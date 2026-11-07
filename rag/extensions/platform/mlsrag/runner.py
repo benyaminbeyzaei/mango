@@ -1,17 +1,16 @@
 """Run a config over a subset and write config.json, queries.jsonl and metrics.json."""
 import json
+import subprocess
 import time
-
-import numpy as np
+from datetime import datetime
 
 from .course import CourseData, mrr_at_k, ndcg_at_k, paths, recall_at_k
 from .flows import get_flow
 from .gateway import ModelGateway
+from .results import METRIC_KEYS, build_metrics, write_metrics  # noqa: F401 (METRIC_KEYS re-exported)
 from .stages import WhisperASR, CourseASR, build_stages, checkout_path, load_transcripts
 from .subsets import load_subset
 from .trace import Trace
-
-METRIC_KEYS = ["Recall@5", "Recall@10", "Recall@20", "Recall@100", "MRR@10", "NDCG@10"]
 
 
 def retrieval_metrics(ranked, rel) -> dict:
@@ -26,31 +25,16 @@ def retrieval_metrics(ranked, rel) -> dict:
     }
 
 
-def summarise(rows, wall_seconds) -> dict:
-    out = {"queries": len(rows)}
-    for key in METRIC_KEYS:
-        out[key] = float(np.mean([r["metrics"][key] for r in rows]))
-    out["wall_seconds"] = wall_seconds
+def git_commit():
+    try:
+        out = subprocess.run(["git", "rev-parse", "HEAD"], cwd=paths.rag_dir, capture_output=True, text=True)
+    except OSError:
+        return None
+    return out.stdout.strip() or None
 
-    stage_ms = {}  # span name -> total ms per query, averaged over queries
-    for r in rows:
-        for s in r["spans"]:
-            stage_ms[s["name"]] = stage_ms.get(s["name"], 0.0) + s["duration_ms"]
-    out["mean_stage_ms"] = {name: ms / len(rows) for name, ms in stage_ms.items()}
 
-    totals = {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "audio_seconds": 0.0}
-    for r in rows:
-        for c in r["cost"].values():
-            for k in totals:
-                totals[k] += c[k]
-    out["elm_calls"] = totals["calls"]
-    out["prompt_tokens"] = totals["prompt_tokens"]
-    out["completion_tokens"] = totals["completion_tokens"]
-    out["audio_seconds"] = totals["audio_seconds"]
-    out["cache_hits"] = sum(
-        v for r in rows for k, v in r["counters"].items() if k.endswith(".cache_hits")
-    )
-    return out
+def now():
+    return datetime.now().isoformat(timespec="seconds")
 
 
 def run(config, subset, generate=True, results_dir=None):
@@ -75,7 +59,7 @@ def run(config, subset, generate=True, results_dir=None):
 
     ids = load_subset(subset)
     rows = []
-    start = time.perf_counter()
+    started = now()
     with (out / "queries.jsonl").open("w", encoding="utf-8") as f:
         for i, qid in enumerate(ids, start=1):
             trace = Trace(run_id, qid, config.name)
@@ -88,8 +72,10 @@ def run(config, subset, generate=True, results_dir=None):
             rows.append(row)
             print(f"[{i:>3}/{len(ids)}] {qid} R@10={row['metrics']['Recall@10']:.3f}")
 
-    metrics = summarise(rows, time.perf_counter() - start)
-    (out / "metrics.json").write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
+    info = {"run_id": run_id, "config_name": config.name, "subset": subset,
+            "started": started, "finished": now(), "git_commit": git_commit()}
+    metrics = build_metrics(rows, info)
+    write_metrics(out, metrics)
     return out, metrics
 
 
