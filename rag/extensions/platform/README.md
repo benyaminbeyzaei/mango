@@ -17,6 +17,8 @@ Tests: `pytest rag/extensions/platform` (fast); `pytest -m slow rag/extensions/p
 - `mlsrag/results.py`: the `metrics.json` schema (pydantic), `load_run`, `list_runs`, `compare`.
 - `mlsrag/evaluate.py`: answer judging through the course evaluator, cost estimates.
 - `mlsrag/matrix.py`: many configs on one subset, one summary table.
+- `mlsrag/maps.py`: linear maps between the enc_a and enc_b spaces (`mlsrag fit-map`).
+- `mlsrag/asr_compare.py`: two transcript caches compared (`mlsrag asr-compare`).
 - `mlsrag/runner.py`, `mlsrag/cli.py`: the commands below. `subsets/`: fixed query-id lists (seed 0):
   `practice-smoke20`, `practice-20pct` (70), `dev-20pct` (25), `practice-all`, `dev-all`.
 
@@ -32,7 +34,7 @@ Tests: `pytest rag/extensions/platform` (fast); `pytest -m slow rag/extensions/p
 
 `name`; `asr` (cached | whisper1 | course); `asr_cache` (JSONL, relative to the checkout root);
 `query_encoder` (gte-small | bge-small); `corpus_index` (enc_a | enc_b); `mismatch_policy`
-(error | as-is: gte-small belongs to enc_a, bge-small to enc_b); `retriever` (exact); `k` (5);
+(error | as-is | re-encode | translate: gte-small belongs to enc_a, bge-small to enc_b; see below); `retriever` (exact); `k` (5);
 `context_builder` (simple); `generator_model`; `judge_model`; `flow` (standard); `params` (free dict).
 A YAML/JSON file with these keys works anywhere a preset name does.
 
@@ -97,6 +99,54 @@ mlsrag compare <run-dir> <run-dir> ...       # Markdown table, one column per ru
   same config, subset and generation mode (`--force` reruns), judges unless `--no-judge` (again
   if the saved verdicts used another judge model; `--no-generate` runs retrieval only), and writes
   `rag/extensions/results/matrices/<name>/summary.json` and `summary.md`.
+
+## Encoder policies (query encoder vs corpus index)
+
+enc_a was built with `thenlper/gte-small` (`rag/models/enc_a`), enc_b with `BAAI/bge-small-en-v1.5`.
+Both are 384-d and normalised, but they are different spaces: for the same record the two vectors
+have cosine 0.82 on average. When `query_encoder` does not belong to `corpus_index`,
+`mismatch_policy` decides what happens:
+
+- `error` (default): the config does not validate.
+- `as-is`: use the query vector anyway (the "wrong space" control).
+- `re-encode`: ignore `query_encoder` and encode the query with the index's own encoder.
+  `params.bge_prefix: true` prepends bge's query instruction
+  (`Represent this sentence for searching relevant passages: `); it is meant for bge-small only.
+- `translate`: encode with `query_encoder`, multiply by a fitted 384x384 map into the index space
+  (`params.map: lstsq | procrustes`, default lstsq), re-normalise.
+
+Configs: `configs/enc-b-{asis,reencode,reencode-prefix,translate-lstsq,translate-procrustes}.yaml`,
+all gte-small queries against enc_b; `configs/matrix-encoders-smoke.yaml` runs them with the baseline.
+
+### Fitting the map
+
+```bash
+mlsrag fit-map --from enc_a --to enc_b --method lstsq --exclude-dev       # ~4 s
+mlsrag fit-map --from enc_a --to enc_b --method procrustes --exclude-dev  # ~1 s
+```
+
+The 24,000 corpus records have a vector in both spaces (same row order), so they are training
+pairs: lstsq finds any linear W with `enc_a @ W ~ enc_b`; Procrustes restricts W to a rotation.
+`--exclude-dev` leaves the records relevant to any dev query (`qrels_dev.tsv`, 325 records) out
+of the fit, so a dev evaluation never sees a map trained on its own answers; those rows are the
+held-out set on which the sidecar reports the mean cosine between mapped enc_a and true enc_b
+(lstsq 0.983, Procrustes 0.968, unmapped 0.819). Maps go to `rag/.cache/maps/<src>-to-<dst>-<method>.npy`
+with a `.json` sidecar (fit time, rows, cosines); they are not committed, refit them in seconds.
+
+## Comparing two ASR systems
+
+```bash
+mlsrag asr-compare --a rag/.cache/transcripts/whisper1-practice.jsonl \
+    --b rag/.cache/transcripts/course-practice.jsonl --subset practice-smoke20 [--config baseline]
+```
+
+Both files are transcript caches (`{query_id, transcript}` per line). It reports WER of `b` with
+`a` as the reference (`jiwer`, after lowercasing and dropping punctuation), the share of queries
+with identical transcripts, and the retrieval metrics of the config (retrieval only, no generation)
+run on each cache. Output: `rag/extensions/results/asr-compare/<a>-vs-<b>-<subset>/summary.json`
+(plus the two run folders). **Limitation:** there are no reference transcripts, so WER measures
+disagreement between the two systems, not the accuracy of either; the retrieval metrics are the
+only quality signal.
 
 ## Adding a retriever or a flow
 

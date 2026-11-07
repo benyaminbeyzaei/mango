@@ -6,7 +6,9 @@ from typing import Protocol
 
 import numpy as np
 
+from .config import ENCODER_SPACE
 from .course import ExactDenseRetriever, SimpleContextBuilder, paths
+from .maps import map_path
 
 # Copied from rag/src/generator.py (ELMGenerator.generate), which keeps it inline.
 COURSE_SYSTEM_PROMPT = (
@@ -100,6 +102,51 @@ class GatewayEncoder:
         return self.gateway.embed(self.name, [text], role="query")[0]
 
 
+BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
+
+
+class ReEncode:
+    """Encode the query with the encoder that produced the index (optionally with bge's query prefix)."""
+
+    def __init__(self, gateway, name, prefix=False):
+        self.inner = GatewayEncoder(gateway, name)
+        self.prefix = BGE_QUERY_PREFIX if prefix else ""
+
+    def encode(self, text: str) -> np.ndarray:
+        return self.inner.encode(self.prefix + text)
+
+
+class Translate:
+    """Map the inner encoder's vector into the index space with a fitted linear map, then normalise."""
+
+    def __init__(self, inner, map_path):
+        map_path = Path(map_path)
+        if not map_path.exists():
+            raise FileNotFoundError(f"{map_path} missing; run `mlsrag fit-map` first")
+        self.inner = inner
+        self.w = np.load(map_path)
+
+    def encode(self, text: str) -> np.ndarray:
+        v = self.inner.encode(text) @ self.w
+        return v / np.linalg.norm(v)
+
+
+def build_encoder(config, gateway) -> Encoder:
+    """Resolve config.mismatch_policy into the query encoder (error is enforced by RunConfig)."""
+    space = ENCODER_SPACE[config.query_encoder]
+    if space == config.corpus_index or config.mismatch_policy in ("error", "as-is"):
+        return GatewayEncoder(gateway, config.query_encoder)
+    if config.mismatch_policy == "re-encode":
+        index_encoder = {v: k for k, v in ENCODER_SPACE.items()}[config.corpus_index]
+        prefix = config.params.get("bge_prefix", False)
+        if prefix and index_encoder != "bge-small":
+            raise ValueError("params.bge_prefix is for bge-small (enc_b) only")
+        return ReEncode(gateway, index_encoder, prefix)
+    method = config.params.get("map", "lstsq")
+    return Translate(GatewayEncoder(gateway, config.query_encoder),
+                     map_path(space, config.corpus_index, method))
+
+
 class ExactRetriever:
     def __init__(self, index_name):
         emb = paths.data_dir / "embeddings"
@@ -158,7 +205,7 @@ def build_stages(config, gateway, data) -> Stages:
         raise ValueError(f"unknown context_builder {config.context_builder!r}")
     return Stages(
         asr=asr,
-        encoder=GatewayEncoder(gateway, config.query_encoder),
+        encoder=build_encoder(config, gateway),
         retriever=ExactRetriever(config.corpus_index),
         context=SimpleContext(data),
         generator=GatewayGenerator(gateway, config.generator_model),

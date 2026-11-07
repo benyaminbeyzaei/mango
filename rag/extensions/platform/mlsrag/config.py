@@ -18,7 +18,9 @@ class RunConfig(BaseModel):
     asr_cache: str | None = None  # JSONL of {query_id, transcript}; relative to the checkout root
     query_encoder: Literal["gte-small", "bge-small"] = "gte-small"
     corpus_index: Literal["enc_a", "enc_b"] = "enc_a"
-    mismatch_policy: Literal["error", "as-is"] = "error"
+    # error: refuse a mismatch; as-is: use the vector anyway; re-encode: encode with the index's
+    # own encoder (params.bge_prefix); translate: map into the index space (params.map)
+    mismatch_policy: Literal["error", "as-is", "re-encode", "translate"] = "error"
     retriever: str = "exact"
     k: int = 5
     context_builder: str = "simple"
