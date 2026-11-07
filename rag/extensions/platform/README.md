@@ -12,8 +12,9 @@ Tests: `pytest rag/extensions/platform` (fast); `pytest -m slow rag/extensions/p
 - `mlsrag/config.py`: `RunConfig`, `load_config(path or preset)`, preset `baseline`.
 - `mlsrag/trace.py`: `Trace` (spans, counters, cost, resources, artifacts), one per query.
 - `mlsrag/gateway.py`: `ModelGateway.chat / embed / transcribe`. Disk cache `rag/.cache/gateway/`, log `rag/.cache/gateway.log.jsonl`, at most 4 concurrent ELM requests, 3 retries on 429, 5xx and timeouts. The key is read from `rag/.env`.
-- `mlsrag/stages.py`: the five interfaces and their adapters; `build_stages(config, gateway, data)`.
-- `mlsrag/flows/`: `standard` = asr → encode → retrieve (100 ranked ids) → context (top k) → generate.
+- `mlsrag/stages.py`: the five interfaces and their adapters; registries `RETRIEVERS`, `CONTEXT_BUILDERS`; `build_stages(config, gateway, data)`.
+- `mlsrag/flows/`: `standard` = asr → encode → retrieve (100 ranked ids) → context (top k) → generate; `grep-static`, `grep-agentic` (see Lexical retrieval).
+- `mlsrag/retrievers/`: `bm25.py` (`BM25Retriever`), `grep.py` (`GrepIndex`). `mlsrag/prompts/grep_v1.py`: the grep prompts.
 - `mlsrag/results.py`: the `metrics.json` schema (pydantic), `load_run`, `list_runs`, `compare`.
 - `mlsrag/evaluate.py`: answer judging through the course evaluator, cost estimates.
 - `mlsrag/matrix.py`: many configs on one subset, one summary table.
@@ -28,7 +29,9 @@ Tests: `pytest rag/extensions/platform` (fast); `pytest -m slow rag/extensions/p
 
 `ASR.transcribe(audio_path) -> str` (`CachedASR`, `WhisperASR`, `CourseASR`),
 `Encoder.encode(text) -> vector` (`GatewayEncoder`: gte-small or bge-small),
-`Retriever.search(vec, k) -> [(record_id, score)]` (`ExactRetriever`: enc_a or enc_b),
+`Retriever.search(vec, k) -> [(record_id, score)]` (`ExactRetriever`: enc_a or enc_b; `BM25Retriever` sets
+`uses_question = True`, so its `search(query_vec, k, question)` ranks by the question text and ignores the
+vector; the API refuses vector input without `input.question` for such retrievers),
 `ContextBuilder.build(question, record_ids) -> prompt` (`SimpleContext`),
 `Generator.generate(prompt) -> answer` (`GatewayGenerator`, the course system prompt, temperature 0.1).
 
@@ -36,8 +39,8 @@ Tests: `pytest rag/extensions/platform` (fast); `pytest -m slow rag/extensions/p
 
 `name`; `asr` (cached | whisper1 | course); `asr_cache` (JSONL, relative to the checkout root);
 `query_encoder` (gte-small | bge-small); `corpus_index` (enc_a | enc_b); `mismatch_policy`
-(error | as-is | re-encode | translate: gte-small belongs to enc_a, bge-small to enc_b; see below); `retriever` (exact); `k` (5);
-`context_builder` (simple); `generator_model`; `judge_model`; `flow` (standard); `params` (free dict).
+(error | as-is | re-encode | translate: gte-small belongs to enc_a, bge-small to enc_b; see below); `retriever` (exact | topic | bm25 | grep); `k` (5);
+`context_builder` (simple); `generator_model`; `judge_model`; `flow` (standard | grep-static | grep-agentic); `params` (free dict).
 A YAML/JSON file with these keys works anywhere a preset name does.
 
 ## Commands (run from the checkout root)
@@ -150,12 +153,43 @@ run on each cache. Output: `rag/extensions/results/asr-compare/<a>-vs-<b>-<subse
 disagreement between the two systems, not the accuracy of either; the retrieval metrics are the
 only quality signal.
 
+## Lexical retrieval (BM25, grep)
+
+Configs `configs/bm25.yaml`, `configs/grep-static.yaml`, `configs/grep-agentic.yaml`.
+
+- **BM25** (`retriever: bm25`, standard flow): `bm25s` over the record texts, tokens = lowercase
+  `\w+` words minus English stop words. The index is pickled to `rag/.cache/bm25/<corpus hash>.pkl`;
+  the first query's trace has `bm25.build_s` and `bm25.build_rss_mb` (growth of peak RSS while
+  building; `load_s`/`load_rss_mb` when the cache was used) and `bm25.index_mb` (pickle size).
+  Only records with a positive score are
+  returned; a query that is empty after tokenising returns nothing.
+- **Grep static** (`retriever: grep`, `flow: grep-static`): one LLM call (`params.grep_model`,
+  default Qwen) turns the transcript into 3 to 8 plain patterns, a case-insensitive `re` scan over
+  all 24,000 texts ranks records by patterns matched, then total matches, then shorter text.
+  Invalid patterns and patterns that match the empty string are dropped and counted.
+  `retriever: grep` is only valid with the two grep flows.
+- **Grep agentic** (`flow: grep-agentic`): the static step, then up to 2 refinement calls (the
+  model sees the patterns and the top 10 hits, 200 characters each, and stops or gives new
+  patterns), then one clean-up call that picks at most `k` ids from the top 20 hits (300
+  characters each). The context gets only the kept ids (the top k if the reply was not a list);
+  the ranking for the metrics is the kept ids, then the rest of the scan order. Caps: 3 scans
+  and 6 LLM calls per query (it makes at most 4).
+
+How costs are counted: the `retrieve` span of the grep flows covers every LLM call and scan, so
+`latency_ms.retrieve` is comparable with the dense retriever; `grep.scan` spans time the scans
+alone. Per-query counters in `queries.jsonl`: `grep.llm_calls`, `grep.iterations`,
+`grep.patterns`, `grep.matched_records`, `grep.invalid_patterns`, `grep.parse_errors`; the
+patterns per round are in `artifacts.patterns`. Tokens come from the gateway's `cost`, which counts
+only new calls (a rerun from the cache costs 0). The prompts are fixed (`VERSION = "grep_v1"`,
+passed to the gateway as `tag` so it enters the cache key); do not tune them on the dev split.
+
 ## Adding a retriever or a flow
 
-A new retriever is a class with `search(query_vec, k)`; add `name: factory(config, gateway, data)` to
-`RETRIEVERS` in `mlsrag/stages.py` (context builders: `CONTEXT_BUILDERS`) and set `retriever: <name>` in a config. A new flow is a module in
+A new retriever is a class with `search(query_vec, k)` (with `uses_question = True` it also gets
+`question=<transcript>`); add `name: factory(config, gateway, data)` to `RETRIEVERS` in `mlsrag/stages.py`
+(context builders: `CONTEXT_BUILDERS`) and set `retriever: <name>` in a config. A new flow is a module in
 `mlsrag/flows/` with a `run_query(query_id, audio_path, stages, config, trace)` that fills
-`trace.artifacts` (at least `ranked_ids`) inside spans; register it in `FLOWS`. All model
+`trace.artifacts` (at least `ranked_ids`) inside spans; register it in `FLOWS` and its extra ELM calls per query in `FLOW_CALLS_PER_QUERY` (`evaluate.py`). All model
 calls go through the gateway so they are cached and costed; options go in `config.params`.
 
 ## Preprocessing pipelines

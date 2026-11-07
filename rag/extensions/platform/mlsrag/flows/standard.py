@@ -14,6 +14,11 @@ def run_query(query_id, audio_path, stages, config, trace) -> dict:
     depth = max(config.k, RANKED_DEPTH)
     subset = config.params.get("record_subset")  # compare on a record subset: keep only its ids
     extra = {"question": a["transcript"]} if getattr(stages.retriever, "uses_question", False) else {}
+    # One-off costs a retriever reports (BM25 index build or load), on the first query only.
+    if getattr(stages.retriever, "build_counters", None):
+        for key, value in stages.retriever.build_counters.items():
+            trace.count(key, value)
+        stages.retriever.build_counters = {}
     with trace.span("retrieve"):
         hits = stages.retriever.search(vec, ALL_CANDIDATES if subset else depth, **extra)
         if subset:

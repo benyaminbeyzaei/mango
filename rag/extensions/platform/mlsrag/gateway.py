@@ -70,7 +70,8 @@ class ModelGateway:
                 )
         return _encoders[name]
 
-    def chat(self, model, messages, temperature=0.0, max_tokens=None) -> str:
+    def chat(self, model, messages, temperature=0.0, max_tokens=None, tag=None) -> str:
+        """`tag` (e.g. a prompt VERSION) enters the cache key when given."""
         def call():
             extra = {"max_tokens": max_tokens} if max_tokens else {}
             r = self.client().chat.completions.create(
@@ -84,6 +85,8 @@ class ModelGateway:
 
         chars = sum(len(m["content"]) for m in messages)
         payload = {"messages": messages, "temperature": temperature, "max_tokens": max_tokens}
+        if tag:
+            payload["tag"] = tag  # only when given, so untagged cache keys stay as they were
         result = self._run("chat", model, payload, call, remote=True, input_chars=chars)
         return result["text"]
 

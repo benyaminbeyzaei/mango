@@ -310,6 +310,19 @@ class Stages:
     retriever: Retriever
     context: ContextBuilder
     generator: Generator | None  # None for retrieval-only runs
+    gateway: object = None  # for flows that call a model themselves (grep)
+
+
+def bm25_retriever(data):
+    from .retrievers.bm25 import BM25Retriever
+
+    return BM25Retriever(data)
+
+
+def grep_index(data):
+    from .retrievers.grep import GrepIndex
+
+    return GrepIndex(data)
 
 
 # name -> factory(config, gateway, data). A new retriever or context builder registers here.
@@ -320,6 +333,8 @@ RETRIEVERS = {
     "kg": lambda config, gateway, data: kg_retriever(config, gateway),
     "toc": lambda config, gateway, data: toc_retriever(config, gateway),
     "raptor-lite": lambda config, gateway, data: raptor_retriever(config, gateway),
+    "bm25": lambda config, gateway, data: bm25_retriever(data),
+    "grep": lambda config, gateway, data: grep_index(data),  # only for the grep flows, which call scan()
 }
 CONTEXT_BUILDERS = {
     "simple": lambda config, gateway, data: SimpleContext(data),
@@ -340,10 +355,13 @@ def build_stages(config, gateway, data) -> Stages:
         raise ValueError(f"unknown retriever {config.retriever!r}; known: {sorted(RETRIEVERS)}")
     if config.context_builder not in CONTEXT_BUILDERS:
         raise ValueError(f"unknown context_builder {config.context_builder!r}; known: {sorted(CONTEXT_BUILDERS)}")
+    if (config.retriever == "grep") != config.flow.startswith("grep-"):
+        raise ValueError("retriever grep goes with flow grep-static or grep-agentic, and only with them")
     return Stages(
         asr=asr,
         encoder=build_encoder(config, gateway),
         retriever=RETRIEVERS[config.retriever](config, gateway, data),
         context=CONTEXT_BUILDERS[config.context_builder](config, gateway, data),
         generator=GatewayGenerator(gateway, config.generator_model),
+        gateway=gateway,
     )
