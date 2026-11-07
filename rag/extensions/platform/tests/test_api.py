@@ -127,6 +127,13 @@ def test_vector_query_errors(client):
     assert post("enc-b-asis", "enc_a").status_code == 200
 
 
+def test_vector_without_question_is_400_for_a_question_retriever(client, stage):
+    stage.uses_question = True  # like BM25: it searches the question text
+    body = {"config": "baseline", "input": {"vector": [0.1] * 384, "space": "enc_a"}}
+    r = client.post("/api/query", json=body)
+    assert r.status_code == 400 and "question" in r.json()["detail"]
+
+
 def test_bad_config_is_400(client):
     assert client.post("/api/query", json={"config": "nope", "input": {"text": "x"}}).status_code == 400
     assert client.post("/api/query", json={"config": "../configs/enc-b-asis", "input": {"text": "x"}}).status_code == 400

@@ -1,0 +1,8 @@
+name: grep-agentic
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl
+retriever: grep
+flow: grep-agentic
+k: 5
+params:
+  grep_model: Qwen/Qwen3.5-397B-A17B-FP8

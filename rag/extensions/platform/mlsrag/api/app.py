@@ -196,6 +196,9 @@ def create_app(web_dir=None, results_dir=None) -> FastAPI:
         config = resolve(body.config)
         if isinstance(body.input, TextInput):
             return answer(config, asr=Fixed(body.input.text))
+        if not body.input.question.strip() and getattr(stages_for(config).retriever, "uses_question", False):
+            raise HTTPException(400, f"retriever {config.retriever!r} searches the question text; "
+                                     "send input.text or a vector with input.question")
         return answer(config, asr=Fixed(body.input.question), encoder=vector_encoder(config, body.input))
 
     @api.post("/query/audio", response_model=QueryResponse)

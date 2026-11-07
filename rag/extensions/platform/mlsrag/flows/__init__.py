@@ -1,7 +1,11 @@
 """Flows: the order in which stages run for one query."""
-from . import standard
+from . import grep_agentic, grep_static, standard
 
-FLOWS = {"standard": standard.run_query}
+FLOWS = {
+    "standard": standard.run_query,
+    "grep-static": grep_static.run_query,
+    "grep-agentic": grep_agentic.run_query,
+}
 
 
 def get_flow(name):

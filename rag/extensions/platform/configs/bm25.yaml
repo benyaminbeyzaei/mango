@@ -1,0 +1,6 @@
+name: bm25
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl
+retriever: bm25
+flow: standard
+k: 5
