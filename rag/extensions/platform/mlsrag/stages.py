@@ -181,6 +181,26 @@ class GatewayGenerator:
         return self.gateway.chat(self.model, messages, temperature=COURSE_TEMPERATURE)
 
 
+def topic_retriever(config, gateway):
+    """`params.index`: the topics pipeline config (YAML) whose topic_index output to load."""
+    from .preprocess import load_pipeline_config, topics_pipeline
+    from .retrievers.topic import TopicRetriever, load_index
+
+    if config.corpus_index != "enc_a":
+        raise ValueError("the topic index is built from enc_a vectors")
+    pipeline = topics_pipeline()
+    pipeline_config = load_pipeline_config(checkout_path(config.params["index"]))
+    rows = pipeline.status(pipeline_config)
+    if rows[-1]["status"] != "ok":
+        raise FileNotFoundError(
+            f"topic index for {config.params['index']} is not built; run "
+            f"`mlsrag preprocess run --pipeline topics --config {config.params['index']}`"
+        )
+    index = load_index(pipeline.stage_dir("topic_index", rows[-1]["hash"]) / "index.json")
+    exact = ExactRetriever("enc_a").inner
+    return TopicRetriever(index, exact.embeddings, exact.record_ids, m=config.params.get("m", 4), gateway=gateway)
+
+
 @dataclass
 class Stages:
     asr: ASR
@@ -188,6 +208,16 @@ class Stages:
     retriever: Retriever
     context: ContextBuilder
     generator: Generator | None  # None for retrieval-only runs
+
+
+# name -> factory(config, gateway, data). A new retriever or context builder registers here.
+RETRIEVERS = {
+    "exact": lambda config, gateway, data: ExactRetriever(config.corpus_index),
+    "topic": lambda config, gateway, data: topic_retriever(config, gateway),
+}
+CONTEXT_BUILDERS = {
+    "simple": lambda config, gateway, data: SimpleContext(data),
+}
 
 
 def build_stages(config, gateway, data) -> Stages:
@@ -199,14 +229,14 @@ def build_stages(config, gateway, data) -> Stages:
         asr = WhisperASR(gateway)
     else:
         asr = CourseASR()
-    if config.retriever != "exact":
-        raise ValueError(f"unknown retriever {config.retriever!r}")
-    if config.context_builder != "simple":
-        raise ValueError(f"unknown context_builder {config.context_builder!r}")
+    if config.retriever not in RETRIEVERS:
+        raise ValueError(f"unknown retriever {config.retriever!r}; known: {sorted(RETRIEVERS)}")
+    if config.context_builder not in CONTEXT_BUILDERS:
+        raise ValueError(f"unknown context_builder {config.context_builder!r}; known: {sorted(CONTEXT_BUILDERS)}")
     return Stages(
         asr=asr,
         encoder=build_encoder(config, gateway),
-        retriever=ExactRetriever(config.corpus_index),
-        context=SimpleContext(data),
+        retriever=RETRIEVERS[config.retriever](config, gateway, data),
+        context=CONTEXT_BUILDERS[config.context_builder](config, gateway, data),
         generator=GatewayGenerator(gateway, config.generator_model),
     )

@@ -16,6 +16,7 @@ dependencies = [
   "pyyaml",
   "scipy",
   "jiwer",
+  "scikit-learn",
 ]
 
 [project.optional-dependencies]
