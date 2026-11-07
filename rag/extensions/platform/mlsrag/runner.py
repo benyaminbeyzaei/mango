@@ -8,13 +8,16 @@ from .course import CourseData, mrr_at_k, ndcg_at_k, paths, recall_at_k
 from .flows import get_flow
 from .gateway import ModelGateway
 from .results import METRIC_KEYS, build_metrics, write_metrics  # noqa: F401 (METRIC_KEYS re-exported)
-from .stages import WhisperASR, CourseASR, build_stages, checkout_path, load_transcripts
-from .subsets import load_subset
+from .stages import WhisperASR, CourseASR, build_stages, checkout_path, load_record_subset, load_transcripts
+from .subsets import SUBSETS, load_subset
 from .trace import Trace
 
 
-def retrieval_metrics(ranked, rel) -> dict:
-    """The six metrics exactly as rag/scripts/evaluate_rag.py computes them."""
+def retrieval_metrics(ranked, rel, record_ids=None) -> dict:
+    """The six metrics exactly as rag/scripts/evaluate_rag.py computes them. With `record_ids`
+    (params.record_subset) only the relevant records inside that subset count."""
+    if record_ids is not None:
+        rel = {r: g for r, g in rel.items() if r in record_ids}
     return {
         "Recall@5": recall_at_k(ranked, rel, 5),
         "Recall@10": recall_at_k(ranked, rel, 10),
@@ -41,6 +44,11 @@ def run(config, subset, generate=True, results_dir=None):
     data = CourseData(paths.data_dir)
     manifest = {row["query_id"]: row for row in data.load_audio_manifest()}
     qrels = {**data.load_qrels("practice"), **data.load_qrels("dev")}
+    record_ids = None
+    if config.params.get("record_subset"):
+        if SUBSETS[subset][0] != "dev":  # the subset is built around the dev qrels
+            raise ValueError("params.record_subset is meant for dev subsets only")
+        record_ids = load_record_subset(config.params["record_subset"])
     gateway = ModelGateway()
     stages = build_stages(config, gateway, data)
     if not generate:
@@ -67,7 +75,7 @@ def run(config, subset, generate=True, results_dir=None):
             flow(qid, paths.data_dir / manifest[qid]["audio_file"], stages, config, trace)
             trace.finish()
             row = trace.to_dict()
-            row["metrics"] = retrieval_metrics(trace.artifacts["ranked_ids"], qrels[qid])
+            row["metrics"] = retrieval_metrics(trace.artifacts["ranked_ids"], qrels[qid], record_ids)
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
             rows.append(row)
             print(f"[{i:>3}/{len(ids)}] {qid} R@10={row['metrics']['Recall@10']:.3f}")

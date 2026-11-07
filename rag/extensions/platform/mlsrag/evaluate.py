@@ -14,6 +14,11 @@ from .subsets import SUBSETS, load_subset
 FLOW_CALLS_PER_QUERY = {"standard": 0}
 
 
+def retriever_calls_per_query(config) -> int:
+    """ELM calls the retriever makes per query: kg with question_entities: llm asks once."""
+    return int(config.retriever == "kg" and config.params.get("question_entities") == "llm")
+
+
 def read_jsonl(path):
     return [json.loads(line) for line in Path(path).read_text(encoding="utf-8").splitlines() if line]
 
@@ -108,6 +113,7 @@ def estimate(config, subset, judge=False, repeats=1) -> dict:
         "generation": len(ids),
         "judge": len(ids) * repeats if judge else 0,
         "flow": None if per_query is None else per_query * len(ids),
+        "retriever": retriever_calls_per_query(config) * len(ids),
         "whisper": len(to_transcribe),
     }
     return {
@@ -129,6 +135,7 @@ def format_estimate(e) -> str:
         f"  generation calls: {c['generation']}\n"
         f"  judge calls:      {c['judge']}\n"
         f"  flow calls:       {flow}\n"
+        f"  retriever calls:  {c['retriever']}\n"
         f"  whisper calls:    {c['whisper']} ({e['audio_seconds']:.0f} audio s, ~${e['est_usd']:.3f})\n"
         f"  total ELM calls:  {e['elm_calls']} (free models count as $0)"
     )

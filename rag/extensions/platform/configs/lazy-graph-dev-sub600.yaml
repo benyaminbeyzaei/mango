@@ -1,0 +1,12 @@
+# RunConfig: lazy graph on dev, restricted to the 600 KG records.
+name: lazy-graph-dev-sub600
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-dev.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+k: 5
+retriever: lazy-graph
+params:
+  index: rag/extensions/platform/configs/lazy-graph.yaml
+  rerank_dense: true
+  record_subset: rag/extensions/platform/subsets/records-dev-relevant-d275.txt
