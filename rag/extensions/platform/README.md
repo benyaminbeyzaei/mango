@@ -275,3 +275,18 @@ space whose `mismatch_policy` cannot apply (`as-is` and `translate` can; `re-enc
 (uploads go to a temp folder and are deleted after transcription). Model calls are still cached and
 logged by the gateway as for any run, under `rag/.cache/`. Model output is returned as text and
 never executed.
+
+## Run with Docker
+
+One image (`rag/extensions/platform/Dockerfile`, about 2.1 GB, CPU only) holds the API, the CLI and the built web client. The data, the model, `rag/.cache/`, the results and `rag/.env` stay on your disk and are mounted (`compose.yaml`). From the checkout root:
+
+```bash
+git clone <this repo> && cd <it> && git lfs install && git lfs pull --include="rag-assets.zip"
+unzip rag-assets.zip -d ~/mls-rag-assets && python rag/scripts/install_assets.py --from-dir ~/mls-rag-assets
+cp rag/.env.example rag/.env    # then put your ELM key in rag/.env
+mkdir -p rag/.cache             # so the mount is owned by you, not root
+docker compose up               # API + client at http://localhost:8000 (first run builds the image)
+docker compose run --rm cli mlsrag run --config baseline --subset practice-smoke20 --no-generate
+```
+
+`rag/.env` is mounted read-only, never copied into the image. Containers run as uid/gid 1000 (set `UID`/`GID` to change it) so written files stay yours. Set `ADMIN_TOKEN` in your shell to enable the admin endpoints. `.git` is not in the image, so `/api/health` and run metadata show `git_commit: null`. The course ASR needs a GPU and is not in the image; `whisper1` and `cached` work.
