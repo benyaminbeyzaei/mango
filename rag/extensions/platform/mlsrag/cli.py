@@ -1,8 +1,15 @@
-"""mlsrag run | transcribe | make-subsets | judge | estimate | matrix | compare | fit-map | asr-compare | preprocess"""
+"""mlsrag run | transcribe | make-subsets | judge | estimate | matrix | compare | fit-map | asr-compare | preprocess | serve | openapi"""
 import argparse
 import json
+from pathlib import Path
 
 from .config import load_config
+
+OPENAPI_PATH = Path(__file__).resolve().parents[1] / "openapi.json"
+
+
+def openapi_json(app) -> str:
+    return json.dumps(app.openapi(), indent=2) + "\n"
 
 
 def main(argv=None):
@@ -69,9 +76,28 @@ def main(argv=None):
     sel.add_argument("--distractors", type=int, default=0, metavar="M")
     sel.add_argument("--seed", type=int, default=0)
 
+    sv = sub.add_parser("serve", help="run the HTTP API (routes under /api)")
+    sv.add_argument("--host", default="127.0.0.1")
+    sv.add_argument("--port", type=int, default=8000)
+    sv.add_argument("--web-dir", help="also serve this folder (the built web client) at /")
+
+    oa = sub.add_parser("openapi", help="write the API's OpenAPI document")
+    oa.add_argument("--out", default=str(OPENAPI_PATH))
+
     args = ap.parse_args(argv)
     if args.command == "preprocess":
         return preprocess(args)
+    if args.command in ("serve", "openapi"):
+        from .api.app import create_app
+
+        if args.command == "serve":
+            import uvicorn
+
+            uvicorn.run(create_app(web_dir=args.web_dir), host=args.host, port=args.port)
+        else:
+            Path(args.out).write_text(openapi_json(create_app()), encoding="utf-8")
+            print(f"wrote {args.out}")
+        return
     from . import asr_compare, evaluate, maps, matrix, results, runner, subsets  # after parsing so --help stays fast
 
     if args.command == "run":

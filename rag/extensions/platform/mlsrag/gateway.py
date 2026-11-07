@@ -106,8 +106,11 @@ class ModelGateway:
     def transcribe(self, audio_path, model="whisper-1") -> str:
         audio_path = Path(audio_path)
         audio = audio_path.read_bytes()
-        with wave.open(str(audio_path)) as w:
-            seconds = w.getnframes() / w.getframerate()
+        try:
+            with wave.open(str(audio_path)) as w:
+                seconds = w.getnframes() / w.getframerate()
+        except (wave.Error, EOFError):  # not a WAV (e.g. WebM from a browser): duration unknown, cost counts 0 s
+            seconds = 0.0
 
         def call():
             r = self.client().audio.transcriptions.create(

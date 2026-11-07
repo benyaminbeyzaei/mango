@@ -17,6 +17,9 @@ dependencies = [
   "scipy",
   "jiwer",
   "scikit-learn",
+  "fastapi",
+  "uvicorn[standard]",
+  "python-multipart",
 ]
 
 [project.optional-dependencies]
