@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mlsrag"
+version = "0.1.0"
+description = "Run, trace and measure RAG experiments on top of the course code in rag/src."
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2",
+  "numpy",
+  "sentence-transformers",
+  "openai",
+  "python-dotenv",
+  "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "httpx2"]  # httpx2: the HTTP library openai uses; the gateway tests build its errors
+
+[project.scripts]
+mlsrag = "mlsrag.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["mlsrag*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: needs the course data, the enc_a model and the whisper transcript cache"]
+addopts = "-m 'not slow'"
