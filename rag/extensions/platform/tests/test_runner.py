@@ -14,5 +14,5 @@ def test_two_runs_in_one_minute_get_separate_folders(tmp_path):
         assert second.name == first.name + "~2"
     for out in (first, second):
         assert {p.name for p in out.iterdir()} == {"config.json", "queries.jsonl", "metrics.json"}
-    assert set(METRIC_KEYS) <= set(json.loads((second / "metrics.json").read_text()))
-    assert metrics["elm_calls"] == 0
+    assert set(METRIC_KEYS) == set(json.loads((second / "metrics.json").read_text())["retrieval"])
+    assert metrics["cost"]["elm_calls"] == 0 and metrics["run"]["subset"] == "practice-smoke20"
