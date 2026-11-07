@@ -1,4 +1,4 @@
-"""mlsrag run | transcribe | make-subsets | judge | estimate | matrix | compare"""
+"""mlsrag run | transcribe | make-subsets | judge | estimate | matrix | compare | fit-map | asr-compare"""
 import argparse
 import json
 
@@ -43,8 +43,21 @@ def main(argv=None):
     cp = sub.add_parser("compare", help="print a Markdown table of several runs side by side")
     cp.add_argument("run_dirs", nargs="+")
 
+    fm = sub.add_parser("fit-map", help="fit a linear map between two corpus encoder spaces")
+    fm.add_argument("--from", dest="src", default="enc_a", choices=["enc_a", "enc_b"])
+    fm.add_argument("--to", dest="dst", default="enc_b", choices=["enc_a", "enc_b"])
+    fm.add_argument("--method", default="lstsq", choices=["lstsq", "procrustes"])
+    fm.add_argument("--exclude-dev", action="store_true", help="leave the dev-relevant records out of the fit")
+
+    ac = sub.add_parser("asr-compare", help="WER between two transcript caches and the retrieval of each")
+    ac.add_argument("--a", required=True, help="reference transcript cache (JSONL)")
+    ac.add_argument("--b", required=True, help="transcript cache to compare (JSONL)")
+    ac.add_argument("--subset", default="practice-smoke20")
+    ac.add_argument("--config", default="baseline")
+    ac.add_argument("--name", help="output folder name (default: <a>-vs-<b>-<subset>)")
+
     args = ap.parse_args(argv)
-    from . import evaluate, matrix, results, runner, subsets  # after parsing so --help stays fast
+    from . import asr_compare, evaluate, maps, matrix, results, runner, subsets  # after parsing so --help stays fast
 
     if args.command == "run":
         out, metrics = runner.run(load_config(args.config), args.subset, generate=not args.no_generate)
@@ -65,5 +78,14 @@ def main(argv=None):
                                 force=args.force, allow_full=args.allow_full, yes=args.yes)
         print((out / "summary.md").read_text(encoding="utf-8"))
         print(f"summary: {out}")
+    elif args.command == "fit-map":
+        out, info = maps.fit_map(args.src, args.dst, args.method, args.exclude_dev)
+        print(json.dumps(info, indent=2))
+        print(f"map: {out}")
+    elif args.command == "asr-compare":
+        out, summary = asr_compare.asr_compare(args.a, args.b, args.subset,
+                                               matrix.resolve_config(args.config), args.name)
+        print(asr_compare.format_summary(summary), end="")
+        print(f"summary: {out / 'summary.json'}")
     else:
         print(results.compare(args.run_dirs), end="")

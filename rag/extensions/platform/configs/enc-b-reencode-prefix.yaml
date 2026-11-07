@@ -1,0 +1,8 @@
+name: enc-b-reencode-prefix
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl
+query_encoder: gte-small
+corpus_index: enc_b
+mismatch_policy: re-encode
+params:
+  bge_prefix: true

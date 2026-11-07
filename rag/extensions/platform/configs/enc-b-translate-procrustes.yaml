@@ -1,0 +1,8 @@
+name: enc-b-translate-procrustes
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl
+query_encoder: gte-small
+corpus_index: enc_b
+mismatch_policy: translate
+params:
+  map: procrustes

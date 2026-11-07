@@ -1,0 +1,9 @@
+name: encoders-smoke
+subset: practice-smoke20
+configs:
+  - baseline
+  - enc-b-asis
+  - enc-b-reencode
+  - enc-b-reencode-prefix
+  - enc-b-translate-lstsq
+  - enc-b-translate-procrustes
