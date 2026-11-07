@@ -1,8 +1,9 @@
 // What happened during one query: the "What ran" line and the full-detail panel.
-// Written for the interactive page; plan 011 (results) can reuse QueryDetail.
+// Used by the interactive page and, for stored traces, by the results query page.
 import type { ReactNode } from "react"
 
 import type { QueryResponse, RunConfig } from "@/api/queries"
+import { useRecord } from "@/lib/results"
 
 type Span = {
   name: string
@@ -72,13 +73,19 @@ export function WhatRan({
   )
 }
 
-export function QueryDetail({ response }: { response: QueryResponse }) {
+export function QueryDetail({
+  response,
+  open = false,
+}: {
+  response: QueryResponse
+  open?: boolean
+}) {
   const trace = response.trace as Trace
   const wall =
     trace.resources?.wall_ms ??
     Math.max(1, ...(trace.spans ?? []).map((s) => s.start_ms + s.duration_ms))
   return (
-    <details className="rounded-lg border p-2 text-sm">
+    <details className="rounded-lg border p-2 text-sm" open={open}>
       <summary className="cursor-pointer font-medium">Full detail</summary>
       <div className="mt-2 flex flex-col gap-4">
         <Section title="Transcript">
@@ -88,17 +95,7 @@ export function QueryDetail({ response }: { response: QueryResponse }) {
         <Section title={`Evidence (${response.retrieved.length})`}>
           <ol className="flex flex-col gap-1">
             {response.retrieved.map((hit, i) => (
-              <li key={hit.record_id}>
-                <details>
-                  <summary className="cursor-pointer font-mono text-xs">
-                    {i + 1}. {hit.record_id}{" "}
-                    <span className="text-muted-foreground">
-                      score {hit.score.toFixed(4)}
-                    </span>
-                  </summary>
-                  <p className="mt-1 text-xs whitespace-pre-wrap">{hit.text}</p>
-                </details>
-              </li>
+              <Evidence key={hit.record_id} rank={i + 1} hit={hit} />
             ))}
           </ol>
         </Section>
@@ -121,10 +118,11 @@ export function QueryDetail({ response }: { response: QueryResponse }) {
                   title={JSON.stringify(s.attrs)}
                 >
                   {s.name}
+                  {s.attrs.cached === true && " (cached)"}
                 </span>
                 <span className="relative h-2 rounded bg-muted">
                   <span
-                    className="absolute inset-y-0 rounded bg-primary"
+                    className={`absolute inset-y-0 rounded ${s.attrs.cached === true ? "bg-muted-foreground/50" : "bg-primary"}`}
                     style={{
                       left: `${(100 * s.start_ms) / wall}%`,
                       width: `max(2px, ${(100 * s.duration_ms) / wall}%)`,
@@ -165,6 +163,39 @@ export function QueryDetail({ response }: { response: QueryResponse }) {
         </Section>
       </div>
     </details>
+  )
+}
+
+// A hit with no text (a stored trace) loads its record; the summary shows the first lines.
+function Evidence({
+  rank,
+  hit,
+}: {
+  rank: number
+  hit: QueryResponse["retrieved"][number]
+}) {
+  const record = useRecord(hit.record_id, !hit.text)
+  const text =
+    hit.text ||
+    record.data ||
+    (record.error ? "(could not load the record)" : "…")
+  return (
+    <li>
+      <details className="group">
+        <summary className="cursor-pointer text-xs">
+          <span className="font-mono">
+            {rank}. {hit.record_id}{" "}
+            <span className="text-muted-foreground">
+              score {hit.score.toFixed(4)}
+            </span>
+          </span>
+          <span className="line-clamp-2 text-muted-foreground group-open:hidden">
+            {text}
+          </span>
+        </summary>
+        <p className="mt-1 text-xs whitespace-pre-wrap">{text}</p>
+      </details>
+    </li>
   )
 }
 

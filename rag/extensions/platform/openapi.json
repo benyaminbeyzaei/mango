@@ -939,6 +939,20 @@
               }
             ],
             "title": "Finished"
+          },
+          "retrieval": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Retrieval",
+            "description": "metrics.json retrieval block: Recall@k, MRR@10, NDCG@10"
+          },
+          "cost": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Cost",
+            "description": "metrics.json cost block: elm_calls, tokens, audio_seconds, est_usd"
           }
         },
         "type": "object",
@@ -947,7 +961,9 @@
           "config_name",
           "subset",
           "n_queries",
-          "finished"
+          "finished",
+          "retrieval",
+          "cost"
         ],
         "title": "RunSummary"
       },
