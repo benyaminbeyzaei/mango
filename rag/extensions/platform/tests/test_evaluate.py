@@ -20,7 +20,7 @@ def write_matrix(tmp_path, subset):
 
 
 def test_matrix_refuses_full_split_without_flag(tmp_path):
-    with pytest.raises(SystemExit, match="--allow-full"):
+    with pytest.raises(ValueError, match="--allow-full"):
         matrix.run_matrix(write_matrix(tmp_path, "practice-all"), yes=True)
 
 

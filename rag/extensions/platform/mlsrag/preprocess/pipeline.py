@@ -69,8 +69,9 @@ class Pipeline:
         p = self.stage_dir(stage_name, h) / "manifest.json"
         return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
 
-    def run(self, config, gateway=None, log=print) -> dict:
-        """Run every stage that is not done yet. Returns {stage name: output dir}."""
+    def run(self, config, gateway=None, log=print, confirm=None) -> dict:
+        """Run every stage that is not done yet. Returns {stage name: output dir}.
+        `confirm(message)`, if given, is called by an LLM stage before its first call; it raises to stop."""
         hashes = self.hashes(config)
         dirs = {}
         for s in self.stages:
@@ -85,7 +86,7 @@ class Pipeline:
             trace = Trace(f"preprocess-{self.name}", s.name, self.name)
             gw = gateway or ModelGateway()
             gw.trace = trace
-            ctx = SimpleNamespace(out_dir=partial, gateway=gw, trace=trace, log=log)
+            ctx = SimpleNamespace(out_dir=partial, gateway=gw, trace=trace, log=log, confirm=confirm)
             log(f"{s.name:<12} {h} running")
             start = time.perf_counter()
             counts = s.run({i: dirs[i] for i in s.inputs}, config.get(s.name, {}), ctx)

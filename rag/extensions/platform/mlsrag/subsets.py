@@ -14,6 +14,12 @@ SUBSETS = {
     "practice-all": ("practice", None),
     "dev-all": ("dev", None),
 }
+FULL_SUBSETS = {"practice-all", "dev-all"}
+
+
+def check_subset(name, allow_full):
+    if name in FULL_SUBSETS and not allow_full:
+        raise ValueError(f"subset {name} is a full split; pass --allow-full (needs Benyamin's go-ahead)")
 
 
 def load_subset(name) -> list[str]:

@@ -4,7 +4,7 @@ import json
 import re
 import time
 
-from .ledger import Ledger
+from .ledger import Ledger, ask
 
 PROMPT_VERSION = "v1"
 MAX_CLUSTERS = 512  # plan 002: never label more than this many clusters in one run
@@ -53,6 +53,7 @@ def run(inputs, config, ctx):
             failures[r["item_id"]] = failures.get(r["item_id"], 0) + 1
     todo = [c for c in clusters if c["cluster"] not in done]
     ctx.log(f"label: {len(done)} clusters done, {len(todo)} to go")
+    ask(ctx, ledger, len(clusters), len(todo))
     for i, c in enumerate(todo, start=1):
         prompt = build_prompt(c, texts, attempt=failures.get(c["cluster"], 0))
         input_hash = hashlib.sha256(prompt.encode()).hexdigest()[:16]
