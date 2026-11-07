@@ -1,0 +1,1077 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "mlsrag",
+    "description": "Query the RAG pipeline with a chosen config and read the committed results.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/models": {
+      "get": {
+        "summary": "Models",
+        "operationId": "models_api_models_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/configs": {
+      "get": {
+        "summary": "Configs",
+        "operationId": "configs_api_configs_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConfigEntry"
+                  },
+                  "type": "array",
+                  "title": "Response Configs Api Configs Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/query": {
+      "post": {
+        "summary": "Query",
+        "operationId": "query_api_query_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/query/audio": {
+      "post": {
+        "summary": "Query Audio",
+        "operationId": "query_audio_api_query_audio_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_query_audio_api_query_audio_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/results": {
+      "get": {
+        "summary": "Results",
+        "operationId": "results_api_results_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResultsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/results/{run_id}": {
+      "get": {
+        "summary": "Result",
+        "operationId": "result_api_results__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/results/{run_id}/queries": {
+      "get": {
+        "summary": "Result Queries",
+        "operationId": "result_queries_api_results__run_id__queries_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueriesPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/records/{record_id}": {
+      "get": {
+        "summary": "Record",
+        "operationId": "record_api_records__record_id__get",
+        "parameters": [
+          {
+            "name": "record_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Record Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecordResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs": {
+      "post": {
+        "summary": "Start Run",
+        "operationId": "start_run_api_runs_post",
+        "parameters": [
+          {
+            "name": "x-admin-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartRunRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/runs/{job_id}/status": {
+      "get": {
+        "summary": "Run Status",
+        "operationId": "run_status_api_runs__job_id__status_get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "x-admin-token",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Admin-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_query_audio_api_query_audio_post": {
+        "properties": {
+          "config": {
+            "type": "string",
+            "title": "Config",
+            "description": "config name or a RunConfig as a JSON string"
+          },
+          "audio": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Audio",
+            "description": "WAV or WebM/Opus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "config",
+          "audio"
+        ],
+        "title": "Body_query_audio_api_query_audio_post"
+      },
+      "ConfigEntry": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "config": {
+            "$ref": "#/components/schemas/RunConfig"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "source",
+          "config"
+        ],
+        "title": "ConfigEntry"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Hit": {
+        "properties": {
+          "record_id": {
+            "type": "string",
+            "title": "Record Id"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "first 500 characters of the record"
+          }
+        },
+        "type": "object",
+        "required": [
+          "record_id",
+          "score",
+          "text"
+        ],
+        "title": "Hit"
+      },
+      "JobStatus": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "done",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "estimate": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Estimate"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "estimate"
+        ],
+        "title": "JobStatus"
+      },
+      "ModelsResponse": {
+        "properties": {
+          "asr": {
+            "items": {
+              "$ref": "#/components/schemas/NamedItem"
+            },
+            "type": "array",
+            "title": "Asr"
+          },
+          "encoders": {
+            "items": {
+              "$ref": "#/components/schemas/NamedItem"
+            },
+            "type": "array",
+            "title": "Encoders"
+          },
+          "indexes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Indexes"
+          },
+          "chat_models": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Chat Models"
+          },
+          "retrievers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Retrievers"
+          },
+          "context_builders": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Context Builders"
+          },
+          "flows": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Flows"
+          }
+        },
+        "type": "object",
+        "required": [
+          "asr",
+          "encoders",
+          "indexes",
+          "chat_models",
+          "retrievers",
+          "context_builders",
+          "flows"
+        ],
+        "title": "ModelsResponse"
+      },
+      "NamedItem": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "available": {
+            "type": "boolean",
+            "title": "Available",
+            "default": true
+          },
+          "space": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Space"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "NamedItem"
+      },
+      "QueriesPage": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "offset",
+          "items"
+        ],
+        "title": "QueriesPage"
+      },
+      "QueryRequest": {
+        "properties": {
+          "config": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              }
+            ],
+            "title": "Config",
+            "description": "config name from GET /configs, or a full RunConfig"
+          },
+          "input": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TextInput"
+              },
+              {
+                "$ref": "#/components/schemas/VectorInput"
+              }
+            ],
+            "title": "Input"
+          }
+        },
+        "type": "object",
+        "required": [
+          "config",
+          "input"
+        ],
+        "title": "QueryRequest"
+      },
+      "QueryResponse": {
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          },
+          "transcript": {
+            "type": "string",
+            "title": "Transcript"
+          },
+          "retrieved": {
+            "items": {
+              "$ref": "#/components/schemas/Hit"
+            },
+            "type": "array",
+            "title": "Retrieved"
+          },
+          "prompt": {
+            "type": "string",
+            "title": "Prompt"
+          },
+          "trace": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Trace",
+            "description": "Trace.to_dict(): spans, counters, cost, resources, artifacts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answer",
+          "transcript",
+          "retrieved",
+          "prompt",
+          "trace"
+        ],
+        "title": "QueryResponse"
+      },
+      "RecordResponse": {
+        "properties": {
+          "record_id": {
+            "type": "string",
+            "title": "Record Id"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "record_id",
+          "text"
+        ],
+        "title": "RecordResponse"
+      },
+      "ResultsResponse": {
+        "properties": {
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/RunSummary"
+            },
+            "type": "array",
+            "title": "Runs"
+          },
+          "matrices": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Matrices",
+            "description": "rag/extensions/results/matrices/<name>/summary.json, one per matrix"
+          },
+          "asr_compare": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Asr Compare",
+            "description": "rag/extensions/results/asr-compare/<name>/summary.json"
+          }
+        },
+        "type": "object",
+        "required": [
+          "runs",
+          "matrices",
+          "asr_compare"
+        ],
+        "title": "ResultsResponse"
+      },
+      "RunConfig": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "asr": {
+            "type": "string",
+            "enum": [
+              "cached",
+              "whisper1",
+              "course"
+            ],
+            "title": "Asr",
+            "default": "cached"
+          },
+          "asr_cache": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asr Cache"
+          },
+          "query_encoder": {
+            "type": "string",
+            "enum": [
+              "gte-small",
+              "bge-small"
+            ],
+            "title": "Query Encoder",
+            "default": "gte-small"
+          },
+          "corpus_index": {
+            "type": "string",
+            "enum": [
+              "enc_a",
+              "enc_b"
+            ],
+            "title": "Corpus Index",
+            "default": "enc_a"
+          },
+          "mismatch_policy": {
+            "type": "string",
+            "enum": [
+              "error",
+              "as-is",
+              "re-encode",
+              "translate"
+            ],
+            "title": "Mismatch Policy",
+            "default": "error"
+          },
+          "retriever": {
+            "type": "string",
+            "title": "Retriever",
+            "default": "exact"
+          },
+          "k": {
+            "type": "integer",
+            "title": "K",
+            "default": 5
+          },
+          "context_builder": {
+            "type": "string",
+            "title": "Context Builder",
+            "default": "simple"
+          },
+          "generator_model": {
+            "type": "string",
+            "title": "Generator Model",
+            "default": "Qwen/Qwen3.5-397B-A17B-FP8"
+          },
+          "judge_model": {
+            "type": "string",
+            "title": "Judge Model",
+            "default": "mistralai/Mistral-Small-4-119B-2603"
+          },
+          "flow": {
+            "type": "string",
+            "title": "Flow",
+            "default": "standard"
+          },
+          "params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Params",
+            "default": {}
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "RunConfig"
+      },
+      "RunDetail": {
+        "properties": {
+          "config": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Config"
+          },
+          "metrics": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metrics"
+          }
+        },
+        "type": "object",
+        "required": [
+          "config",
+          "metrics"
+        ],
+        "title": "RunDetail"
+      },
+      "RunSummary": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "title": "Run Id"
+          },
+          "config_name": {
+            "type": "string",
+            "title": "Config Name"
+          },
+          "subset": {
+            "type": "string",
+            "title": "Subset"
+          },
+          "n_queries": {
+            "type": "integer",
+            "title": "N Queries"
+          },
+          "finished": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "config_name",
+          "subset",
+          "n_queries",
+          "finished"
+        ],
+        "title": "RunSummary"
+      },
+      "StartRunRequest": {
+        "properties": {
+          "config": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "additionalProperties": true,
+                "type": "object"
+              }
+            ],
+            "title": "Config"
+          },
+          "subset": {
+            "type": "string",
+            "title": "Subset",
+            "default": "practice-smoke20"
+          },
+          "generate": {
+            "type": "boolean",
+            "title": "Generate",
+            "default": true
+          },
+          "allow_full": {
+            "type": "boolean",
+            "title": "Allow Full",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "config"
+        ],
+        "title": "StartRunRequest"
+      },
+      "TextInput": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "TextInput"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VectorInput": {
+        "properties": {
+          "vector": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Vector",
+            "description": "384 floats"
+          },
+          "space": {
+            "type": "string",
+            "enum": [
+              "enc_a",
+              "enc_b"
+            ],
+            "title": "Space"
+          },
+          "question": {
+            "type": "string",
+            "title": "Question",
+            "description": "question text for the prompt (the vector replaces only the encoder)",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "vector",
+          "space"
+        ],
+        "title": "VectorInput"
+      }
+    }
+  }
+}
