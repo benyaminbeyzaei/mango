@@ -2,6 +2,7 @@ import { useState } from "react"
 import { SettingsIcon } from "lucide-react"
 
 import { getAdminToken, setAdminToken } from "@/api/client"
+import { PresetSelect } from "@/components/config-picker"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,11 +16,31 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  getConfirmTranscript,
+  getDefaultPreset,
+  setConfirmTranscript,
+  setDefaultPreset,
+} from "@/lib/settings"
 
 export function SettingsDialog() {
   const [token, setToken] = useState(getAdminToken)
+  const [preset, setPreset] = useState(getDefaultPreset)
+  const [confirm, setConfirm] = useState(getConfirmTranscript)
+  const save = () => {
+    setAdminToken(token.trim())
+    setDefaultPreset(preset)
+    setConfirmTranscript(confirm)
+  }
   return (
-    <Dialog onOpenChange={(open) => open && setToken(getAdminToken())}>
+    <Dialog
+      onOpenChange={(open) => {
+        if (!open) return
+        setToken(getAdminToken())
+        setPreset(getDefaultPreset())
+        setConfirm(getConfirmTranscript())
+      }}
+    >
       <DialogTrigger
         render={<Button variant="ghost" size="icon" aria-label="Settings" />}
       >
@@ -29,32 +50,48 @@ export function SettingsDialog() {
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>
-            The admin token unlocks starting runs. It is kept in this browser
-            only and sent as the X-Admin-Token header.
+            Kept in this browser only (localStorage).
           </DialogDescription>
         </DialogHeader>
         <form
-          className="flex flex-col gap-2"
+          className="flex flex-col gap-4"
           onSubmit={(e) => {
             e.preventDefault()
-            setAdminToken(token.trim())
+            save()
           }}
         >
-          <Label htmlFor="admin-token">Admin token</Label>
-          <Input
-            id="admin-token"
-            type="password"
-            autoComplete="off"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-          />
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="default-preset">Default config for new chats</Label>
+            <PresetSelect
+              id="default-preset"
+              value={preset}
+              onChange={setPreset}
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={confirm}
+              onChange={(e) => setConfirm(e.target.checked)}
+            />
+            Confirm the transcript of a voice question before showing its answer
+          </label>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="admin-token">Admin token</Label>
+            <Input
+              id="admin-token"
+              type="password"
+              autoComplete="off"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Unlocks starting runs; sent as the X-Admin-Token header.
+            </p>
+          </div>
         </form>
         <DialogFooter>
-          <DialogClose
-            render={<Button onClick={() => setAdminToken(token.trim())} />}
-          >
-            Save
-          </DialogClose>
+          <DialogClose render={<Button onClick={save} />}>Save</DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>
