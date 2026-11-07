@@ -438,6 +438,20 @@ export interface components {
             n_queries: number;
             /** Finished */
             finished: string | null;
+            /**
+             * Retrieval
+             * @description metrics.json retrieval block: Recall@k, MRR@10, NDCG@10
+             */
+            retrieval: {
+                [key: string]: number;
+            };
+            /**
+             * Cost
+             * @description metrics.json cost block: elm_calls, tokens, audio_seconds, est_usd
+             */
+            cost: {
+                [key: string]: unknown;
+            };
         };
         /** StartRunRequest */
         StartRunRequest: {

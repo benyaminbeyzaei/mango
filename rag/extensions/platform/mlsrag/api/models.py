@@ -63,6 +63,8 @@ class RunSummary(BaseModel):
     subset: str
     n_queries: int
     finished: str | None
+    retrieval: dict[str, float] = Field(description="metrics.json retrieval block: Recall@k, MRR@10, NDCG@10")
+    cost: dict = Field(description="metrics.json cost block: elm_calls, tokens, audio_seconds, est_usd")
 
 
 class ResultsResponse(BaseModel):

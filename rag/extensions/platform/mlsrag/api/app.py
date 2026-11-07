@@ -215,7 +215,10 @@ def create_app(web_dir=None, results_dir=None) -> FastAPI:
 
     @api.get("/results", response_model=ResultsResponse)
     def results():
-        runs = [RunSummary.model_validate(load_run(d)["metrics"]["run"]) for d in list_runs(results_root)]
+        runs = []
+        for d in list_runs(results_root):
+            m = load_run(d)["metrics"]
+            runs.append(RunSummary(**m["run"], retrieval=m["retrieval"], cost=m["cost"]))
         def summaries(folder):  # list_runs only sees run folders, not these summaries
             return [json.loads(p.read_text(encoding="utf-8"))
                     for p in sorted(results_root.glob(f"{folder}/*/summary.json"))]

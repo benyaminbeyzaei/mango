@@ -14,7 +14,10 @@ import { Route as DocsRouteImport } from './routes/docs'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as InteractiveRouteImport } from './routes/interactive'
 import { Route as ModelsRouteImport } from './routes/models'
-import { Route as ResultsRouteImport } from './routes/results'
+import { Route as ResultsIndexRouteImport } from './routes/results.index'
+import { Route as ResultsCompareRouteImport } from './routes/results.compare'
+import { Route as ResultsRunIdIndexRouteImport } from './routes/results.$runId.index'
+import { Route as ResultsRunIdQueryIdRouteImport } from './routes/results.$runId.$queryId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,9 +44,24 @@ const ModelsRoute = ModelsRouteImport.update({
   path: '/models',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResultsRoute = ResultsRouteImport.update({
-  id: '/results',
-  path: '/results',
+const ResultsIndexRoute = ResultsIndexRouteImport.update({
+  id: '/results/',
+  path: '/results/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResultsCompareRoute = ResultsCompareRouteImport.update({
+  id: '/results/compare',
+  path: '/results/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResultsRunIdIndexRoute = ResultsRunIdIndexRouteImport.update({
+  id: '/results/$runId/',
+  path: '/results/$runId/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResultsRunIdQueryIdRoute = ResultsRunIdQueryIdRouteImport.update({
+  id: '/results/$runId/$queryId',
+  path: '/results/$runId/$queryId',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -53,7 +71,10 @@ export interface FileRoutesByFullPath {
   '/guide': typeof GuideRoute
   '/interactive': typeof InteractiveRoute
   '/models': typeof ModelsRoute
-  '/results': typeof ResultsRoute
+  '/results/compare': typeof ResultsCompareRoute
+  '/results/': typeof ResultsIndexRoute
+  '/results/$runId/$queryId': typeof ResultsRunIdQueryIdRoute
+  '/results/$runId/': typeof ResultsRunIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -61,7 +82,10 @@ export interface FileRoutesByTo {
   '/guide': typeof GuideRoute
   '/interactive': typeof InteractiveRoute
   '/models': typeof ModelsRoute
-  '/results': typeof ResultsRoute
+  '/results/compare': typeof ResultsCompareRoute
+  '/results': typeof ResultsIndexRoute
+  '/results/$runId/$queryId': typeof ResultsRunIdQueryIdRoute
+  '/results/$runId': typeof ResultsRunIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -70,13 +94,34 @@ export interface FileRoutesById {
   '/guide': typeof GuideRoute
   '/interactive': typeof InteractiveRoute
   '/models': typeof ModelsRoute
-  '/results': typeof ResultsRoute
+  '/results/compare': typeof ResultsCompareRoute
+  '/results/': typeof ResultsIndexRoute
+  '/results/$runId/$queryId': typeof ResultsRunIdQueryIdRoute
+  '/results/$runId/': typeof ResultsRunIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/docs' | '/guide' | '/interactive' | '/models' | '/results'
+  fullPaths:
+    | '/'
+    | '/docs'
+    | '/guide'
+    | '/interactive'
+    | '/models'
+    | '/results/compare'
+    | '/results/'
+    | '/results/$runId/$queryId'
+    | '/results/$runId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/docs' | '/guide' | '/interactive' | '/models' | '/results'
+  to:
+    | '/'
+    | '/docs'
+    | '/guide'
+    | '/interactive'
+    | '/models'
+    | '/results/compare'
+    | '/results'
+    | '/results/$runId/$queryId'
+    | '/results/$runId'
   id:
     | '__root__'
     | '/'
@@ -84,7 +129,10 @@ export interface FileRouteTypes {
     | '/guide'
     | '/interactive'
     | '/models'
-    | '/results'
+    | '/results/compare'
+    | '/results/'
+    | '/results/$runId/$queryId'
+    | '/results/$runId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -93,7 +141,10 @@ export interface RootRouteChildren {
   GuideRoute: typeof GuideRoute
   InteractiveRoute: typeof InteractiveRoute
   ModelsRoute: typeof ModelsRoute
-  ResultsRoute: typeof ResultsRoute
+  ResultsCompareRoute: typeof ResultsCompareRoute
+  ResultsIndexRoute: typeof ResultsIndexRoute
+  ResultsRunIdQueryIdRoute: typeof ResultsRunIdQueryIdRoute
+  ResultsRunIdIndexRoute: typeof ResultsRunIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -133,11 +184,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModelsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/results': {
-      id: '/results'
+    '/results/': {
+      id: '/results/'
       path: '/results'
-      fullPath: '/results'
-      preLoaderRoute: typeof ResultsRouteImport
+      fullPath: '/results/'
+      preLoaderRoute: typeof ResultsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/results/compare': {
+      id: '/results/compare'
+      path: '/results/compare'
+      fullPath: '/results/compare'
+      preLoaderRoute: typeof ResultsCompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/results/$runId/': {
+      id: '/results/$runId/'
+      path: '/results/$runId'
+      fullPath: '/results/$runId/'
+      preLoaderRoute: typeof ResultsRunIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/results/$runId/$queryId': {
+      id: '/results/$runId/$queryId'
+      path: '/results/$runId/$queryId'
+      fullPath: '/results/$runId/$queryId'
+      preLoaderRoute: typeof ResultsRunIdQueryIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -149,7 +221,10 @@ const rootRouteChildren: RootRouteChildren = {
   GuideRoute: GuideRoute,
   InteractiveRoute: InteractiveRoute,
   ModelsRoute: ModelsRoute,
-  ResultsRoute: ResultsRoute,
+  ResultsCompareRoute: ResultsCompareRoute,
+  ResultsIndexRoute: ResultsIndexRoute,
+  ResultsRunIdQueryIdRoute: ResultsRunIdQueryIdRoute,
+  ResultsRunIdIndexRoute: ResultsRunIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

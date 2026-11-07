@@ -158,6 +158,8 @@ def test_results_endpoints(client):
     run_id = listing["runs"][0]["run_id"]
     assert listing["runs"][0]["subset"] == "practice-smoke20" and listing["matrices"][0]["name"] == "m1"
     assert listing["asr_compare"] == [{"wer": 0.1}]
+    metrics = json.loads((paths.results_dir / run_id / "metrics.json").read_text())
+    assert listing["runs"][0]["retrieval"] == metrics["retrieval"] and listing["runs"][0]["cost"] == metrics["cost"]
     detail = client.get(f"/api/results/{run_id}").json()
     assert detail["metrics"]["run"]["run_id"] == run_id and detail["config"]["name"] == "baseline"
     page = client.get(f"/api/results/{run_id}/queries", params={"offset": 18, "limit": 5}).json()

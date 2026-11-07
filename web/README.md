@@ -1,7 +1,7 @@
 # web: the mlsrag client
 
 A Vite + React + TypeScript app (shadcn preset `b1Q5GC`, TanStack Router and Query) in front of
-the mlsrag API. Pages: Docs, Models, Interactive, Guide; Results comes in plan 011.
+the mlsrag API. Pages: Docs, Models, Results, Interactive, Guide.
 
 ## Run
 
@@ -52,6 +52,24 @@ and held back until you accept the transcript, or edit it and ask again as text)
 stored in this browser's IndexedDB (Dexie database `mlsrag`). The server stores nothing about users. Each
 chat can be renamed, deleted or exported as JSON (recordings are left out); **Import** reads such a file back,
 and **Clear all** deletes every chat after a confirmation.
+
+## Results mode
+
+Read-only views of the committed runs in `rag/extensions/results/` (from `GET /api/results...`). Every number
+shown is the stored `metrics.json` or `queries.jsonl` value; tables print it in full, cards and charts round it.
+
+| Route | What it shows | URL state |
+|---|---|---|
+| `/results` | runs (config, subset, queries, date, Recall@10, MRR@10, NDCG@10, ELM calls) and matrices | `q` search, `sel` ticked runs |
+| `/results/compare?runs=a,b,c` | config fields that differ, then four charts: one metric family by run, latency by stage, a metric against cost (mean ELM calls per query or mean latency), a retrieval metric per query | `runs` (up to 6), `metric`, `x` (`calls` or `latency`) |
+| `/results/<run_id>` | every metric of the run, the per-query table (sort by any column, filter by query id) | `sort`, `desc`, `filter` |
+| `/results/<run_id>/<query_id>` | the answer, retrieval metrics, judge scores if stored, then the full detail: transcript, top-k records (text from `/api/records/{id}`), prompt, span timeline, counters, cost | none |
+
+Each chart (`src/components/charts/`, Recharts) has a **Show table** button that swaps it for a table of the same
+numbers. Remote calls served from the cache take about 1 ms and cost nothing, so they are not latency or cost
+samples: such spans are marked `(cached)`, and a run with any cache hit shows `–` for latency and cost in the
+comparison charts (the run page still lists its stored values). Per-query judge scores are not part of the trace, so the query page shows them only when
+a trace carries a `judge` field.
 
 ## Layout
 
