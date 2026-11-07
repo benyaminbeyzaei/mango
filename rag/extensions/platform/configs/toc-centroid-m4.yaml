@@ -1,0 +1,13 @@
+# RunConfig: two-level TOC routing (centroid): 2 of 16 sections, then 4 topics inside them.
+name: toc-centroid-m4
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+retriever: toc
+k: 5
+params:
+  index: rag/extensions/platform/configs/topics-k256.yaml
+  sections: 2
+  m: 4
+  route: centroid

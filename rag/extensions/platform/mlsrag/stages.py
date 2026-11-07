@@ -183,6 +183,23 @@ class GatewayGenerator:
         return self.gateway.chat(self.model, messages, temperature=COURSE_TEMPERATURE)
 
 
+def stage_output(pipeline_name, config, stage_name) -> Path:
+    """The output folder of one preprocessing stage for the pipeline config in `params.index`.
+    (Not `built_index`: toc and raptor share the topics folder, so its hint would name the wrong pipeline.)"""
+    from .preprocess import PIPELINES, load_pipeline_config
+
+    if config.corpus_index != "enc_a":
+        raise ValueError("the preprocessing indexes are built from enc_a vectors")
+    pipeline = PIPELINES[pipeline_name]()
+    rows = {r["stage"]: r for r in pipeline.status(load_pipeline_config(checkout_path(config.params["index"])))}
+    if rows[stage_name]["status"] != "ok":
+        raise FileNotFoundError(
+            f"{stage_name} for {config.params['index']} is not built; run "
+            f"`mlsrag preprocess run --pipeline {pipeline_name} --config {config.params['index']}`"
+        )
+    return pipeline.stage_dir(stage_name, rows[stage_name]["hash"])
+
+
 def topic_retriever(config, gateway):
     """`params.index`: the topics pipeline config (YAML) whose topic_index output to load."""
     from .preprocess import load_pipeline_config, topics_pipeline
@@ -201,6 +218,43 @@ def topic_retriever(config, gateway):
     index = load_index(pipeline.stage_dir("topic_index", rows[-1]["hash"]) / "index.json")
     exact = ExactRetriever("enc_a").inner
     return TopicRetriever(index, exact.embeddings, exact.record_ids, m=config.params.get("m", 4), gateway=gateway)
+
+
+TOC_ROUTE_MODEL = "meta-llama/Llama-3.3-70B-Instruct"
+
+
+def toc_retriever(config, gateway):
+    """`params`: index (pipeline config), sections (2), m (4), route (centroid | llm), route_model."""
+    from .retrievers.toc import TocRetriever, load_toc
+
+    p = config.params
+    toc = load_toc(stage_output("toc", config, "toc_index") / "toc.json")
+    exact = ExactRetriever("enc_a").inner
+    return TocRetriever(toc, exact.embeddings, exact.record_ids, sections=p.get("sections", 2), m=p.get("m", 4),
+                        route=p.get("route", "centroid"), gateway=gateway,
+                        model=p.get("route_model", TOC_ROUTE_MODEL))
+
+
+def raptor_retriever(config, gateway):
+    """`params`: index (pipeline config), summary_as_evidence (false), expand_top (3)."""
+    from .retrievers.raptor import SummaryRetriever, load_summaries
+
+    p = config.params
+    if p.get("summary_as_evidence", False) and config.context_builder != "with-summaries":
+        raise ValueError("summary_as_evidence: true needs context_builder: with-summaries")
+    vectors, rows = load_summaries(stage_output("raptor", config, "summary_index"))
+    exact = ExactRetriever("enc_a").inner
+    return SummaryRetriever(vectors, rows, exact.embeddings, exact.record_ids,
+                            summary_as_evidence=p.get("summary_as_evidence", False),
+                            expand_top=p.get("expand_top", 3), gateway=gateway)
+
+
+def summary_context(config, data):
+    """SimpleContext that can also show `summary:<cluster>` evidence from the raptor index."""
+    from .retrievers.raptor import SummaryData, load_summaries
+
+    _, rows = load_summaries(stage_output("raptor", config, "summary_index"))
+    return SimpleContext(SummaryData(data, rows))
 
 
 def built_index(pipeline, config_path, file_name) -> Path:
@@ -264,9 +318,12 @@ RETRIEVERS = {
     "topic": lambda config, gateway, data: topic_retriever(config, gateway),
     "lazy-graph": lambda config, gateway, data: lazy_graph_retriever(config, gateway),
     "kg": lambda config, gateway, data: kg_retriever(config, gateway),
+    "toc": lambda config, gateway, data: toc_retriever(config, gateway),
+    "raptor-lite": lambda config, gateway, data: raptor_retriever(config, gateway),
 }
 CONTEXT_BUILDERS = {
     "simple": lambda config, gateway, data: SimpleContext(data),
+    "with-summaries": lambda config, gateway, data: summary_context(config, data),
 }
 
 
