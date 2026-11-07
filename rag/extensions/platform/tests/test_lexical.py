@@ -128,7 +128,7 @@ def test_grep_retriever_only_with_grep_flows(tmp_path):
 def test_standard_flow_gives_bm25_the_question_and_reports_the_build_once(tmp_path):
     class Encoder:
         def encode(self, text):
-            return None
+            raise AssertionError("BM25 needs no query vector")
 
     bm25 = BM25Retriever(TOY, cache_dir=tmp_path)
     stages = Stages(asr=FakeASR(), encoder=Encoder(), retriever=bm25, context=FakeContext(), generator=None)
@@ -138,3 +138,4 @@ def test_standard_flow_gives_bm25_the_question_and_reports_the_build_once(tmp_pa
     get_flow("standard")("q2", "q2.wav", stages, cfg, second)
     assert out["ranked_ids"] == ["r3", "r1"]  # "is a roth ira good"
     assert "bm25.build_s" in first.counters and "bm25.build_s" not in second.counters
+    assert "encode" not in [s.name for s in first.spans]

@@ -134,8 +134,10 @@ export function unit(path: string) {
   return "0–1"
 }
 
+// Remote (ELM) calls: chat and transcribe. Embeddings are local and free, so they never count.
 // Remote-call spans served from the cache take about 1 ms and cost nothing.
-export const isGatewaySpan = (s: Span) => s.name.startsWith("gateway.")
+export const isGatewaySpan = (s: Span) =>
+  s.name === "gateway.chat" || s.name === "gateway.transcribe"
 export const isCached = (s: Span) => s.attrs.cached === true
 
 // Share of a run's remote-call spans that were cache hits (0 when there were none).

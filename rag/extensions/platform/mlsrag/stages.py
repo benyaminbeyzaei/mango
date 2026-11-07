@@ -29,7 +29,8 @@ class Encoder(Protocol):
 
 class Retriever(Protocol):
     def search(self, query_vec: np.ndarray, k: int) -> list[tuple[str, float]]: ...
-    # a retriever with `uses_question = True` is also given `question=<transcript>` by the flow
+    # a retriever with `uses_question = True` is also given `question=<transcript>` by the flow;
+    # one with `uses_vector = False` gets no vector (None) and the flow skips the encode stage
 
 
 class ContextBuilder(Protocol):

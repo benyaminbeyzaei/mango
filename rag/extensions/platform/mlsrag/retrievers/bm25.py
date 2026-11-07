@@ -20,7 +20,8 @@ def tokenise(text):
 
 
 class BM25Retriever:
-    uses_question = True  # the standard flow passes question=<transcript>; the vector is ignored
+    uses_question = True  # the standard flow passes question=<transcript>
+    uses_vector = False  # so the flow skips the encode stage and passes no vector
 
     def __init__(self, data, cache_dir=None):
         self.ids = list(data.records)

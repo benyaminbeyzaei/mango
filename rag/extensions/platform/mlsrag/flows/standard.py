@@ -9,8 +9,10 @@ def run_query(query_id, audio_path, stages, config, trace) -> dict:
     a = trace.artifacts
     with trace.span("asr"):
         a["transcript"] = stages.asr.transcribe(audio_path)
-    with trace.span("encode"):
-        vec = stages.encoder.encode(a["transcript"])
+    vec = None
+    if getattr(stages.retriever, "uses_vector", True):
+        with trace.span("encode"):
+            vec = stages.encoder.encode(a["transcript"])
     depth = max(config.k, RANKED_DEPTH)
     subset = config.params.get("record_subset")  # compare on a record subset: keep only its ids
     extra = {"question": a["transcript"]} if getattr(stages.retriever, "uses_question", False) else {}
