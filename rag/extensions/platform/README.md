@@ -19,7 +19,7 @@ Tests: `pytest rag/extensions/platform` (fast); `pytest -m slow rag/extensions/p
 - `mlsrag/matrix.py`: many configs on one subset, one summary table.
 - `mlsrag/maps.py`: linear maps between the enc_a and enc_b spaces (`mlsrag fit-map`).
 - `mlsrag/asr_compare.py`: two transcript caches compared (`mlsrag asr-compare`).
-- `mlsrag/preprocess/`, `mlsrag/retrievers/topic.py`: the preprocessing pipelines and the topic retriever (see the end of this file).
+- `mlsrag/preprocess/`, `mlsrag/retrievers/`: the preprocessing pipelines and the topic, toc and raptor-lite retrievers (see the end of this file).
 - `mlsrag/retrievers/graph.py`: the lazy-graph and knowledge-graph retrievers (see Graph retrievers).
 - `mlsrag/runner.py`, `mlsrag/cli.py`: the commands below. `subsets/`: fixed query-id lists (seed 0):
   `practice-smoke20`, `practice-20pct` (70), `dev-20pct` (25), `practice-all`, `dev-all`.
@@ -196,6 +196,40 @@ section of the YAML; write your files into `ctx.out_dir`, call models through `c
 work, keep a `Ledger(ctx.out_dir / "ledger.jsonl")` and skip `ledger.done_ids()`. Register it in
 the pipeline's list in `mlsrag/preprocess/__init__.py` with `Stage(name, run, inputs=[...])`, and
 bump `version` whenever you change what it writes.
+
+### Two-level table of contents (`toc`) and RAPTOR-lite (`raptor`)
+
+Both pipelines share the `topics` stages and folder (same config file, `configs/topics-k256.yaml`),
+so the clusters and labels are computed once.
+
+```bash
+mlsrag preprocess run --pipeline toc    --config rag/extensions/platform/configs/topics-k256.yaml  # 16 LLM calls
+mlsrag preprocess run --pipeline raptor --config rag/extensions/platform/configs/topics-k256.yaml  # 256 LLM calls
+mlsrag matrix --matrix rag/extensions/platform/configs/matrix-toc-raptor-smoke.yaml --no-generate
+```
+
+**TOC** (`retriever: toc`, `params: {index, sections: 2, m: 4, route: centroid | llm, route_model}`).
+Stage `section` runs k-means (n=16) on the 256 topic centroids and names each section from its
+topics' labels (one LLM call per section, ledger); `toc_index` writes `toc.json` (sections →
+topics → record ids) and both centroid files. With `route: centroid` the query takes the
+`sections` nearest section centroids, then the `m` nearest topic centroids among their topics,
+then searches those topics' members exactly (no LLM). With `route: llm` one chat call picks up to
+`sections` sections from the 16 titles and a second picks up to `m` topics from those sections'
+labels (Llama 3.3 by default; an unusable reply falls back to the centroids and counts
+`toc.llm_fallbacks`). The retriever sets `uses_question = True`, so the flow passes it the transcript. Trace:
+span `toc.route`, counters `toc.sections_probed`, `toc.topics_probed`, `toc.llm_calls`,
+`toc.candidates_scanned`; `mlsrag estimate` counts the 2 routing calls per query.
+
+**RAPTOR-lite** (`retriever: raptor-lite`, `params: {index, summary_as_evidence: false, expand_top: 3}`).
+One level of RAPTOR (Sarthi et al., ICLR 2024): stage `summarise` writes one summary (at most 120
+words) per cluster from its 8 records nearest the centroid (first 400 characters each; ledger,
+prompt `v1`), and `summary_index` embeds them with gte-small as passages (`summaries.npy`,
+`summaries.jsonl`). A query searches the 24,000 records and 256 summaries together, exactly. A
+summary that ranks is replaced by its cluster's `expand_top` members most similar to the query
+(records already listed are skipped), or, with `summary_as_evidence: true`, kept as the id
+`summary:<cluster>`, which needs `context_builder: with-summaries` to put its text in the prompt
+(it never counts as relevant in the retrieval metrics). Trace: span `raptor.search`, counters
+`raptor.summary_hits`, `raptor.candidates_scanned`. No LLM calls at query time.
 
 ## Graph retrievers (plan 008)
 

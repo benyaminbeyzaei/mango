@@ -15,8 +15,11 @@ FLOW_CALLS_PER_QUERY = {"standard": 0}
 
 
 def retriever_calls_per_query(config) -> int:
-    """ELM calls the retriever makes per query: kg with question_entities: llm asks once."""
-    return int(config.retriever == "kg" and config.params.get("question_entities") == "llm")
+    """ELM calls the retriever makes per query: kg with question_entities: llm asks once;
+    toc with route: llm picks sections, then topics."""
+    if config.retriever == "kg":
+        return int(config.params.get("question_entities") == "llm")
+    return 2 if config.retriever == "toc" and config.params.get("route", "centroid") == "llm" else 0
 
 
 def read_jsonl(path):

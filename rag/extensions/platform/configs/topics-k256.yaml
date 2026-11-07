@@ -1,6 +1,12 @@
-# Topics pipeline (mlsrag preprocess run --pipeline topics --config <this file>).
+# Topics pipeline (mlsrag preprocess run --pipeline topics|toc|raptor --config <this file>).
 # One section per stage; each section is part of that stage's hash.
 select: {mode: all}
 cluster: {k: 256}
 label: {model: meta-llama/Llama-3.3-70B-Instruct}
 topic_index: {}
+# toc: the 256 topics grouped into 16 sections, one LLM label per section
+section: {n: 16, model: meta-llama/Llama-3.3-70B-Instruct}
+toc_index: {}
+# raptor: one summary per cluster from its 8 records nearest the centroid (400 chars each)
+summarise: {model: meta-llama/Llama-3.3-70B-Instruct, members: 8, chars: 400, words: 120}
+summary_index: {encoder: gte-small}
