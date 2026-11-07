@@ -1,0 +1,26 @@
+# docker compose up                → API + web client on http://localhost:8000
+# docker compose run --rm cli mlsrag run --config baseline --subset practice-smoke20 --no-generate
+x-app: &app
+  build:
+    context: .
+    dockerfile: rag/extensions/platform/Dockerfile
+  image: mlsrag
+  user: "${UID:-1000}:${GID:-1000}"  # files written to the mounts stay owned by you
+  environment:
+    - ADMIN_TOKEN  # optional: passed through only if set in your shell
+  volumes:
+    - ./rag/.env:/app/rag/.env:ro  # the key: read from this file, never baked into the image
+    - ./rag/data/rag_corpus:/app/rag/data/rag_corpus:ro
+    - ./rag/models/enc_a:/app/rag/models/enc_a:ro
+    - ./rag/.cache:/app/rag/.cache
+    - ./rag/extensions/results:/app/rag/extensions/results
+
+services:
+  app:
+    <<: *app
+    ports:
+      - "8000:8000"
+  cli:
+    <<: *app
+    profiles: [cli]
+    command: mlsrag --help
