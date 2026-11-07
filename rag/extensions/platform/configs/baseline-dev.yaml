@@ -1,0 +1,8 @@
+# RunConfig: flat dense on dev, whole corpus (control for baseline-dev-sub600).
+name: baseline-dev
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-dev.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+k: 5
+retriever: exact

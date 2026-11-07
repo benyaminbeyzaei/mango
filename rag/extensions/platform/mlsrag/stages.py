@@ -1,6 +1,7 @@
 """The five stage interfaces and the adapters that wrap the course code behind them."""
 import json
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Protocol
 
@@ -28,6 +29,7 @@ class Encoder(Protocol):
 
 class Retriever(Protocol):
     def search(self, query_vec: np.ndarray, k: int) -> list[tuple[str, float]]: ...
+    # a retriever with `uses_question = True` is also given `question=<transcript>` by the flow
 
 
 class ContextBuilder(Protocol):
@@ -201,6 +203,52 @@ def topic_retriever(config, gateway):
     return TopicRetriever(index, exact.embeddings, exact.record_ids, m=config.params.get("m", 4), gateway=gateway)
 
 
+def built_index(pipeline, config_path, file_name) -> Path:
+    """The last stage's `file_name` for a pipeline config, or an error saying how to build it."""
+    from .preprocess import load_pipeline_config
+
+    rows = pipeline.status(load_pipeline_config(checkout_path(config_path)))
+    if rows[-1]["status"] != "ok":
+        raise FileNotFoundError(f"{pipeline.name} index for {config_path} is not built; run "
+                                f"`mlsrag preprocess run --pipeline {pipeline.name} --config {config_path}`")
+    return pipeline.stage_dir(rows[-1]["stage"], rows[-1]["hash"]) / file_name
+
+
+def lazy_graph_retriever(config, gateway):
+    """`params.index`: the lazy-graph pipeline config; `params.rerank_dense` (default true)."""
+    from .preprocess import lazy_graph_pipeline
+    from .retrievers.graph import LazyGraphRetriever, load_index
+
+    if config.corpus_index != "enc_a":
+        raise ValueError("the graph retrievers order candidates with enc_a vectors")
+    index = load_index(built_index(lazy_graph_pipeline(), config.params["index"], "index.json"))
+    exact = ExactRetriever("enc_a").inner
+    return LazyGraphRetriever(index, exact.embeddings, exact.record_ids,
+                              rerank_dense=config.params.get("rerank_dense", True), gateway=gateway)
+
+
+def kg_retriever(config, gateway):
+    """`params.index`: the kg pipeline config; `params.question_entities`: spacy | llm
+    (`params.question_model`, default the generator model)."""
+    from .preprocess import kg_pipeline
+    from .retrievers.graph import KGRetriever, load_index
+
+    if config.corpus_index != "enc_a":
+        raise ValueError("the graph retrievers order candidates with enc_a vectors")
+    index = load_index(built_index(kg_pipeline(), config.params["index"], "index.json"))
+    exact = ExactRetriever("enc_a").inner
+    return KGRetriever(index, exact.embeddings, exact.record_ids,
+                       question_entities=config.params.get("question_entities", "spacy"),
+                       model=config.params.get("question_model", config.generator_model), gateway=gateway)
+
+
+@lru_cache(maxsize=8)
+def load_record_subset(path) -> frozenset:
+    """`params.record_subset`: a text file with one record id per line (relative to the checkout root)."""
+    lines = checkout_path(path).read_text(encoding="utf-8").splitlines()
+    return frozenset(line.strip() for line in lines if line.strip())
+
+
 @dataclass
 class Stages:
     asr: ASR
@@ -214,6 +262,8 @@ class Stages:
 RETRIEVERS = {
     "exact": lambda config, gateway, data: ExactRetriever(config.corpus_index),
     "topic": lambda config, gateway, data: topic_retriever(config, gateway),
+    "lazy-graph": lambda config, gateway, data: lazy_graph_retriever(config, gateway),
+    "kg": lambda config, gateway, data: kg_retriever(config, gateway),
 }
 CONTEXT_BUILDERS = {
     "simple": lambda config, gateway, data: SimpleContext(data),

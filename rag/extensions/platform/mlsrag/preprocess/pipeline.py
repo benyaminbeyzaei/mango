@@ -21,7 +21,7 @@ from ..course import paths
 from ..gateway import ModelGateway
 from ..trace import Trace
 
-PACKAGES = ["numpy", "scikit-learn", "openai", "mlsrag"]
+PACKAGES = ["numpy", "scikit-learn", "openai", "spacy", "en_core_web_sm", "igraph", "leidenalg", "mlsrag"]
 
 
 @dataclass

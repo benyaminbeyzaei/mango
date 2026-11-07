@@ -1,0 +1,10 @@
+# RunConfig: flat dense on dev, restricted to the 600 KG records (plan 008 subset comparison).
+name: baseline-dev-sub600
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-dev.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+k: 5
+retriever: exact
+params:
+  record_subset: rag/extensions/platform/subsets/records-dev-relevant-d275.txt

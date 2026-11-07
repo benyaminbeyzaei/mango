@@ -1,0 +1,12 @@
+# RunConfig: topic routing (k=256, m=4) on dev, restricted to the 600 KG records.
+name: topics-k256-m4-dev-sub600
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-dev.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+k: 5
+retriever: topic
+params:
+  index: rag/extensions/platform/configs/topics-k256.yaml
+  m: 4
+  record_subset: rag/extensions/platform/subsets/records-dev-relevant-d275.txt

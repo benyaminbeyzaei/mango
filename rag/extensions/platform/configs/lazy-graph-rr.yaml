@@ -1,0 +1,11 @@
+# RunConfig: lazy graph (phrase nodes -> records), ties ordered by enc_a similarity.
+name: lazy-graph-rr
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+retriever: lazy-graph
+k: 5
+params:
+  index: rag/extensions/platform/configs/lazy-graph.yaml
+  rerank_dense: true
