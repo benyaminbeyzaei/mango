@@ -20,7 +20,7 @@
       "tokens/q": 0.0
     },
     {
-      "run": "20261107-1954-bm25-practice-smoke20~2",
+      "run": "20261107-1954-bm25-practice-smoke20",
       "config": "bm25",
       "Recall@5": 0.16666666666666669,
       "Recall@10": 0.18333333333333335,
@@ -32,7 +32,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 3.0184854986146092,
+      "latency_ms": 1.2566004996187985,
       "calls/q": 0.0,
       "tokens/q": 0.0
     }

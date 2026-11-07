@@ -4,8 +4,7 @@ import json
 from ..prompts import grep_v1
 from .grep_static import ask, clean_patterns, finish, scan
 
-MAX_ITERATIONS = 3  # scans per query
-MAX_CALLS = 6  # LLM calls per query; this loop makes at most 1 + 2 + 1 = 4
+MAX_ITERATIONS = 3  # scans per query, so at most 1 + 2 + 1 = 4 LLM calls
 
 
 def show(stages, hits, chars):
@@ -16,21 +15,16 @@ def show(stages, hits, chars):
 def retrieve(stages, config, trace, question):
     """(ranked ids, scan hits, kept ids or None). Calls: 1 for patterns, up to 2 refinements, 1 clean-up."""
     a = trace.artifacts
-    calls = 0
 
     patterns = clean_patterns(ask(stages, config, trace, grep_v1.PATTERNS.format(question=question)))
-    calls += 1
     a["patterns"] = [patterns]
     hits = scan(stages, trace, patterns)
 
     for _ in range(MAX_ITERATIONS - 1):
-        if calls + 2 > MAX_CALLS:  # keep one call for the clean-up
-            break
         prompt = grep_v1.REFINE.format(
             question=question, patterns=json.dumps(patterns), hits=show(stages, hits[:10], 200) or "(none)"
         )
         reply = ask(stages, config, trace, prompt)
-        calls += 1
         new = clean_patterns(reply.get("patterns")) if isinstance(reply, dict) else []
         if not new or (isinstance(reply, dict) and reply.get("stop")):
             break
@@ -44,7 +38,6 @@ def retrieve(stages, config, trace, question):
     if hits:
         prompt = grep_v1.CLEANUP.format(question=question, hits=show(stages, hits[:20], 300), k=config.k)
         reply = ask(stages, config, trace, prompt)
-        calls += 1
         if isinstance(reply, list):
             top = {rid for rid, _, _ in hits[:20]}
             kept = []
