@@ -9,9 +9,9 @@ from . import evaluate, runner
 from .config import PRESETS, RunConfig, load_config
 from .course import paths
 from .results import list_runs, load_run, markdown_table, summary_row
+from .subsets import check_subset
 
 CONFIGS_DIR = Path(__file__).resolve().parents[1] / "configs"
-FULL_SUBSETS = {"practice-all", "dev-all"}
 
 
 def resolve_config(name) -> RunConfig:
@@ -43,8 +43,7 @@ def find_run(config, subset, generate):
 def run_matrix(path, judge=True, generate=True, force=False, allow_full=False, yes=False):
     spec = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     subset = spec["subset"]
-    if subset in FULL_SUBSETS and not allow_full:
-        raise SystemExit(f"{subset} is a full split; pass --allow-full if Benyamin approved it")
+    check_subset(subset, allow_full)
     configs = [resolve_config(name) for name in spec["configs"]]
     judge = judge and generate  # nothing to judge without answers
 
@@ -64,7 +63,7 @@ def run_matrix(path, judge=True, generate=True, force=False, allow_full=False, y
         if run_dir:
             print(f"{config.name}: reusing {run_dir.name}")
         else:
-            run_dir, _ = runner.run(config, subset, generate=generate)
+            run_dir, _ = runner.run(config, subset, generate=generate, allow_full=allow_full)
         answers = load_run(run_dir)["metrics"]["answers"]
         if judge and (answers is None or answers["judge_model"] != config.judge_model):
             evaluate.judge(run_dir)

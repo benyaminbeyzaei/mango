@@ -23,10 +23,10 @@ from ..course import CourseData, paths
 from ..flows import FLOWS, get_flow
 from ..gateway import ModelGateway
 from ..maps import map_path
-from ..matrix import CONFIGS_DIR, FULL_SUBSETS, config_hash
+from ..matrix import CONFIGS_DIR, config_hash
 from ..results import list_runs, load_run
 from ..stages import CONTEXT_BUILDERS, RETRIEVERS, Translate, WhisperASR, build_stages
-from ..subsets import load_subset
+from ..subsets import check_subset, load_subset
 from ..trace import Trace
 from .models import (ConfigEntry, Hit, JobStatus, ModelsResponse, NamedItem, QueriesPage, QueryRequest,
                      QueryResponse, RecordResponse, ResultsResponse, RunDetail, RunSummary,
@@ -251,9 +251,8 @@ def create_app(web_dir=None, results_dir=None) -> FastAPI:
     @api.post("/runs", response_model=JobStatus, dependencies=[Depends(require_admin)])
     def start_run(body: StartRunRequest):
         config = resolve(body.config)
-        if body.subset in FULL_SUBSETS and not body.allow_full:
-            raise HTTPException(400, f"{body.subset} is a full split; set allow_full: true to run it")
         try:
+            check_subset(body.subset, body.allow_full)
             load_subset(body.subset)
         except ValueError as err:
             raise HTTPException(400, str(err)) from err
@@ -266,7 +265,8 @@ def create_app(web_dir=None, results_dir=None) -> FastAPI:
 
         def work():
             try:
-                out, _ = runner.run(config, body.subset, generate=body.generate, results_dir=results_root)
+                out, _ = runner.run(config, body.subset, generate=body.generate, results_dir=results_root,
+                                   allow_full=body.allow_full)
                 job.run_id, job.status = out.name, "done"
             except Exception as err:  # reported through GET /runs/{id}/status
                 job.error, job.status = f"{type(err).__name__}: {err}", "failed"

@@ -186,7 +186,7 @@ def test_admin_runs(stage, tmp_path, monkeypatch):
     monkeypatch.setattr(evaluate, "estimate", lambda config, subset: {"calls": {"generation": 20}, "elm_calls": 20})
     calls = []
 
-    def fake_run(config, subset, generate, results_dir):
+    def fake_run(config, subset, generate, results_dir, allow_full):
         calls.append((config.name, subset, generate))
         return tmp_path / "20261107-0000-baseline-practice-smoke20", {}
 
@@ -197,7 +197,7 @@ def test_admin_runs(stage, tmp_path, monkeypatch):
     assert client.post("/api/runs", json=body, headers={"X-Admin-Token": "wrong"}).status_code == 403
     admin = {"X-Admin-Token": "s3cret"}
     full = client.post("/api/runs", json={"config": "baseline", "subset": "practice-all"}, headers=admin)
-    assert full.status_code == 400 and "allow_full" in full.json()["detail"]
+    assert full.status_code == 400 and "full split" in full.json()["detail"]
     job = client.post("/api/runs", json=body, headers=admin).json()
     assert job["estimate"] == {"calls": {"generation": 0}, "elm_calls": 0}  # generate: false
     for _ in range(50):

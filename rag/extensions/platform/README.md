@@ -53,6 +53,8 @@ mlsrag run --config baseline --subset practice-smoke20 --no-generate   # no gene
 mlsrag run --config baseline --subset practice-smoke20                 # + 20 Qwen calls
 ```
 
+Full splits (`practice-all`, `dev-all`) need `--allow-full` on `run`, `transcribe` and `matrix` (and `allow_full: true` on `POST /api/runs`); `mlsrag preprocess run` asks `y/N` before its LLM calls unless `--yes`.
+
 ## Results
 
 `rag/extensions/results/<YYYYMMDD-HHMM>-<config name>-<subset>/`: `config.json`;

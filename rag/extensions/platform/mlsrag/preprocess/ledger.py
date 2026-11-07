@@ -38,6 +38,20 @@ class Ledger:
             f.write(start + json.dumps(row, ensure_ascii=False) + "\n")
 
 
+def ask(ctx, ledger, items, calls):
+    """Before an LLM stage's first call: log the items and calls, then let ctx.confirm stop the run."""
+    if not calls:
+        return
+    rows = ledger.rows()
+    fresh = [r["latency_ms"] for r in rows if r["tokens"]]  # calls answered from the cache cost 0 tokens
+    pace = f", mean {sum(fresh) / len(fresh) / 1000:.1f}s per call so far" if fresh else ""
+    message = (f"{items} items, {len(ledger.done_ids())} done after {len(rows)} calls; "
+               f"{calls} ELM calls to make{pace}")
+    ctx.log(message)
+    if getattr(ctx, "confirm", None):
+        ctx.confirm(message)
+
+
 def run_items(items, ctx, model, build_prompt, parse, max_tokens=None) -> dict:
     """One chat call per item not yet `ok` in ctx.out_dir/ledger.jsonl; returns {item_id: output}.
 
@@ -56,6 +70,7 @@ def run_items(items, ctx, model, build_prompt, parse, max_tokens=None) -> dict:
             attempts[r["item_id"]] = attempts.get(r["item_id"], 0) + 1
     todo = [i for i in items if i not in done]
     ctx.log(f"{len(done)} items done, {len(todo)} to go")
+    ask(ctx, ledger, len(items), len(todo))
     for n, item_id in enumerate(todo, start=1):
         prompt = build_prompt(items[item_id], attempts.get(item_id, 0))
         input_hash = hashlib.sha256(prompt.encode()).hexdigest()[:16]

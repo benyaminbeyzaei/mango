@@ -11,7 +11,7 @@ import json
 import re
 import time
 
-from .ledger import Ledger
+from .ledger import Ledger, ask
 from .phrases import load_nlp, normalise
 
 PROMPT_VERSION = "v1"
@@ -66,6 +66,7 @@ def run_extract(inputs, config, ctx):
     spent = sum(len(Ledger(p).rows()) for p in ctx.out_dir.parent.glob("*/ledger.jsonl"))
     budget = MAX_CALLS - spent
     ctx.log(f"kg_extract: {len(done)} records done, {len(todo)} to go, {budget} calls left")
+    ask(ctx, ledger, len(records), min(len(todo), max(budget, 0)))
     for i, r in enumerate(todo[:budget], start=1):
         prompt = build_prompt(r["text"], attempt=attempts.get(r["record_id"], 0))
         input_hash = hashlib.sha256(prompt.encode()).hexdigest()[:16]

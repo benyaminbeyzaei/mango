@@ -20,11 +20,13 @@ def main(argv=None):
     run.add_argument("--config", required=True, help="preset name (baseline) or .yaml/.json file")
     run.add_argument("--subset", default="practice-smoke20")
     run.add_argument("--no-generate", action="store_true", help="skip the generator (retrieval only; free with asr: cached)")
+    run.add_argument("--allow-full", action="store_true", help="allow practice-all / dev-all")
 
     tr = sub.add_parser("transcribe", help="fill a transcript cache (resumable)")
     tr.add_argument("--asr", choices=["whisper1", "course"], default="whisper1")
     tr.add_argument("--subset", default="practice-smoke20")
     tr.add_argument("--out", required=True, help="JSONL path, relative to the checkout root")
+    tr.add_argument("--allow-full", action="store_true", help="allow practice-all / dev-all")
 
     sub.add_parser("make-subsets", help="regenerate the subset files (seed 0)")
 
@@ -68,6 +70,7 @@ def main(argv=None):
     pre.add_argument("--pipeline", default="topics")
     pre.add_argument("--config", default="rag/extensions/platform/configs/topics-k256.yaml")
     pre.add_argument("--stage", help="clean: the stage to delete")
+    pre.add_argument("--yes", action="store_true", help="run: do not ask before the LLM calls")
     sel = pre.add_argument_group("record selection (overrides the config's select section)")
     sel.add_argument("--all", action="store_true", help="every corpus record")
     sel.add_argument("--ids", help="file with one record id per line")
@@ -101,11 +104,12 @@ def main(argv=None):
     from . import asr_compare, evaluate, maps, matrix, results, runner, subsets  # after parsing so --help stays fast
 
     if args.command == "run":
-        out, metrics = runner.run(load_config(args.config), args.subset, generate=not args.no_generate)
+        out, metrics = runner.run(load_config(args.config), args.subset, generate=not args.no_generate,
+                                  allow_full=args.allow_full)
         print(json.dumps(metrics, indent=2))
         print(f"results: {out}")
     elif args.command == "transcribe":
-        print(json.dumps(runner.transcribe(args.asr, args.subset, args.out), indent=2))
+        print(json.dumps(runner.transcribe(args.asr, args.subset, args.out, args.allow_full), indent=2))
     elif args.command == "make-subsets":
         subsets.make_subsets()
         print(f"wrote subsets to {subsets.SUBSETS_DIR}")
@@ -148,6 +152,11 @@ def selection(args):
     return None
 
 
+def confirm(message):
+    if input(f"{message}. Proceed? [y/N] ").strip().lower() != "y":
+        raise SystemExit("aborted")
+
+
 def preprocess(args):
     from .preprocess import PIPELINES, load_pipeline_config
     from .stages import checkout_path
@@ -157,7 +166,7 @@ def preprocess(args):
     if (sel := selection(args)) is not None:
         config["select"] = sel
     if args.action == "run":
-        dirs = pipeline.run(config)
+        dirs = pipeline.run(config, confirm=None if args.yes else confirm)
         print(f"output: {dirs[pipeline.stages[-1].name]}")
     elif args.action == "status":
         for row in pipeline.status(config):

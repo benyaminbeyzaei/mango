@@ -4,12 +4,13 @@ import subprocess
 import time
 from datetime import datetime
 
+from . import evaluate
 from .course import CourseData, mrr_at_k, ndcg_at_k, paths, recall_at_k
 from .flows import get_flow
 from .gateway import ModelGateway
 from .results import METRIC_KEYS, build_metrics, write_metrics  # noqa: F401 (METRIC_KEYS re-exported)
 from .stages import WhisperASR, CourseASR, build_stages, checkout_path, load_record_subset, load_transcripts
-from .subsets import SUBSETS, load_subset
+from .subsets import SUBSETS, check_subset, load_subset
 from .trace import Trace
 
 
@@ -40,7 +41,15 @@ def now():
     return datetime.now().isoformat(timespec="seconds")
 
 
-def run(config, subset, generate=True, results_dir=None):
+def run(config, subset, generate=True, results_dir=None, allow_full=False):
+    try:
+        check_subset(subset, allow_full)
+    except ValueError as err:  # say what the refused run would have cost
+        e = evaluate.estimate(config, subset)
+        if not generate:
+            e["elm_calls"] -= e["calls"]["generation"]
+            e["calls"]["generation"] = 0
+        raise ValueError(f"{err}\n{evaluate.format_estimate(e)}") from None
     data = CourseData(paths.data_dir)
     manifest = {row["query_id"]: row for row in data.load_audio_manifest()}
     qrels = {**data.load_qrels("practice"), **data.load_qrels("dev")}
@@ -87,8 +96,9 @@ def run(config, subset, generate=True, results_dir=None):
     return out, metrics
 
 
-def transcribe(asr_name, subset, out_path):
+def transcribe(asr_name, subset, out_path, allow_full=False):
     """Fill a transcript cache for a subset; ids already in the file are skipped."""
+    check_subset(subset, allow_full)
     out_path = checkout_path(out_path)
     data = CourseData(paths.data_dir)
     manifest = {row["query_id"]: row for row in data.load_audio_manifest()}
