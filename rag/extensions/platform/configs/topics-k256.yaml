@@ -1,0 +1,6 @@
+# Topics pipeline (mlsrag preprocess run --pipeline topics --config <this file>).
+# One section per stage; each section is part of that stage's hash.
+select: {mode: all}
+cluster: {k: 256}
+label: {model: meta-llama/Llama-3.3-70B-Instruct}
+topic_index: {}

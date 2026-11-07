@@ -1,4 +1,4 @@
-"""mlsrag run | transcribe | make-subsets | judge | estimate | matrix | compare | fit-map | asr-compare"""
+"""mlsrag run | transcribe | make-subsets | judge | estimate | matrix | compare | fit-map | asr-compare | preprocess"""
 import argparse
 import json
 
@@ -56,7 +56,22 @@ def main(argv=None):
     ac.add_argument("--config", default="baseline")
     ac.add_argument("--name", help="output folder name (default: <a>-vs-<b>-<subset>)")
 
+    pre = sub.add_parser("preprocess", help="run, inspect or clean a preprocessing pipeline")
+    pre.add_argument("action", choices=["run", "status", "clean"])
+    pre.add_argument("--pipeline", default="topics")
+    pre.add_argument("--config", default="rag/extensions/platform/configs/topics-k256.yaml")
+    pre.add_argument("--stage", help="clean: the stage to delete")
+    sel = pre.add_argument_group("record selection (overrides the config's select section)")
+    sel.add_argument("--all", action="store_true", help="every corpus record")
+    sel.add_argument("--ids", help="file with one record id per line")
+    sel.add_argument("--sample", type=int, metavar="N", help="N random records")
+    sel.add_argument("--split", choices=["dev-relevant"], help="records in qrels_dev.tsv + distractors")
+    sel.add_argument("--distractors", type=int, default=0, metavar="M")
+    sel.add_argument("--seed", type=int, default=0)
+
     args = ap.parse_args(argv)
+    if args.command == "preprocess":
+        return preprocess(args)
     from . import asr_compare, evaluate, maps, matrix, results, runner, subsets  # after parsing so --help stays fast
 
     if args.command == "run":
@@ -89,3 +104,45 @@ def main(argv=None):
         print(f"summary: {out / 'summary.json'}")
     else:
         print(results.compare(args.run_dirs), end="")
+
+
+def selection(args):
+    """The select stage config from the command line flags, or None to keep the config's."""
+    if args.all:
+        return {"mode": "all"}
+    if args.ids:
+        from pathlib import Path
+
+        ids = [line.strip() for line in Path(args.ids).read_text(encoding="utf-8").splitlines() if line.strip()]
+        return {"mode": "ids", "ids": ids}
+    if args.sample is not None:
+        return {"mode": "sample", "n": args.sample, "seed": args.seed}
+    if args.split:
+        return {"mode": args.split, "distractors": args.distractors, "seed": args.seed}
+    return None
+
+
+def preprocess(args):
+    from .preprocess import PIPELINES, load_pipeline_config
+    from .stages import checkout_path
+
+    pipeline = PIPELINES[args.pipeline]()
+    config = load_pipeline_config(checkout_path(args.config))
+    if (sel := selection(args)) is not None:
+        config["select"] = sel
+    if args.action == "run":
+        dirs = pipeline.run(config)
+        print(f"output: {dirs[pipeline.stages[-1].name]}")
+    elif args.action == "status":
+        for row in pipeline.status(config):
+            m = row["manifest"] or {}
+            calls = sum(c["calls"] for c in m.get("cost", {}).values())
+            tokens = sum(c["prompt_tokens"] + c["completion_tokens"] for c in m.get("cost", {}).values())
+            wall = f"{m['wall_seconds']:.1f}s" if m else "-"
+            print(f"{row['stage']:<12} {row['hash']} {row['status']:<8} {wall:>8} "
+                  f"elm_calls={calls} tokens={tokens} {m.get('counts', '')}")
+    else:
+        if not args.stage:
+            raise SystemExit("clean needs --stage")
+        removed = pipeline.clean(config, args.stage)
+        print("\n".join(f"removed {d}" for d in removed) or "nothing to remove")

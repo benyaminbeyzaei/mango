@@ -19,6 +19,7 @@ Tests: `pytest rag/extensions/platform` (fast); `pytest -m slow rag/extensions/p
 - `mlsrag/matrix.py`: many configs on one subset, one summary table.
 - `mlsrag/maps.py`: linear maps between the enc_a and enc_b spaces (`mlsrag fit-map`).
 - `mlsrag/asr_compare.py`: two transcript caches compared (`mlsrag asr-compare`).
+- `mlsrag/preprocess/`, `mlsrag/retrievers/topic.py`: the preprocessing pipelines and the topic retriever (see the end of this file).
 - `mlsrag/runner.py`, `mlsrag/cli.py`: the commands below. `subsets/`: fixed query-id lists (seed 0):
   `practice-smoke20`, `practice-20pct` (70), `dev-20pct` (25), `practice-all`, `dev-all`.
 
@@ -150,8 +151,47 @@ only quality signal.
 
 ## Adding a retriever or a flow
 
-A new retriever is a class with `search(query_vec, k)`; add a branch for its name in
-`build_stages` and set `retriever: <name>` in a config. A new flow is a module in
+A new retriever is a class with `search(query_vec, k)`; add `name: factory(config, gateway, data)` to
+`RETRIEVERS` in `mlsrag/stages.py` (context builders: `CONTEXT_BUILDERS`) and set `retriever: <name>` in a config. A new flow is a module in
 `mlsrag/flows/` with a `run_query(query_id, audio_path, stages, config, trace)` that fills
 `trace.artifacts` (at least `ranked_ids`) inside spans; register it in `FLOWS`. All model
 calls go through the gateway so they are cached and costed; options go in `config.params`.
+
+## Preprocessing pipelines
+
+`mlsrag/preprocess/`: a pipeline is a list of `Stage`s run in order. Pipeline `topics`:
+`select` (which records) → `cluster` (k-means on enc_a) → `label` (one LLM call per cluster) →
+`topic_index` (`index.json` + `centroids.npy` for `retriever: topic`).
+
+- **Hashes.** Each stage writes to `rag/.cache/preprocess/<pipeline>/<stage>/<hash>/`; the hash
+  covers the upstream hashes, the stage's config section, its code `version` and `prompt_version`.
+  Change one stage's config and only that stage and the ones below it re-run.
+- **Manifest.** `manifest.json` (`status: ok`, inputs, config, wall seconds, counts, ELM cost,
+  package versions) marks a stage done. A stage writes into `<hash>.partial/` and is renamed when
+  it finishes, so a stopped run leaves a `partial` stage that the next run continues.
+- **Ledger.** LLM stages append one line per item to `ledger.jsonl` (`item_id, input_hash, status,
+  output, tokens, latency_ms, error`). Items with `ok` are skipped on resume; `failed` ones are retried.
+- **Selection.** `select` is an ordinary stage, so every downstream hash depends on it.
+- **Clustering.** `KMeans(k, random_state=0, n_init=1)` on the normalised vectors. Spherical k-means
+  is not needed at this size; centroids are re-normalised for cosine routing.
+
+```bash
+mlsrag preprocess run    --pipeline topics --config rag/extensions/platform/configs/topics-k256.yaml
+mlsrag preprocess status --pipeline topics --config ...   # per stage: hash, ok|partial|missing, time, ELM calls/tokens
+mlsrag preprocess clean  --pipeline topics --config ... --stage label
+# selection flags (override the config's select section): --all | --ids FILE | --sample N --seed S
+#   | --split dev-relevant --distractors M --seed S
+mlsrag run --config rag/extensions/platform/configs/topics-k256-m4.yaml --subset practice-smoke20 --no-generate
+```
+
+`retriever: topic` takes `params: {index: <topics pipeline config>, m: 4}`: it ranks the centroids,
+takes the `m` nearest clusters and searches their members exactly (trace: span `topic.route`,
+counters `topic.clusters_probed`, `topic.candidates_scanned`).
+
+To add a stage: write `run(inputs, config, ctx)` in a module under `mlsrag/preprocess/`.
+`inputs` maps each upstream stage name you declared to its output directory; `config` is your
+section of the YAML; write your files into `ctx.out_dir`, call models through `ctx.gateway`
+(costs land on `ctx.trace`), and return a small dict of counts for the manifest. For per-item LLM
+work, keep a `Ledger(ctx.out_dir / "ledger.jsonl")` and skip `ledger.done_ids()`. Register it in
+the pipeline's list in `mlsrag/preprocess/__init__.py` with `Stage(name, run, inputs=[...])`, and
+bump `version` whenever you change what it writes.
