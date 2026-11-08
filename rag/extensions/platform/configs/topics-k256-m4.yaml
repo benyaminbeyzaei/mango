@@ -7,5 +7,5 @@ corpus_index: enc_a
 retriever: topic
 k: 5
 params:
-  index: rag/extensions/platform/configs/topics-k256.yaml
+  index: rag/extensions/platform/configs/pipelines/topics-k256.yaml
   m: 4

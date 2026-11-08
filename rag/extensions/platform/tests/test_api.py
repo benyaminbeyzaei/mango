@@ -26,7 +26,7 @@ class FakeStage:
     def encode(self, text):
         return np.ones(384, dtype=np.float32)
 
-    def search(self, vec, k):
+    def search(self, vec, k, trace=None):
         self.vectors.append(vec)
         return [(f"r{i}", 1.0 - i / 1000) for i in range(k)]
 

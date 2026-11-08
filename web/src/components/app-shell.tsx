@@ -34,20 +34,15 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 function ThemeToggle() {
-  const { setTheme } = useTheme()
-  const toggle = () =>
-    setTheme(
-      document.documentElement.classList.contains("dark") ? "light" : "dark"
-    )
+  const { theme, setTheme } = useTheme()
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={toggle}
+      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
       aria-label="Toggle light/dark theme"
     >
-      <SunIcon className="hidden dark:block" />
-      <MoonIcon className="dark:hidden" />
+      {theme === "dark" ? <SunIcon /> : <MoonIcon />}
     </Button>
   )
 }

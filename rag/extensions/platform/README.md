@@ -88,7 +88,7 @@ Judge calls are evaluation overhead, so they are not part of `cost` (which is wh
 ```bash
 mlsrag judge <run-dir>                       # one judge call per query (cached); --dry-run validates only
 mlsrag estimate --config baseline --subset practice-20pct --judge   # expected calls before a run
-mlsrag matrix --matrix rag/extensions/platform/configs/matrix-smoke.yaml --no-judge
+mlsrag matrix --matrix rag/extensions/platform/configs/matrices/matrix-smoke.yaml --no-judge
 mlsrag compare <run-dir> <run-dir> ...       # Markdown table, one column per run
 ```
 
@@ -123,7 +123,7 @@ have cosine 0.82 on average. When `query_encoder` does not belong to `corpus_ind
   (`params.map: lstsq | procrustes`, default lstsq), re-normalise.
 
 Configs: `configs/enc-b-{asis,reencode,reencode-prefix,translate-lstsq,translate-procrustes}.yaml`,
-all gte-small queries against enc_b; `configs/matrix-encoders-smoke.yaml` runs them with the baseline.
+all gte-small queries against enc_b; `configs/matrices/matrix-encoders-smoke.yaml` runs them with the baseline.
 
 ### Fitting the map
 
@@ -213,7 +213,7 @@ calls go through the gateway so they are cached and costed; options go in `confi
   is not needed at this size; centroids are re-normalised for cosine routing.
 
 ```bash
-mlsrag preprocess run    --pipeline topics --config rag/extensions/platform/configs/topics-k256.yaml
+mlsrag preprocess run    --pipeline topics --config rag/extensions/platform/configs/pipelines/topics-k256.yaml
 mlsrag preprocess status --pipeline topics --config ...   # per stage: hash, ok|partial|missing, time, ELM calls/tokens
 mlsrag preprocess clean  --pipeline topics --config ... --stage label
 # selection flags (override the config's select section): --all | --ids FILE | --sample N --seed S
@@ -235,13 +235,13 @@ bump `version` whenever you change what it writes.
 
 ### Two-level table of contents (`toc`) and RAPTOR-lite (`raptor`)
 
-Both pipelines share the `topics` stages and folder (same config file, `configs/topics-k256.yaml`),
+Both pipelines share the `topics` stages and folder (same config file, `configs/pipelines/topics-k256.yaml`),
 so the clusters and labels are computed once.
 
 ```bash
-mlsrag preprocess run --pipeline toc    --config rag/extensions/platform/configs/topics-k256.yaml  # 16 LLM calls
-mlsrag preprocess run --pipeline raptor --config rag/extensions/platform/configs/topics-k256.yaml  # 256 LLM calls
-mlsrag matrix --matrix rag/extensions/platform/configs/matrix-toc-raptor-smoke.yaml --no-generate
+mlsrag preprocess run --pipeline toc    --config rag/extensions/platform/configs/pipelines/topics-k256.yaml  # 16 LLM calls
+mlsrag preprocess run --pipeline raptor --config rag/extensions/platform/configs/pipelines/topics-k256.yaml  # 256 LLM calls
+mlsrag matrix --matrix rag/extensions/platform/configs/matrices/matrix-toc-raptor-smoke.yaml --no-generate
 ```
 
 **TOC** (`retriever: toc`, `params: {index, sections: 2, m: 4, route: centroid | llm, route_model}`).
@@ -292,13 +292,13 @@ standard flow; the others are called exactly as before.
   then cosine. Counters `kg.entities_matched`, `kg.entities_1hop`, `kg.candidates`.
 
 ```bash
-mlsrag preprocess run --pipeline lazy-graph --config rag/extensions/platform/configs/lazy-graph.yaml
-mlsrag preprocess run --pipeline kg --config rag/extensions/platform/configs/kg.yaml   # ≤ 600 LLM calls
+mlsrag preprocess run --pipeline lazy-graph --config rag/extensions/platform/configs/pipelines/lazy-graph.yaml
+mlsrag preprocess run --pipeline kg --config rag/extensions/platform/configs/pipelines/kg.yaml   # ≤ 600 LLM calls
 ```
 
 ### Record subsets (`params.record_subset`)
 
-The KG is built on 600 records only (`configs/kg.yaml`: every record in `qrels_dev.tsv` plus 275
+The KG is built on 600 records only (`configs/pipelines/kg.yaml`: every record in `qrels_dev.tsv` plus 275
 random distractors, seed 0). To compare it fairly, every other retriever must see the same 600
 records: `params.record_subset: <file with one record id per line>` makes the flow ask the
 retriever for every candidate and keep only ids in the file (counters `subset.candidates_in`,
@@ -324,7 +324,7 @@ stage's output, a given vector replaces the encoder's.
 |---|---|
 | `GET /api/health` | `{status, git_commit}` |
 | `GET /api/models` | ASR (`course` is `available: false` without a GPU), encoders and their space, indexes, the four free ELM models, retrievers and context builders (`stages.RETRIEVERS`, `stages.CONTEXT_BUILDERS`) and flows (`flows.FLOWS`) |
-| `GET /api/configs` | presets and the RunConfig YAMLs in `configs/` (matrix and preprocessing files skipped), with all fields |
+| `GET /api/configs` | presets and the RunConfig YAMLs in `configs/` (top level; pipelines are in `configs/pipelines/`, matrices in `configs/matrices/`), with all fields |
 | `POST /api/query` | JSON `{config: <name or RunConfig>, input: {text} \| {vector, space, question?}}` → `{answer, transcript, retrieved: [{record_id, score, text[:500]}], prompt, trace}` |
 | `POST /api/query/audio` | `multipart/form-data`: `config` (name or RunConfig JSON), `audio` (WAV or WebM/Opus, passed to whisper-1 unconverted). A `cached` ASR config uses whisper-1, since an upload is never in a transcript cache. Non-WAV audio is costed as 0 s |
 | `GET /api/results` | committed runs `{run_id, config_name, subset, n_queries, finished}`, matrix summaries (`results/matrices/`) and ASR comparisons (`results/asr-compare/`) |

@@ -33,6 +33,12 @@ def test_matrix_asks_before_running(tmp_path, monkeypatch):
 
 
 @needs_data
+def test_every_flow_has_a_call_estimate():
+    from mlsrag.flows import FLOWS
+
+    assert set(evaluate.FLOW_CALLS_PER_QUERY) == set(FLOWS)
+
+
 def test_estimate_counts_generation_and_judge_calls():
     e = estimate(baseline(), "practice-20pct", judge=True)
     assert e["calls"]["generation"] == 70 and e["calls"]["judge"] == 70

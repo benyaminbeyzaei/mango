@@ -28,8 +28,10 @@ def test_bm25_ranks_toy_corpus_and_reuses_cache(tmp_path):
     hits = r.search(None, 5, question="roth ira tax")  # the vector is ignored
     assert [rid for rid, _ in hits] == ["r3", "r1"]  # no zero-score records
     again = BM25Retriever(TOY, cache_dir=tmp_path)
-    assert "bm25.load_s" in again.build_counters
-    assert again.uses_question and again.search(None, 5, question="roth ira tax") == hits
+    assert set(again.build_counters) == {"bm25.build_s", "bm25.index_mb"}
+    trace = Trace("r", "q", "c")
+    assert again.uses_question and again.search(None, 5, trace=trace, question="roth ira tax") == hits
+    assert set(trace.counters) == {"bm25.build_s", "bm25.index_mb"} and again.build_counters == {}
     assert again.search(None, 5, question="") == [] and again.search(None, 5, question="is it the") == []
 
 

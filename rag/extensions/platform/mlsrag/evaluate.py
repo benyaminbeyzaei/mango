@@ -110,12 +110,10 @@ def estimate(config, subset, judge=False, repeats=1) -> dict:
     else:  # course ASR runs locally on a GPU
         to_transcribe = []
     audio_seconds = sum(durations[q] for q in to_transcribe)
-    per_query = FLOW_CALLS_PER_QUERY.get(config.flow)
-
     calls = {
         "generation": len(ids),
         "judge": len(ids) * repeats if judge else 0,
-        "flow": None if per_query is None else per_query * len(ids),
+        "flow": FLOW_CALLS_PER_QUERY[config.flow] * len(ids),
         "retriever": retriever_calls_per_query(config) * len(ids),
         "whisper": len(to_transcribe),
     }
@@ -124,7 +122,7 @@ def estimate(config, subset, judge=False, repeats=1) -> dict:
         "subset": subset,
         "queries": len(ids),
         "calls": calls,
-        "elm_calls": sum(v for v in calls.values() if v is not None),
+        "elm_calls": sum(calls.values()),
         "audio_seconds": audio_seconds,
         "est_usd": audio_seconds / 60 * WHISPER_USD_PER_MINUTE,
     }
@@ -132,12 +130,11 @@ def estimate(config, subset, judge=False, repeats=1) -> dict:
 
 def format_estimate(e) -> str:
     c = e["calls"]
-    flow = "unknown (flow not in FLOW_CALLS_PER_QUERY)" if c["flow"] is None else c["flow"]
     return (
         f"{e['config']} on {e['subset']} ({e['queries']} queries), upper bound, cached calls are free:\n"
         f"  generation calls: {c['generation']}\n"
         f"  judge calls:      {c['judge']}\n"
-        f"  flow calls:       {flow}\n"
+        f"  flow calls:       {c['flow']}\n"
         f"  retriever calls:  {c['retriever']}\n"
         f"  whisper calls:    {c['whisper']} ({e['audio_seconds']:.0f} audio s, ~${e['est_usd']:.3f})\n"
         f"  total ELM calls:  {e['elm_calls']} (free models count as $0)"

@@ -36,6 +36,39 @@ def _should_retry(err):
     return err.status_code == 429 or err.status_code >= 500
 
 
+def cache_key(op, model, payload) -> str:
+    return hashlib.sha256(json.dumps([op, model, payload], sort_keys=True).encode()).hexdigest()
+
+
+def cache_get(cache_dir, key):
+    """The cached result of an identical call, or None."""
+    path = Path(cache_dir) / f"{key}.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+
+
+def cache_put(cache_dir, key, result):
+    path = Path(cache_dir) / f"{key}.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(result), encoding="utf-8")
+    tmp.replace(path)  # atomic, so a reader never sees half a file
+
+
+def with_retries(call, log_failure):
+    """(call(), retries). Retryable errors are retried RETRIES times with backoff 1, 2, 4 s;
+    on giving up, log_failure(error=<name>, retries=<n>) is called and the error re-raised."""
+    retries = 0
+    while True:
+        try:
+            return call(), retries
+        except (openai.APIStatusError, openai.APIConnectionError) as err:
+            if not _should_retry(err) or retries == RETRIES:
+                log_failure(error=type(err).__name__, retries=retries)
+                raise
+            time.sleep(2**retries)
+            retries += 1
+
+
 class ModelGateway:
     def __init__(self, trace=None, cache_dir=None, log_path=None, env_path=None):
         self.trace = trace
@@ -74,20 +107,28 @@ class ModelGateway:
         """`tag` (e.g. a prompt VERSION) enters the cache key when given."""
         def call():
             extra = {"max_tokens": max_tokens} if max_tokens else {}
-            r = self.client().chat.completions.create(
-                model=model, messages=messages, temperature=temperature, **extra
-            )
+            with _remote_slots:
+                r = self.client().chat.completions.create(
+                    model=model, messages=messages, temperature=temperature, **extra
+                )
             return {
                 "text": r.choices[0].message.content.strip(),
                 "prompt_tokens": r.usage.prompt_tokens if r.usage else 0,
                 "completion_tokens": r.usage.completion_tokens if r.usage else 0,
             }
 
-        chars = sum(len(m["content"]) for m in messages)
+        sizes = {"input_chars": sum(len(m["content"]) for m in messages)}
         payload = {"messages": messages, "temperature": temperature, "max_tokens": max_tokens}
         if tag:
             payload["tag"] = tag  # only when given, so untagged cache keys stay as they were
-        result = self._run("chat", model, payload, call, remote=True, input_chars=chars)
+        key = cache_key("chat", model, payload)
+        with self._trace().span("gateway.chat", model=model, **sizes) as span:
+            result, retries = cache_get(self.cache_dir, key), 0
+            cached = result is not None
+            if not cached:
+                result, retries = with_retries(call, self._failure_log("chat", model, key, sizes))
+                cache_put(self.cache_dir, key, result)
+        self._record("chat", model, key, span, result, cached, retries, sizes, remote=True)
         return result["text"]
 
     def embed(self, encoder_name, texts, role="query") -> np.ndarray:
@@ -102,8 +143,15 @@ class ModelGateway:
             )
             return {"vectors": np.asarray(vecs, dtype=np.float32).tolist()}
 
-        payload = {"texts": list(texts), "role": role}
-        result = self._run("embed", encoder_name, payload, call, remote=False, n_texts=len(texts))
+        sizes = {"n_texts": len(texts)}
+        key = cache_key("embed", encoder_name, {"texts": list(texts), "role": role})
+        with self._trace().span("gateway.embed", model=encoder_name, **sizes) as span:
+            result, retries = cache_get(self.cache_dir, key), 0
+            cached = result is not None
+            if not cached:
+                result, retries = with_retries(call, self._failure_log("embed", encoder_name, key, sizes))
+                cache_put(self.cache_dir, key, result)
+        self._record("embed", encoder_name, key, span, result, cached, retries, sizes, remote=False)
         return np.asarray(result["vectors"], dtype=np.float32)
 
     def transcribe(self, audio_path, model="whisper-1") -> str:
@@ -116,48 +164,33 @@ class ModelGateway:
             seconds = 0.0
 
         def call():
-            r = self.client().audio.transcriptions.create(
-                model=model, file=(audio_path.name, audio)
-            )
+            with _remote_slots:
+                r = self.client().audio.transcriptions.create(
+                    model=model, file=(audio_path.name, audio)
+                )
             return {"text": r.text.strip(), "audio_seconds": seconds}
 
-        payload = {"audio_sha256": hashlib.sha256(audio).hexdigest()}
-        result = self._run("transcribe", model, payload, call, remote=True, audio_seconds=seconds)
+        sizes = {"audio_seconds": seconds}
+        key = cache_key("transcribe", model, {"audio_sha256": hashlib.sha256(audio).hexdigest()})
+        with self._trace().span("gateway.transcribe", model=model, **sizes) as span:
+            result, retries = cache_get(self.cache_dir, key), 0
+            cached = result is not None
+            if not cached:
+                result, retries = with_retries(call, self._failure_log("transcribe", model, key, sizes))
+                cache_put(self.cache_dir, key, result)
+        self._record("transcribe", model, key, span, result, cached, retries, sizes, remote=True)
         return result["text"]
 
-    def _run(self, op, model, payload, call, remote, **sizes):
-        key = hashlib.sha256(json.dumps([op, model, payload], sort_keys=True).encode()).hexdigest()
-        path = self.cache_dir / f"{key}.json"
-        trace = self.trace or Trace("-", "-", "-")  # throwaway when nobody is tracing
-        retries = 0
-        with trace.span(f"gateway.{op}", model=model, **sizes) as span:
-            cached = path.exists()
-            if cached:
-                result = json.loads(path.read_text(encoding="utf-8"))
-            else:
-                while True:
-                    try:
-                        if remote:
-                            with _remote_slots:
-                                result = call()
-                        else:
-                            result = call()
-                        break
-                    except (openai.APIStatusError, openai.APIConnectionError) as err:
-                        if not _should_retry(err) or retries == RETRIES:
-                            self._log(
-                                op=op, model=model, cached=False, retries=retries,
-                                cache_key=key, error=type(err).__name__, **sizes,
-                            )
-                            raise
-                        time.sleep(2**retries)
-                        retries += 1
-                path.parent.mkdir(parents=True, exist_ok=True)
-                tmp = path.with_suffix(".tmp")
-                tmp.write_text(json.dumps(result), encoding="utf-8")
-                tmp.replace(path)
-            span.attrs.update(cached=cached, retries=retries)
+    def _trace(self):
+        return self.trace or Trace("-", "-", "-")  # throwaway when nobody is tracing
 
+    def _failure_log(self, op, model, key, sizes):
+        return lambda **fields: self._log(op=op, model=model, cached=False, cache_key=key, **sizes, **fields)
+
+    def _record(self, op, model, key, span, result, cached, retries, sizes, remote):
+        """After a call: span attributes, counters, cost (new remote calls only) and the log line."""
+        span.attrs.update(cached=cached, retries=retries)
+        trace = self._trace()
         trace.count(f"gateway.{op}.cache_hits" if cached else f"gateway.{op}.calls")
         if remote and not cached:
             trace.add_cost(
@@ -173,7 +206,6 @@ class ModelGateway:
             prompt_tokens=result.get("prompt_tokens"),
             completion_tokens=result.get("completion_tokens"),
         )
-        return result
 
     def _log(self, **fields):
         line = json.dumps({"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), **fields})

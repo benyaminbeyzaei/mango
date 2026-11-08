@@ -6,6 +6,11 @@ from pydantic import BaseModel, Field
 from ..config import RunConfig
 
 
+class HealthResponse(BaseModel):
+    status: str
+    git_commit: str | None
+
+
 class TextInput(BaseModel):
     text: str
 

@@ -7,6 +7,6 @@ corpus_index: enc_a
 k: 5
 retriever: topic
 params:
-  index: rag/extensions/platform/configs/topics-k256.yaml
+  index: rag/extensions/platform/configs/pipelines/topics-k256.yaml
   m: 4
   record_subset: rag/extensions/platform/subsets/records-dev-relevant-d275.txt

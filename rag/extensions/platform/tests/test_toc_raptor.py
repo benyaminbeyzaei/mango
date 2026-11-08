@@ -49,17 +49,17 @@ def test_parse_ids_keeps_allowed_distinct_in_order():
 
 def test_toc_centroid_route_probes_nearest_section_then_topic():
     vectors, ids = toy_corpus()
-    g = SimpleNamespace(trace=Trace("r", "q", "c"))
-    hits = TocRetriever(toy_toc(), vectors, ids, sections=1, m=1, gateway=g).search(np.array([0.1, 1, 0]), k=10)
+    trace = Trace("r", "q", "c")
+    hits = TocRetriever(toy_toc(), vectors, ids, sections=1, m=1).search(np.array([0.1, 1, 0]), k=10, trace=trace)
     assert [r for r, _ in hits] == ["c", "d"]
-    assert g.trace.counters == {"toc.sections_probed": 1, "toc.topics_probed": 1, "toc.candidates_scanned": 2}
+    assert trace.counters == {"toc.sections_probed": 1, "toc.topics_probed": 1, "toc.candidates_scanned": 2}
 
 
 def test_toc_llm_route_follows_the_replies_and_counts_calls():
     vectors, ids = toy_corpus()
     g = ScriptedGateway(['{"ids": [1]}', '{"ids": [2]}'])
     hits = TocRetriever(toy_toc(), vectors, ids, sections=2, m=4, route="llm", gateway=g).search(
-        np.array([1.0, 0, 0]), k=10, question="where is z")  # the vector points at x; the LLM's choice (z) wins
+        np.array([1.0, 0, 0]), k=10, trace=g.trace, question="where is z")  # the vector points at x; the LLM's choice (z) wins
     assert [r for r, _ in hits] == ["f", "e"]
     assert "where is z" in g.prompts[0] and "2. Z: z" in g.prompts[1] and "0. X" not in g.prompts[1]
     assert g.trace.counters["toc.llm_calls"] == 2
@@ -70,7 +70,7 @@ def test_toc_llm_route_falls_back_to_centroids_on_bad_reply():
     vectors, ids = toy_corpus()
     g = ScriptedGateway(["I don't know", '{"ids": [7]}'])
     hits = TocRetriever(toy_toc(), vectors, ids, sections=1, m=1, route="llm", gateway=g).search(
-        np.array([1.0, 0, 0]), k=10, question="q")
+        np.array([1.0, 0, 0]), k=10, trace=g.trace, question="q")
     assert [r for r, _ in hits] == ["a", "b"]
     assert g.trace.counters["toc.llm_fallbacks"] == 2
 
@@ -87,12 +87,12 @@ def test_summary_hit_expands_to_its_best_members():
     vectors, ids = toy_corpus()
     sv, rows = toy_summaries()
     sv /= np.linalg.norm(sv, axis=1, keepdims=True)
-    g = SimpleNamespace(trace=Trace("r", "q", "c"))
+    trace = Trace("r", "q", "c")
     q = np.array([0, 0.2, 1.0])  # the summary scores 1.0, above every record
-    hits = SummaryRetriever(sv, rows, vectors, ids, expand_top=2, gateway=g).search(q, k=4)
+    hits = SummaryRetriever(sv, rows, vectors, ids, expand_top=2).search(q, k=4, trace=trace)
     # flat order would be e, f, d, c; the summary (members e, c) puts both first
     assert [r for r, _ in hits] == ["e", "c", "f", "d"]
-    assert g.trace.counters["raptor.summary_hits"] >= 1
+    assert trace.counters["raptor.summary_hits"] >= 1
 
 
 def test_summary_as_evidence_keeps_summary_id_and_context_shows_it():
