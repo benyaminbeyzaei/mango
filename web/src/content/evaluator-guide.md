@@ -72,7 +72,7 @@ mlsrag estimate --config baseline --subset dev-all --judge --fresh      # calls 
 mlsrag matrix --matrix my-matrix-b-dev-all.yaml --fresh --allow-full --yes
 ```
 
-Estimated cost on `dev-all` (125 queries), after the transcript cache is filled (100 whisper-1 calls, 550 audio s, about $0.06; `practice-all` needs 330, about $0.17). The chat models are free university-hosted ELM models; wall time is at one request at a time, judging not included:
+Estimated cost on `dev-all` (125 queries), after the transcript cache is filled. Transcript caches are not in git, so a fresh clone first needs 125 whisper-1 calls for `dev-all` (about 690 audio s, $0.07) and 350 for `practice-all` (about 1,800 s, $0.18); the `transcribe` command above is resumable and skips queries already cached. The chat models are free university-hosted ELM models; wall time is at one request at a time, judging not included:
 
 | Matrix | Mode | ELM calls | Wall time |
 |---|---|---|---|

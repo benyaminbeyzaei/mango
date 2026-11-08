@@ -45,8 +45,7 @@ whisper1 | course) and `asr_cache`; `query_encoder` (gte-small | bge-small); `co
 enc_b) and `mismatch_policy` (error | as-is | re-encode | translate); `retriever` (exact | topic |
 lazy-graph | kg | toc | raptor-lite | bm25 | grep); `k` (5); `context_builder` (simple | budgeted |
 dedupe | with-summaries); `generator_model`; `judge_model`; `flow` (standard | grep-static |
-grep-agentic); `params` (free dict for the retriever's options). A YAML file with these keys works
-anywhere a preset name (`baseline`) does.
+grep-agentic); `params` (free dict for the retriever's options). A YAML file works like a preset name.
 
 **Trace** (`trace.py`). One per query: timed `spans` (asr, encode, retrieve, context, generate and
 any inner ones), `counters` (e.g. `grep.llm_calls`), `cost` per model, `resources` (CPU, RSS) and
@@ -158,10 +157,8 @@ gte-small on enc_a, k=5, generator `Qwen/Qwen3.5-397B-A17B-FP8` at temperature 0
 `mistralai/Mistral-Small-4-119B-2603` through the course evaluator, the course context prompt and
 `grep_v1`. Always pass `--fresh`.
 
-Wall time at concurrency 1 (queries run one at a time), from the fresh smoke runs: a Qwen generation
-~52 s, grep static ~94 s and grep agentic ~304 s per query, toc-llm routing ~1 s (Llama), dense,
-BM25, topic, raptor and graph retrieval under 0.2 s. Judge time (Mistral, through the course
-evaluator) is not measured, so it is not included.
+Wall time (queries one at a time, from the fresh smoke runs): Qwen generation ~52 s, grep static ~94 s,
+grep agentic ~304 s per query, toc-llm ~1 s, all other retrievers < 0.2 s. Judge time is not measured.
 
 | Matrix file (`configs/matrices/`) | Subset | Mode | ELM calls (fresh) | Wall time |
 |---|---|---|---|---|
@@ -186,10 +183,13 @@ disk and are mounted (`compose.yaml`). From a fresh clone:
 
 ```bash
 git clone <this repo> && cd <it> && git lfs install && git lfs pull --include="rag-assets.zip"
-unzip rag-assets.zip -d ~/mls-rag-assets && python3 rag/scripts/install_assets.py --from-dir ~/mls-rag-assets
+unzip rag-assets.zip -d ~/mls-rag-assets   # the course script needs numpy, so run it with uv:
+uv run --no-project --with numpy python rag/scripts/install_assets.py --from-dir ~/mls-rag-assets
 cp rag/.env.example rag/.env    # then put your ELM key in rag/.env
 mkdir -p rag/.cache             # so the mount is owned by you, not root
-docker compose up               # API + client at http://localhost:8000 (first run builds the image)
+docker compose up               # API + client at http://localhost:8000 (first run builds the image, ~2 min)
+# transcript caches are not in git: fill one before a cached-ASR run (20 whisper-1 calls, ~$0.01)
+docker compose run --rm cli mlsrag transcribe --asr whisper1 --subset practice-smoke20 --out rag/.cache/transcripts/whisper1-practice.jsonl
 docker compose run --rm cli mlsrag run --config baseline --subset practice-smoke20 --no-generate
 ```
 

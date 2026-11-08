@@ -44,8 +44,9 @@ def find_run(config, subset, generate, fresh=False):
 
 def with_override(config, override):
     """The config with the override applied; each overridden field except asr_cache (the subset
-    already names the split) is appended to the name, so two matrices write distinguishable runs."""
-    suffix = "".join(f"+{k}={v}" for k, v in override.items() if k != "asr_cache")
+    already names the split) is appended to the name, so two matrices write distinguishable runs
+    ("/" becomes "_": the name is part of the run folder)."""
+    suffix = "".join(f"+{k}={v}".replace("/", "_") for k, v in override.items() if k != "asr_cache")
     return RunConfig(**{**config.model_dump(), **override, "name": config.name + suffix})
 
 
