@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .config import load_config
 
+FRESH_HELP = "skip cache reads for chat and embed calls (judge stays cached); needed for valid latency and cost"
 OPENAPI_PATH = Path(__file__).resolve().parents[1] / "openapi.json"
 
 
@@ -21,6 +22,7 @@ def main(argv=None):
     run.add_argument("--subset", default="practice-smoke20")
     run.add_argument("--no-generate", action="store_true", help="skip the generator (retrieval only; free with asr: cached)")
     run.add_argument("--allow-full", action="store_true", help="allow practice-all / dev-all")
+    run.add_argument("--fresh", action="store_true", help=FRESH_HELP)
 
     tr = sub.add_parser("transcribe", help="fill a transcript cache (resumable)")
     tr.add_argument("--asr", choices=["whisper1", "course"], default="whisper1")
@@ -40,6 +42,7 @@ def main(argv=None):
     es.add_argument("--config", required=True)
     es.add_argument("--subset", default="practice-smoke20")
     es.add_argument("--judge", action="store_true", help="include the judge calls")
+    es.add_argument("--fresh", action="store_true", help="the run will use --fresh")
 
     mx = sub.add_parser("matrix", help="run several configs on one subset and summarise them")
     mx.add_argument("--matrix", required=True, help="YAML with name, subset, configs")
@@ -48,6 +51,7 @@ def main(argv=None):
     mx.add_argument("--force", action="store_true", help="rerun configs that already have a run")
     mx.add_argument("--allow-full", action="store_true", help="allow practice-all / dev-all")
     mx.add_argument("--yes", action="store_true", help="do not ask for confirmation")
+    mx.add_argument("--fresh", action="store_true", help=FRESH_HELP + "; reruns non-fresh runs instead of reusing them")
 
     cp = sub.add_parser("compare", help="print a Markdown table of several runs side by side")
     cp.add_argument("run_dirs", nargs="+")
@@ -105,7 +109,7 @@ def main(argv=None):
 
     if args.command == "run":
         out, metrics = runner.run(load_config(args.config), args.subset, generate=not args.no_generate,
-                                  allow_full=args.allow_full)
+                                  allow_full=args.allow_full, fresh=args.fresh)
         print(json.dumps(metrics, indent=2))
         print(f"results: {out}")
     elif args.command == "transcribe":
@@ -117,10 +121,11 @@ def main(argv=None):
         print(json.dumps(evaluate.judge(args.run_dir, args.model, args.repeats, args.dry_run), indent=2))
     elif args.command == "estimate":
         config = matrix.resolve_config(args.config)
-        print(evaluate.format_estimate(evaluate.estimate(config, args.subset, judge=args.judge)))
+        print(evaluate.format_estimate(evaluate.estimate(config, args.subset, judge=args.judge), args.fresh))
     elif args.command == "matrix":
         out = matrix.run_matrix(args.matrix, judge=not args.no_judge, generate=not args.no_generate,
-                                force=args.force, allow_full=args.allow_full, yes=args.yes)
+                                force=args.force, allow_full=args.allow_full, yes=args.yes,
+                                fresh=args.fresh)
         print((out / "summary.md").read_text(encoding="utf-8"))
         print(f"summary: {out}")
     elif args.command == "fit-map":

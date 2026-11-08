@@ -51,7 +51,16 @@ mlsrag transcribe --asr whisper1 --subset practice-smoke20 \
     --out rag/.cache/transcripts/whisper1-practice.jsonl     # one-off, ~1.6 audio min, resumable
 mlsrag run --config baseline --subset practice-smoke20 --no-generate   # no generator; free with cached ASR
 mlsrag run --config baseline --subset practice-smoke20                 # + 20 Qwen calls
+mlsrag run --config baseline --subset practice-smoke20 --fresh         # no cache reads: real latency and cost
 ```
+
+**`--fresh`** (on `run` and `matrix`, `fresh: true` on `POST /api/runs`): the gateway skips cache
+reads for chat and embed calls (it still writes the cache), so every system call is really made
+and timed. Judge calls stay cached (the judge is the instrument, not the system); whisper calls and
+`asr: cached` transcripts stay as configured; preprocessing always keeps the cache. The run's
+`metrics.json` records `run.fresh`. **Evaluations that report latency or cost must use `--fresh`:**
+`matrix`, `compare` and the web client show latency and cost as `–` ("not a fresh run") for any run
+without it; retrieval and answer scores are shown either way.
 
 Full splits (`practice-all`, `dev-all`) need `--allow-full` on `run`, `transcribe` and `matrix` (and `allow_full: true` on `POST /api/runs`); `mlsrag preprocess run` asks `y/N` before its LLM calls unless `--yes`.
 
@@ -76,7 +85,8 @@ cost        {elm_calls, prompt_tokens, completion_tokens, audio_seconds, est_usd
 latency_ms  {asr, encode, retrieve, context, generate: mean ms per query (null if the stage did not run),
              end_to_end: {mean, p50, p95}}
 resources   {cpu_s (summed over queries), peak_rss_mb (whole process)}
-run         {run_id, config_name, subset, n_queries, started, finished, git_commit}
+run         {run_id, config_name, subset, n_queries, started, finished, git_commit,
+             fresh (false when missing: latency and cost are valid only when true)}
 ```
 
 `est_usd` counts whisper-1 audio only ($0.006 per minute); the free ELM chat models are $0.
@@ -103,7 +113,8 @@ mlsrag compare <run-dir> <run-dir> ...       # Markdown table, one column per ru
 - **Matrix.** A YAML with `name`, `subset` and `configs` (preset names, `configs/<name>.yaml`
   without the extension, or paths). It prints the estimate and asks for `y` (`--yes` skips),
   refuses `practice-all`/`dev-all` without `--allow-full`, reuses the newest finished run with the
-  same config, subset and generation mode (`--force` reruns), judges unless `--no-judge` (again
+  same config, subset and generation mode (`--force` reruns; with `--fresh` only a fresh run is
+  reused, otherwise it reruns fresh), judges unless `--no-judge` (again
   if the saved verdicts used another judge model; `--no-generate` runs retrieval only), and writes
   `rag/extensions/results/matrices/<name>/summary.json` and `summary.md`.
 

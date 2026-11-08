@@ -263,7 +263,7 @@ def create_app(web_dir=None, results_dir=None) -> FastAPI:
         def work():
             try:
                 out, _ = runner.run(config, body.subset, generate=body.generate, results_dir=results_root,
-                                   allow_full=body.allow_full)
+                                   allow_full=body.allow_full, fresh=body.fresh)
                 job.run_id, job.status = out.name, "done"
             except Exception as err:  # reported through GET /runs/{id}/status
                 job.error, job.status = f"{type(err).__name__}: {err}", "failed"

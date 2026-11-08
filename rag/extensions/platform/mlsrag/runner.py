@@ -41,7 +41,8 @@ def now():
     return datetime.now().isoformat(timespec="seconds")
 
 
-def run(config, subset, generate=True, results_dir=None, allow_full=False):
+def run(config, subset, generate=True, results_dir=None, allow_full=False, fresh=False):
+    """fresh=True skips cache reads for the system's chat and embed calls, so latency and cost are real."""
     try:
         check_subset(subset, allow_full)
     except ValueError as err:  # say what the refused run would have cost
@@ -58,7 +59,7 @@ def run(config, subset, generate=True, results_dir=None, allow_full=False):
         if SUBSETS[subset][0] != "dev":  # the subset is built around the dev qrels
             raise ValueError("params.record_subset is meant for dev subsets only")
         record_ids = load_record_subset(config.params["record_subset"])
-    gateway = ModelGateway()
+    gateway = ModelGateway(fresh=fresh)
     stages = build_stages(config, gateway, data)
     if not generate:
         stages.generator = None
@@ -90,7 +91,7 @@ def run(config, subset, generate=True, results_dir=None, allow_full=False):
             print(f"[{i:>3}/{len(ids)}] {qid} R@10={row['metrics']['Recall@10']:.3f}")
 
     info = {"run_id": run_id, "config_name": config.name, "subset": subset,
-            "started": started, "finished": now(), "git_commit": git_commit()}
+            "started": started, "finished": now(), "git_commit": git_commit(), "fresh": fresh}
     metrics = build_metrics(rows, info)
     write_metrics(out, metrics)
     return out, metrics

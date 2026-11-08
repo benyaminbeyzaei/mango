@@ -14,6 +14,7 @@ export type Metrics = {
     subset: string
     n_queries: number
     started?: string
+    fresh?: boolean
   }
 }
 export type Span = {
@@ -140,11 +141,10 @@ export const isGatewaySpan = (s: Span) =>
   s.name === "gateway.chat" || s.name === "gateway.transcribe"
 export const isCached = (s: Span) => s.attrs.cached === true
 
-// Share of a run's remote-call spans that were cache hits (0 when there were none).
-export function cachedShare(queries: QueryTrace[]) {
-  const calls = queries.flatMap((q) => q.spans.filter(isGatewaySpan))
-  return calls.length ? calls.filter(isCached).length / calls.length : 0
-}
+// Latency and cost are valid only for runs made with --fresh (no cache reads).
+export const NOT_FRESH = "not a fresh run: latency and cost invalid"
+export const isTimeOrCost = (path: string) =>
+  path.startsWith("latency_ms") || path.startsWith("cost")
 
 export const MAX_COMPARE = 6
 

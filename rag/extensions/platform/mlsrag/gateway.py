@@ -2,6 +2,7 @@
 
 Each call gets a span on the current trace, its cost (from the API usage), a line in
 rag/.cache/gateway.log.jsonl and a disk cache entry, so an identical call is free next time.
+With fresh=True, chat and embed skip the cache read (but still write), so latency and cost are real.
 """
 import hashlib
 import json
@@ -70,8 +71,9 @@ def with_retries(call, log_failure):
 
 
 class ModelGateway:
-    def __init__(self, trace=None, cache_dir=None, log_path=None, env_path=None):
+    def __init__(self, trace=None, cache_dir=None, log_path=None, env_path=None, fresh=False):
         self.trace = trace
+        self.fresh = fresh
         self.cache_dir = Path(cache_dir or paths.cache_dir / "gateway")
         self.log_path = Path(log_path or paths.cache_dir / "gateway.log.jsonl")
         self.env_path = Path(env_path or paths.rag_dir / ".env")
@@ -123,7 +125,7 @@ class ModelGateway:
             payload["tag"] = tag  # only when given, so untagged cache keys stay as they were
         key = cache_key("chat", model, payload)
         with self._trace().span("gateway.chat", model=model, **sizes) as span:
-            result, retries = cache_get(self.cache_dir, key), 0
+            result, retries = None if self.fresh else cache_get(self.cache_dir, key), 0
             cached = result is not None
             if not cached:
                 result, retries = with_retries(call, self._failure_log("chat", model, key, sizes))
@@ -146,7 +148,7 @@ class ModelGateway:
         sizes = {"n_texts": len(texts)}
         key = cache_key("embed", encoder_name, {"texts": list(texts), "role": role})
         with self._trace().span("gateway.embed", model=encoder_name, **sizes) as span:
-            result, retries = cache_get(self.cache_dir, key), 0
+            result, retries = None if self.fresh else cache_get(self.cache_dir, key), 0
             cached = result is not None
             if not cached:
                 result, retries = with_retries(call, self._failure_log("embed", encoder_name, key, sizes))

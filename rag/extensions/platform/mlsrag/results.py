@@ -63,6 +63,7 @@ class RunInfo(Strict):
     started: str
     finished: str | None
     git_commit: str | None
+    fresh: bool = False  # cache reads skipped; latency and cost count only when true (missing in old runs)
 
 
 class Metrics(Strict):
@@ -145,12 +146,17 @@ def list_runs(results_dir=None) -> list[Path]:
     return sorted(p.parent for p in root.glob("*/metrics.json"))
 
 
+COST_KEYS = ["latency_ms", "calls/q", "tokens/q"]  # valid only for fresh runs
+
+
 def summary_row(run) -> dict:
-    """The numbers one table row shows for a run (from load_run)."""
+    """The numbers one table row shows for a run (from load_run). Latency and cost are None
+    unless the run was fresh: cached calls make them meaningless."""
     m = run["metrics"]
     n = m["run"]["n_queries"]
     a = m["answers"] or {}
-    return {
+    fresh = m["run"].get("fresh", False)
+    row = {
         "run": m["run"]["run_id"],
         "config": m["run"]["config_name"],
         **m["retrieval"],
@@ -161,7 +167,11 @@ def summary_row(run) -> dict:
         "latency_ms": m["latency_ms"]["end_to_end"]["mean"],
         "calls/q": m["cost"]["elm_calls"] / n,
         "tokens/q": (m["cost"]["prompt_tokens"] + m["cost"]["completion_tokens"]) / n,
+        "fresh": fresh,
     }
+    if not fresh:
+        row.update(dict.fromkeys(COST_KEYS))
+    return row
 
 
 def fmt(v) -> str:

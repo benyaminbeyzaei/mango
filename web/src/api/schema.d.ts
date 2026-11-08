@@ -446,6 +446,12 @@ export interface components {
             /** Finished */
             finished: string | null;
             /**
+             * Fresh
+             * @description latency and cost are valid only for fresh runs
+             * @default false
+             */
+            fresh: boolean;
+            /**
              * Retrieval
              * @description metrics.json retrieval block: Recall@k, MRR@10, NDCG@10
              */
@@ -481,6 +487,12 @@ export interface components {
              * @default false
              */
             allow_full: boolean;
+            /**
+             * Fresh
+             * @description skip cache reads so latency and cost are valid
+             * @default false
+             */
+            fresh: boolean;
         };
         /** TextInput */
         TextInput: {

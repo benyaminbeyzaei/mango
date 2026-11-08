@@ -186,13 +186,13 @@ def test_admin_runs(stage, tmp_path, monkeypatch):
     monkeypatch.setattr(evaluate, "estimate", lambda config, subset: {"calls": {"generation": 20}, "elm_calls": 20})
     calls = []
 
-    def fake_run(config, subset, generate, results_dir, allow_full):
-        calls.append((config.name, subset, generate))
+    def fake_run(config, subset, generate, results_dir, allow_full, fresh):
+        calls.append((config.name, subset, generate, fresh))
         return tmp_path / "20261107-0000-baseline-practice-smoke20", {}
 
     monkeypatch.setattr(runner, "run", fake_run)
     client = TestClient(app_module.create_app(results_dir=tmp_path))
-    body = {"config": "baseline", "subset": "practice-smoke20", "generate": False}
+    body = {"config": "baseline", "subset": "practice-smoke20", "generate": False, "fresh": True}
     assert client.post("/api/runs", json=body).status_code == 403
     assert client.post("/api/runs", json=body, headers={"X-Admin-Token": "wrong"}).status_code == 403
     admin = {"X-Admin-Token": "s3cret"}
@@ -206,7 +206,7 @@ def test_admin_runs(stage, tmp_path, monkeypatch):
             break
         time.sleep(0.02)
     assert status["status"] == "done" and status["run_id"] == "20261107-0000-baseline-practice-smoke20"
-    assert calls == [("baseline", "practice-smoke20", False)]
+    assert calls == [("baseline", "practice-smoke20", False, True)]
 
 
 def test_web_dir_serves_the_client_with_spa_fallback(stage, tmp_path):

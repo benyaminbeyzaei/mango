@@ -9,7 +9,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { MAX_COMPARE, runDate, uniqueIds, useResults } from "@/lib/results"
+import {
+  MAX_COMPARE,
+  NOT_FRESH,
+  runDate,
+  uniqueIds,
+  useResults,
+} from "@/lib/results"
 
 const HEADLINE = ["Recall@10", "MRR@10", "NDCG@10"]
 
@@ -134,8 +140,11 @@ function Results() {
                   {r.retrieval[m]}
                 </TableCell>
               ))}
-              <TableCell className="text-right font-mono">
-                {String(r.cost.elm_calls)}
+              <TableCell
+                className="text-right font-mono"
+                title={r.fresh ? undefined : NOT_FRESH}
+              >
+                {r.fresh ? String(r.cost.elm_calls) : "–"}
               </TableCell>
             </TableRow>
           ))}
