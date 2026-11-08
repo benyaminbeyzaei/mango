@@ -46,7 +46,9 @@ def run_matrix(path, judge=True, generate=True, force=False, allow_full=False, y
     spec = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     subset = spec["subset"]
     check_subset(subset, allow_full)
-    configs = [resolve_config(name) for name in spec["configs"]]
+    # override: top-level RunConfig fields set on every config (e.g. the dev asr_cache, a context_builder)
+    configs = [RunConfig(**{**resolve_config(name).model_dump(), **spec.get("override", {})})
+               for name in spec["configs"]]
     judge = judge and generate  # nothing to judge without answers
 
     estimates = [evaluate.estimate(c, subset, judge=judge) for c in configs]

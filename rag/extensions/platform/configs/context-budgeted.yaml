@@ -1,0 +1,11 @@
+# RunConfig: the baseline, with the evidence cut to an 800-token budget (words x 1.3).
+name: context-budgeted
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+retriever: exact
+k: 5
+context_builder: budgeted
+params:
+  budget_tokens: 800

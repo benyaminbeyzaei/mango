@@ -1,0 +1,12 @@
+# RunConfig: the baseline, dropping records with enc_a similarity > 0.9 to a kept one, then the 800-token budget.
+name: context-dedupe
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+retriever: exact
+k: 5
+context_builder: dedupe
+params:
+  dedupe_threshold: 0.9
+  budget_tokens: 800

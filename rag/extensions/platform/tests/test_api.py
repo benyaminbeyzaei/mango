@@ -30,7 +30,7 @@ class FakeStage:
         self.vectors.append(vec)
         return [(f"r{i}", 1.0 - i / 1000) for i in range(k)]
 
-    def build(self, question, record_ids):
+    def build(self, question, record_ids, trace=None):
         return f"{question} | {','.join(record_ids)}"
 
     def generate(self, prompt):

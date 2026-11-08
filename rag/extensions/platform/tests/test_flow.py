@@ -17,7 +17,7 @@ class Fake:
         self.k = k
         return [(f"r{i}", 1.0 - i / 1000) for i in range(k)]
 
-    def build(self, question, record_ids):
+    def build(self, question, record_ids, trace=None):
         self.context_ids = record_ids
         return f"{question} | {','.join(record_ids)}"
 
