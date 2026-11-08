@@ -12,7 +12,7 @@ function Home() {
     queryFn: async () => {
       const { data, error } = await api.GET("/api/health")
       if (error) throw new Error("health check failed")
-      return data as { status: string; git_commit: string | null }
+      return data
     },
   })
 

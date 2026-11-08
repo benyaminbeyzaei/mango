@@ -59,11 +59,10 @@ def test_lazy_graph_build_and_search(tmp_path):
     index = json.loads((tmp_path / "index" / "index.json").read_text())
     assert sorted(index["nodes"]["roth ira"]["records"]) == ["r1", "r2"]
 
-    gw = SimpleNamespace(trace=Trace("t", "q", "c"))
-    r = LazyGraphRetriever(index, VECS, IDS, gateway=gw)
-    hits = r.search(VECS[1], 10, question="Should I open a Roth IRA?")
+    trace = Trace("t", "q", "c")
+    hits = LazyGraphRetriever(index, VECS, IDS).search(VECS[1], 10, trace=trace, question="Should I open a Roth IRA?")
     assert [h[0] for h in hits] == ["r2", "r1"]  # equal graph score, r2 is closer to the query vector
-    assert gw.trace.counters["lazy.nodes_matched"] >= 1 and gw.trace.counters["lazy.candidates"] == 2
+    assert trace.counters["lazy.nodes_matched"] >= 1 and trace.counters["lazy.candidates"] == 2
 
 
 class FakeGateway:
@@ -111,8 +110,8 @@ def test_kg_extract_respects_the_call_budget_and_index(tmp_path, monkeypatch):
     assert "vanguard" in index["entities"]["roth ira"]["neighbours"]
 
     t = Trace("t", "q", "c")
-    r = KGRetriever(index, VECS, IDS, gateway=SimpleNamespace(trace=t))
-    hits = [h[0] for h in r.search(VECS[3], 10, question="Which accounts does Vanguard offer?")]
+    r = KGRetriever(index, VECS, IDS)
+    hits = [h[0] for h in r.search(VECS[3], 10, trace=t, question="Which accounts does Vanguard offer?")]
     assert hits[:2] == ["r1", "r4"]  # both match "vanguard"; r1 also holds the 1-hop "roth ira"
     assert "r2" in hits  # via the 1-hop neighbour "roth ira"
     assert t.counters["kg.entities_matched"] == 1
@@ -132,7 +131,7 @@ def test_record_subset_restricts_candidates_and_qrels(tmp_path):
         def encode(self, text):
             return VECS[0]
 
-        def search(self, query_vec, k):  # no uses_question: must not be given the question
+        def search(self, query_vec, k, trace=None):  # no uses_question: must not be given the question
             self.k = k
             return [(r, 1.0 - i / 10) for i, r in enumerate(IDS)][:k]
 

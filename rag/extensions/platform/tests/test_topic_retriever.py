@@ -12,18 +12,13 @@ def toy():
     return index, vectors, ids
 
 
-class G:
-    trace = None
-
-
 def test_probes_nearest_cluster_only_and_counts():
     index, vectors, ids = toy()
-    g = G()
-    g.trace = Trace("r", "q", "c")
-    hits = TopicRetriever(index, vectors, ids, m=1, gateway=g).search(np.array([0.2, 1.0]), k=10)
+    trace = Trace("r", "q", "c")
+    hits = TopicRetriever(index, vectors, ids, m=1).search(np.array([0.2, 1.0]), k=10, trace=trace)
     assert [r for r, _ in hits] == ["d", "c"]
-    assert g.trace.counters == {"topic.clusters_probed": 1, "topic.candidates_scanned": 2}
-    assert [s.name for s in g.trace.spans] == ["topic.route"]
+    assert trace.counters == {"topic.clusters_probed": 1, "topic.candidates_scanned": 2}
+    assert [s.name for s in trace.spans] == ["topic.route"]
 
 
 def test_all_clusters_equal_flat_search():

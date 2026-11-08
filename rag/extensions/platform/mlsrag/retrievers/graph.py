@@ -8,12 +8,12 @@ neighbours -> records ranked by direct matches, then 1-hop matches.
 """
 import json
 import re
-from contextlib import nullcontext
 from pathlib import Path
 
 import numpy as np
 
 from ..preprocess.phrases import load_nlp, normalise, question_ngrams
+from ..trace import Trace
 
 QUESTION_ENTITIES_PROMPT = (
     "List the entities (people, organisations, products, financial instruments, accounts, taxes, "
@@ -27,22 +27,10 @@ class GraphRanker:
 
     uses_question = True  # the flow passes question=<transcript>
 
-    def __init__(self, vectors, ids, gateway=None):
+    def __init__(self, vectors, ids):
         self.vectors = np.asarray(vectors, dtype=np.float32)
         self.ids = ids
         self.row = {rid: i for i, rid in enumerate(ids)}
-        self.gateway = gateway
-
-    def trace(self):
-        return getattr(self.gateway, "trace", None)
-
-    def span(self, name):
-        t = self.trace()
-        return t.span(name) if t is not None else nullcontext()
-
-    def count(self, key, n):
-        if (t := self.trace()) is not None:
-            t.count(key, n)
 
     def rank(self, keys, query_vec, k, use_dense=True):
         """keys: {record_id: tuple, larger is better}; ties broken by cosine with the query
@@ -57,35 +45,37 @@ class GraphRanker:
 
 
 class LazyGraphRetriever(GraphRanker):
-    def __init__(self, index, vectors, ids, rerank_dense=True, gateway=None):
-        super().__init__(vectors, ids, gateway)
+    def __init__(self, index, vectors, ids, rerank_dense=True):
+        super().__init__(vectors, ids)
         self.nodes = index["nodes"]
         self.rerank_dense = rerank_dense
 
-    def search(self, query_vec, k, question=None):
+    def search(self, query_vec, k, trace=None, question=None):
         if question is None:
             raise ValueError("the lazy-graph retriever needs the question text")
-        with self.span("lazy.match"):
+        trace = trace or Trace("-", "-", "-")
+        with trace.span("lazy.match"):
             matched = sorted(question_ngrams(question) & self.nodes.keys())
         scores = {}
         for p in matched:
             node = self.nodes[p]
             for rid in node["records"]:
                 scores[rid] = scores.get(rid, 0.0) + 1.0 / max(node["degree"], 1)
-        self.count("lazy.nodes_matched", len(matched))
-        self.count("lazy.candidates", len(scores))
-        self.count("lazy.community_hits", len({self.nodes[p]["community"] for p in matched}))
+        trace.count("lazy.nodes_matched", len(matched))
+        trace.count("lazy.candidates", len(scores))
+        trace.count("lazy.community_hits", len({self.nodes[p]["community"] for p in matched}))
         return self.rank({r: (s,) for r, s in scores.items()}, query_vec, k, self.rerank_dense)
 
 
 class KGRetriever(GraphRanker):
     def __init__(self, index, vectors, ids, question_entities="spacy", model=None, gateway=None):
-        super().__init__(vectors, ids, gateway)
+        super().__init__(vectors, ids)
         if question_entities not in ("spacy", "llm"):
             raise ValueError("params.question_entities must be 'spacy' or 'llm'")
         self.entities = index["entities"]
         self.mode = question_entities
         self.model = model
+        self.gateway = gateway
 
     def question_entities(self, question) -> set:
         if self.mode == "spacy":
@@ -97,10 +87,11 @@ class KGRetriever(GraphRanker):
         names = [n for n in names if isinstance(n, str)]
         return {normalise(doc) for doc in load_nlp().pipe(names)} & self.entities.keys()
 
-    def search(self, query_vec, k, question=None):
+    def search(self, query_vec, k, trace=None, question=None):
         if question is None:
             raise ValueError("the kg retriever needs the question text")
-        with self.span("kg.match"):
+        trace = trace or Trace("-", "-", "-")
+        with trace.span("kg.match"):
             matched = self.question_entities(question)
         hop = {n for e in matched for n in self.entities[e]["neighbours"]} - matched
         direct, near = {}, {}
@@ -109,9 +100,9 @@ class KGRetriever(GraphRanker):
                 for rid in self.entities[e]["records"]:
                     counts[rid] = counts.get(rid, 0) + 1
         keys = {r: (direct.get(r, 0), near.get(r, 0)) for r in direct.keys() | near.keys()}
-        self.count("kg.entities_matched", len(matched))
-        self.count("kg.entities_1hop", len(hop))
-        self.count("kg.candidates", len(keys))
+        trace.count("kg.entities_matched", len(matched))
+        trace.count("kg.entities_1hop", len(hop))
+        trace.count("kg.candidates", len(keys))
         return self.rank(keys, query_vec, k)
 
 

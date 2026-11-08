@@ -2,7 +2,6 @@
 import hashlib
 import pickle
 import re
-import resource
 import time
 
 import bm25s
@@ -10,6 +9,7 @@ import numpy as np
 from bm25s.stopwords import STOPWORDS_EN
 
 from ..course import paths
+from ..trace import Trace
 
 TOKENIZER_VERSION = "words-lower-stopen-v1"  # change it when tokenise() changes: it enters the cache name
 _STOPWORDS = set(STOPWORDS_EN)
@@ -32,27 +32,23 @@ class BM25Retriever:
         path = (cache_dir or paths.cache_dir / "bm25") / f"{digest.hexdigest()[:16]}.pkl"
 
         start = time.perf_counter()
-        rss_before = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         if path.exists():
             self.index = pickle.loads(path.read_bytes())
-            built = False
         else:
             self.index = bm25s.BM25()
             self.index.index([tokenise(t) for t in texts], show_progress=False)
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(pickle.dumps(self.index))
-            built = True
-        seconds = time.perf_counter() - start
-        # Reported once, on the first query's trace (see flows/standard.py).
-        # rss_mb: growth of the process's peak RSS while building or loading (0 if below an earlier peak).
-        rss_mb = (resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - rss_before) / 1024
-        self.build_counters = {
-            "bm25.build_s" if built else "bm25.load_s": seconds,
-            "bm25.build_rss_mb" if built else "bm25.load_rss_mb": rss_mb,
-            "bm25.index_mb": path.stat().st_size / 1e6,  # size of the pickled index on disk
-        }
+        # One-off costs, added to the first query's trace: seconds to build (or load from the cache)
+        # and the size of the pickled index on disk.
+        self.build_counters = {"bm25.build_s": time.perf_counter() - start,
+                               "bm25.index_mb": path.stat().st_size / 1e6}
 
-    def search(self, query_vec, k, question):
+    def search(self, query_vec, k, trace=None, question=None):
+        trace = trace or Trace("-", "-", "-")
+        for key, value in self.build_counters.items():
+            trace.count(key, value)
+        self.build_counters = {}
         tokens = tokenise(question)
         if not tokens:  # empty or only stop words: bm25s cannot score an empty query
             return []

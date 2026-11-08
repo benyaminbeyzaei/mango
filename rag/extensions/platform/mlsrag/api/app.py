@@ -28,7 +28,7 @@ from ..results import list_runs, load_run
 from ..stages import CONTEXT_BUILDERS, RETRIEVERS, Translate, WhisperASR, build_stages
 from ..subsets import check_subset, load_subset
 from ..trace import Trace
-from .models import (ConfigEntry, Hit, JobStatus, ModelsResponse, NamedItem, QueriesPage, QueryRequest,
+from .models import (ConfigEntry, HealthResponse, Hit, JobStatus, ModelsResponse, NamedItem, QueriesPage, QueryRequest,
                      QueryResponse, RecordResponse, ResultsResponse, RunDetail, RunSummary,
                      StartRunRequest, TextInput)
 
@@ -62,15 +62,12 @@ def course_asr_available():
 
 
 def named_configs() -> list[tuple[str, str, RunConfig]]:
-    """(name, source, config) for every preset and every RunConfig YAML in configs/.
-
-    configs/ also holds matrix and preprocessing files; a file counts as a RunConfig when all its keys are
-    RunConfig fields."""
+    """(name, source, config) for every preset and every RunConfig YAML in configs/ (top level only:
+    pipeline and matrix files live in configs/pipelines/ and configs/matrices/)."""
     out = [(name, "preset", make()) for name, make in PRESETS.items()]
     for path in sorted(CONFIGS_DIR.glob("*.yaml")):
         raw = yaml.safe_load(path.read_text(encoding="utf-8"))
-        if isinstance(raw, dict) and set(raw) <= set(RunConfig.model_fields):
-            out.append((path.stem, f"configs/{path.name}", RunConfig(**raw)))
+        out.append((path.stem, f"configs/{path.name}", RunConfig(**raw)))
     return out
 
 
@@ -170,9 +167,9 @@ def create_app(web_dir=None, results_dir=None) -> FastAPI:
         if not x_admin_token or not hmac.compare_digest(x_admin_token, admin_token):
             raise HTTPException(403, "wrong or missing X-Admin-Token")
 
-    @api.get("/health")
+    @api.get("/health", response_model=HealthResponse)
     def health():
-        return {"status": "ok", "git_commit": runner.git_commit()}
+        return HealthResponse(status="ok", git_commit=runner.git_commit())
 
     @api.get("/models", response_model=ModelsResponse)
     def models():

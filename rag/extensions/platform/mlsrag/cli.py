@@ -68,7 +68,7 @@ def main(argv=None):
     pre = sub.add_parser("preprocess", help="run, inspect or clean a preprocessing pipeline")
     pre.add_argument("action", choices=["run", "status", "clean"])
     pre.add_argument("--pipeline", default="topics")
-    pre.add_argument("--config", default="rag/extensions/platform/configs/topics-k256.yaml")
+    pre.add_argument("--config", default="rag/extensions/platform/configs/pipelines/topics-k256.yaml")
     pre.add_argument("--stage", help="clean: the stage to delete")
     pre.add_argument("--yes", action="store_true", help="run: do not ask before the LLM calls")
     sel = pre.add_argument_group("record selection (overrides the config's select section)")

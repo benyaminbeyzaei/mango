@@ -2,7 +2,7 @@
 import json
 
 from ..prompts import grep_v1
-from .standard import RANKED_DEPTH
+from .standard import RANKED_DEPTH, finish
 
 DEFAULT_MODEL = "Qwen/Qwen3.5-397B-A17B-FP8"
 
@@ -53,21 +53,6 @@ def scan(stages, trace, patterns):
     trace.count("grep.matched_records", n_matched)
     trace.count("grep.invalid_patterns", n_invalid)
     return hits
-
-
-def finish(stages, config, trace, ranked_ids, scores, context_ids=None):
-    """Context (top k, or context_ids when given) and generation as in the standard flow."""
-    a = trace.artifacts
-    a["ranked_ids"] = ranked_ids
-    a["scores"] = scores
-    with trace.span("context"):
-        ids = ranked_ids[: config.k] if context_ids is None else context_ids
-        a["prompt"] = stages.context.build(a["transcript"], ids)
-    a["answer"] = None
-    if stages.generator is not None:
-        with trace.span("generate"):
-            a["answer"] = stages.generator.generate(a["prompt"])
-    return a
 
 
 def run_query(query_id, audio_path, stages, config, trace) -> dict:

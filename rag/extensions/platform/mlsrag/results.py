@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from .course import paths
 
@@ -13,16 +13,7 @@ WHISPER_USD_PER_MINUTE = 0.006  # whisper-1 list price; the free ELM chat models
 
 
 class Strict(BaseModel):
-    model_config = ConfigDict(extra="forbid", populate_by_name=True)
-
-
-class Retrieval(Strict):
-    recall_5: float = Field(alias="Recall@5")
-    recall_10: float = Field(alias="Recall@10")
-    recall_20: float = Field(alias="Recall@20")
-    recall_100: float = Field(alias="Recall@100")
-    mrr_10: float = Field(alias="MRR@10")
-    ndcg_10: float = Field(alias="NDCG@10")
+    model_config = ConfigDict(extra="forbid")
 
 
 class Answers(Strict):
@@ -75,12 +66,19 @@ class RunInfo(Strict):
 
 
 class Metrics(Strict):
-    retrieval: Retrieval
+    retrieval: dict[str, float]  # exactly METRIC_KEYS
     answers: Answers | None = None
     cost: Cost
     latency_ms: Latency
     resources: Resources
     run: RunInfo
+
+    @field_validator("retrieval")
+    @classmethod
+    def has_metric_keys(cls, value):
+        if sorted(value) != sorted(METRIC_KEYS):
+            raise ValueError(f"retrieval keys must be {METRIC_KEYS}, got {sorted(value)}")
+        return value
 
 
 def build_metrics(rows, run_info) -> dict:

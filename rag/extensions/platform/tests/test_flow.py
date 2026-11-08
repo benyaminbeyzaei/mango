@@ -13,7 +13,7 @@ class Fake:
     def encode(self, text):
         return np.ones(3, dtype=np.float32)
 
-    def search(self, vec, k):
+    def search(self, vec, k, trace=None):
         self.k = k
         return [(f"r{i}", 1.0 - i / 1000) for i in range(k)]
 

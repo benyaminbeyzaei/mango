@@ -37,6 +37,8 @@ def test_schema_rejects_unknown_and_missing_keys(tmp_path):
     m = build_metrics([row(10.0)], INFO)
     with pytest.raises(ValidationError):
         Metrics.model_validate({**m, "extra": 1})
+    with pytest.raises(ValidationError):
+        Metrics.model_validate({**m, "retrieval": {**m["retrieval"], "Recall@1": 0.5}})
     del m["retrieval"]["MRR@10"]
     with pytest.raises(ValidationError):
         write_metrics(tmp_path, m)

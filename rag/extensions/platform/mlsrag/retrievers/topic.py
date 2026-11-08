@@ -1,10 +1,11 @@
 """TopicRetriever: route the query to the m nearest cluster centroids, then search only their
 members exactly (the idea behind an IVF index)."""
 import json
-from contextlib import nullcontext
 from pathlib import Path
 
 import numpy as np
+
+from ..trace import Trace
 
 
 def load_index(path) -> dict:
@@ -16,28 +17,25 @@ def load_index(path) -> dict:
 
 
 class TopicRetriever:
-    def __init__(self, index, vectors, ids, m=4, gateway=None):
-        """`vectors`/`ids`: the corpus enc_a matrix and its record ids. `gateway.trace`, if set,
-        receives the `topic.route` span and the counters (the runner points it at the current query)."""
+    def __init__(self, index, vectors, ids, m=4):
+        """`vectors`/`ids`: the corpus enc_a matrix and its record ids."""
         self.centroids = index["centroids"]
         row = {rid: i for i, rid in enumerate(ids)}
         self.members = [np.array([row[r] for r in ms], dtype=np.int64) for ms in index["members"]]
         self.vectors = np.asarray(vectors, dtype=np.float32)
         self.ids = ids
         self.m = m
-        self.gateway = gateway
 
-    def search(self, query_vec, k, m=None):
+    def search(self, query_vec, k, trace=None, m=None):
         m = m or self.m
+        trace = trace or Trace("-", "-", "-")  # throwaway when nobody is tracing
         q = np.asarray(query_vec, dtype=np.float32).reshape(-1)
         q = q / np.linalg.norm(q)
-        trace = getattr(self.gateway, "trace", None)
-        with trace.span("topic.route") if trace is not None else nullcontext():
+        with trace.span("topic.route"):
             probed = np.argsort(-(self.centroids @ q), kind="stable")[:m]
         rows = np.sort(np.concatenate([self.members[c] for c in probed]))  # corpus order, so ties break as in a flat scan
         scores = self.vectors[rows] @ q
         top = np.argsort(-scores, kind="stable")[:k]
-        if trace is not None:
-            trace.count("topic.clusters_probed", len(probed))
-            trace.count("topic.candidates_scanned", len(rows))
+        trace.count("topic.clusters_probed", len(probed))
+        trace.count("topic.candidates_scanned", len(rows))
         return [(self.ids[int(rows[i])], float(scores[i])) for i in top]

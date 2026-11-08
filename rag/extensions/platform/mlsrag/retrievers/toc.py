@@ -7,10 +7,11 @@ The LLM needs the question text: `uses_question = True` makes the flow pass it a
 """
 import json
 import re
-from contextlib import nullcontext
 from pathlib import Path
 
 import numpy as np
+
+from ..trace import Trace
 
 SECTIONS_PROMPT = (
     "Question: {question}\n\nA document collection is organised into these sections:\n{options}\n\n"
@@ -71,12 +72,12 @@ class TocRetriever:
         trace.count("toc.llm_calls")
         return parse_ids(reply, set(allowed), n)
 
-    def search(self, query_vec, k, question=None):
+    def search(self, query_vec, k, trace=None, question=None):
+        trace = trace or Trace("-", "-", "-")
         q = np.asarray(query_vec, dtype=np.float32).reshape(-1)
         q = q / np.linalg.norm(q)
-        trace = getattr(self.gateway, "trace", None)
         all_sections = list(range(len(self.toc["sections"])))
-        with trace.span("toc.route", route=self.route) if trace is not None else nullcontext():
+        with trace.span("toc.route", route=self.route):
             if self.route == "centroid":
                 sections = self._nearest(self.toc["section_centroids"], q, all_sections, self.n_sections)
             else:
@@ -102,8 +103,7 @@ class TocRetriever:
         rows = np.sort(np.concatenate([self.members[t] for t in topics]))  # corpus order: ties break as in a flat scan
         scores = self.vectors[rows] @ q
         top = np.argsort(-scores, kind="stable")[:k]
-        if trace is not None:
-            trace.count("toc.sections_probed", len(sections))
-            trace.count("toc.topics_probed", len(topics))
-            trace.count("toc.candidates_scanned", len(rows))
+        trace.count("toc.sections_probed", len(sections))
+        trace.count("toc.topics_probed", len(topics))
+        trace.count("toc.candidates_scanned", len(rows))
         return [(self.ids[int(rows[i])], float(scores[i])) for i in top]

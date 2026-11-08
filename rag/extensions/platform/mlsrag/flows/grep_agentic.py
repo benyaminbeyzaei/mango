@@ -2,7 +2,8 @@
 import json
 
 from ..prompts import grep_v1
-from .grep_static import ask, clean_patterns, finish, scan
+from .grep_static import ask, clean_patterns, scan
+from .standard import finish
 
 MAX_ITERATIONS = 3  # scans per query, so at most 1 + 2 + 1 = 4 LLM calls
 

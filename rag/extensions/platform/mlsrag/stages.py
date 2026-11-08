@@ -1,9 +1,9 @@
-"""The five stage interfaces and the adapters that wrap the course code behind them."""
+"""The five stages of a query (asr, encoder, retriever, context, generator) and the adapters that
+wrap the course code behind them."""
 import json
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Protocol
 
 import numpy as np
 
@@ -17,28 +17,6 @@ COURSE_SYSTEM_PROMPT = (
     "Do not invent facts that are unsupported by the evidence."
 )
 COURSE_TEMPERATURE = 0.1
-
-
-class ASR(Protocol):
-    def transcribe(self, audio_path) -> str: ...
-
-
-class Encoder(Protocol):
-    def encode(self, text: str) -> np.ndarray: ...
-
-
-class Retriever(Protocol):
-    def search(self, query_vec: np.ndarray, k: int) -> list[tuple[str, float]]: ...
-    # a retriever with `uses_question = True` is also given `question=<transcript>` by the flow;
-    # one with `uses_vector = False` gets no vector (None) and the flow skips the encode stage
-
-
-class ContextBuilder(Protocol):
-    def build(self, question: str, record_ids: list[str]) -> str: ...
-
-
-class Generator(Protocol):
-    def generate(self, prompt: str) -> str: ...
 
 
 def checkout_path(path) -> Path:
@@ -134,7 +112,7 @@ class Translate:
         return v / np.linalg.norm(v)
 
 
-def build_encoder(config, gateway) -> Encoder:
+def build_encoder(config, gateway):
     """Resolve config.mismatch_policy into the query encoder (error is enforced by RunConfig)."""
     space = ENCODER_SPACE[config.query_encoder]
     if space == config.corpus_index or config.mismatch_policy in ("error", "as-is"):
@@ -157,7 +135,7 @@ class ExactRetriever:
             emb / f"corpus_{index_name}.npy", emb / f"corpus_{index_name}_ids.json"
         )
 
-    def search(self, query_vec, k):
+    def search(self, query_vec, k, trace=None):
         r = self.inner.retrieve(query_vec, k=k)
         return list(zip(r["record_ids"], r["scores"], strict=True))
 
@@ -201,7 +179,15 @@ def stage_output(pipeline_name, config, stage_name) -> Path:
     return pipeline.stage_dir(stage_name, rows[stage_name]["hash"])
 
 
-def topic_retriever(config, gateway):
+def enc_a() -> tuple:
+    """(vectors, record ids) of the corpus enc_a index, loaded as the preprocessing stages load it."""
+    from .preprocess.cluster import load_vectors
+
+    ids = json.loads((paths.data_dir / "embeddings" / "corpus_enc_a_ids.json").read_text(encoding="utf-8"))
+    return load_vectors(ids), ids
+
+
+def topic_retriever(config):
     """`params.index`: the topics pipeline config (YAML) whose topic_index output to load."""
     from .preprocess import load_pipeline_config, topics_pipeline
     from .retrievers.topic import TopicRetriever, load_index
@@ -217,8 +203,7 @@ def topic_retriever(config, gateway):
             f"`mlsrag preprocess run --pipeline topics --config {config.params['index']}`"
         )
     index = load_index(pipeline.stage_dir("topic_index", rows[-1]["hash"]) / "index.json")
-    exact = ExactRetriever("enc_a").inner
-    return TopicRetriever(index, exact.embeddings, exact.record_ids, m=config.params.get("m", 4), gateway=gateway)
+    return TopicRetriever(index, *enc_a(), m=config.params.get("m", 4))
 
 
 TOC_ROUTE_MODEL = "meta-llama/Llama-3.3-70B-Instruct"
@@ -230,13 +215,12 @@ def toc_retriever(config, gateway):
 
     p = config.params
     toc = load_toc(stage_output("toc", config, "toc_index") / "toc.json")
-    exact = ExactRetriever("enc_a").inner
-    return TocRetriever(toc, exact.embeddings, exact.record_ids, sections=p.get("sections", 2), m=p.get("m", 4),
+    return TocRetriever(toc, *enc_a(), sections=p.get("sections", 2), m=p.get("m", 4),
                         route=p.get("route", "centroid"), gateway=gateway,
                         model=p.get("route_model", TOC_ROUTE_MODEL))
 
 
-def raptor_retriever(config, gateway):
+def raptor_retriever(config):
     """`params`: index (pipeline config), summary_as_evidence (false), expand_top (3)."""
     from .retrievers.raptor import SummaryRetriever, load_summaries
 
@@ -244,10 +228,8 @@ def raptor_retriever(config, gateway):
     if p.get("summary_as_evidence", False) and config.context_builder != "with-summaries":
         raise ValueError("summary_as_evidence: true needs context_builder: with-summaries")
     vectors, rows = load_summaries(stage_output("raptor", config, "summary_index"))
-    exact = ExactRetriever("enc_a").inner
-    return SummaryRetriever(vectors, rows, exact.embeddings, exact.record_ids,
-                            summary_as_evidence=p.get("summary_as_evidence", False),
-                            expand_top=p.get("expand_top", 3), gateway=gateway)
+    return SummaryRetriever(vectors, rows, *enc_a(), summary_as_evidence=p.get("summary_as_evidence", False),
+                            expand_top=p.get("expand_top", 3))
 
 
 def summary_context(config, data):
@@ -269,7 +251,7 @@ def built_index(pipeline, config_path, file_name) -> Path:
     return pipeline.stage_dir(rows[-1]["stage"], rows[-1]["hash"]) / file_name
 
 
-def lazy_graph_retriever(config, gateway):
+def lazy_graph_retriever(config):
     """`params.index`: the lazy-graph pipeline config; `params.rerank_dense` (default true)."""
     from .preprocess import lazy_graph_pipeline
     from .retrievers.graph import LazyGraphRetriever, load_index
@@ -277,9 +259,7 @@ def lazy_graph_retriever(config, gateway):
     if config.corpus_index != "enc_a":
         raise ValueError("the graph retrievers order candidates with enc_a vectors")
     index = load_index(built_index(lazy_graph_pipeline(), config.params["index"], "index.json"))
-    exact = ExactRetriever("enc_a").inner
-    return LazyGraphRetriever(index, exact.embeddings, exact.record_ids,
-                              rerank_dense=config.params.get("rerank_dense", True), gateway=gateway)
+    return LazyGraphRetriever(index, *enc_a(), rerank_dense=config.params.get("rerank_dense", True))
 
 
 def kg_retriever(config, gateway):
@@ -291,9 +271,7 @@ def kg_retriever(config, gateway):
     if config.corpus_index != "enc_a":
         raise ValueError("the graph retrievers order candidates with enc_a vectors")
     index = load_index(built_index(kg_pipeline(), config.params["index"], "index.json"))
-    exact = ExactRetriever("enc_a").inner
-    return KGRetriever(index, exact.embeddings, exact.record_ids,
-                       question_entities=config.params.get("question_entities", "spacy"),
+    return KGRetriever(index, *enc_a(), question_entities=config.params.get("question_entities", "spacy"),
                        model=config.params.get("question_model", config.generator_model), gateway=gateway)
 
 
@@ -306,11 +284,13 @@ def load_record_subset(path) -> frozenset:
 
 @dataclass
 class Stages:
-    asr: ASR
-    encoder: Encoder
-    retriever: Retriever
-    context: ContextBuilder
-    generator: Generator | None  # None for retrieval-only runs
+    asr: object  # .transcribe(audio_path) -> str
+    encoder: object  # .encode(text) -> vector
+    # .search(query_vec, k, trace=None) -> [(record_id, score)]; with `uses_question = True` the flow
+    # also passes question=<transcript>; with `uses_vector = False` it skips encoding and passes None
+    retriever: object
+    context: object  # .build(question, record_ids) -> prompt
+    generator: object | None  # .generate(prompt) -> str; None for retrieval-only runs
     gateway: object = None  # for flows that call a model themselves (grep)
 
 
@@ -329,11 +309,11 @@ def grep_index(data):
 # name -> factory(config, gateway, data). A new retriever or context builder registers here.
 RETRIEVERS = {
     "exact": lambda config, gateway, data: ExactRetriever(config.corpus_index),
-    "topic": lambda config, gateway, data: topic_retriever(config, gateway),
-    "lazy-graph": lambda config, gateway, data: lazy_graph_retriever(config, gateway),
+    "topic": lambda config, gateway, data: topic_retriever(config),
+    "lazy-graph": lambda config, gateway, data: lazy_graph_retriever(config),
     "kg": lambda config, gateway, data: kg_retriever(config, gateway),
     "toc": lambda config, gateway, data: toc_retriever(config, gateway),
-    "raptor-lite": lambda config, gateway, data: raptor_retriever(config, gateway),
+    "raptor-lite": lambda config, gateway, data: raptor_retriever(config),
     "bm25": lambda config, gateway, data: bm25_retriever(data),
     "grep": lambda config, gateway, data: grep_index(data),  # only for the grep flows, which call scan()
 }
