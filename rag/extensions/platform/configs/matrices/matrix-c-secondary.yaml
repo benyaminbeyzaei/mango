@@ -1,0 +1,16 @@
+# Matrix C (dev-20pct, secondary): what does using a different encoder for the queries cost in retrieval?
+# Variable: the encoder mismatch policy (gte-small queries against the enc_b index). Retrieval only:
+# run with --no-generate --fresh. The ASR comparison (whisper-1 vs the course ASR) joins this matrix
+# once course transcripts exist (mlsrag transcribe --asr course on the cluster).
+# Rows: baseline = gte-small on enc_a; enc-b-* = gte-small queries on the enc_b index with the named
+# policy (as-is, re-encode with bge-small, with its prefix, or a fitted lstsq/procrustes map).
+# Controls (same in every row): whisper-1 transcript cache (rag/.cache/transcripts/whisper1-<split>.jsonl),
+# retriever exact, k=5,
+# generator Qwen/Qwen3.5-397B-A17B-FP8 at temperature 0.1 with the course system prompt,
+# judge mistralai/Mistral-Small-4-119B-2603 (course evaluator, cached), prompts: course context prompt,
+# grep_v1 for the grep flows. Run every matrix with --fresh: latency and cost are valid only then.
+# Expected cost: see "How to run the experiments" in the platform README (from mlsrag estimate).
+name: c-secondary
+subset: dev-20pct
+override: {asr_cache: rag/.cache/transcripts/whisper1-dev.jsonl}
+configs: [baseline, enc-b-asis, enc-b-reencode, enc-b-reencode-prefix, enc-b-translate-lstsq, enc-b-translate-procrustes]

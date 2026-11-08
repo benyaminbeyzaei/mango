@@ -135,7 +135,7 @@ def test_record_subset_restricts_candidates_and_qrels(tmp_path):
             self.k = k
             return [(r, 1.0 - i / 10) for i, r in enumerate(IDS)][:k]
 
-        def build(self, question, record_ids):
+        def build(self, question, record_ids, trace=None):
             return ""
 
     (tmp_path / "subset.txt").write_text("r2\nr4\n", encoding="utf-8")

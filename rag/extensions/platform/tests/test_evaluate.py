@@ -33,6 +33,20 @@ def test_matrix_asks_before_running(tmp_path, monkeypatch):
 
 
 @needs_data
+def test_matrix_override_applies_to_every_config(tmp_path, monkeypatch):
+    path = tmp_path / "m.yaml"
+    path.write_text("name: t\nsubset: dev-20pct\nconfigs: [baseline, bm25]\n"
+                    "override: {asr_cache: rag/.cache/transcripts/whisper1-dev.jsonl, context_builder: budgeted}\n")
+    seen, real = [], evaluate.estimate
+    monkeypatch.setattr(evaluate, "estimate", lambda c, *a, **k: seen.append(c) or real(c, *a, **k))
+    monkeypatch.setattr("builtins.input", lambda _: "n")
+    with pytest.raises(SystemExit, match="aborted"):
+        matrix.run_matrix(path)
+    assert seen[0].retriever == "exact" and seen[0].context_builder == "budgeted"
+    assert seen[0].asr_cache.endswith("whisper1-dev.jsonl")
+
+
+@needs_data
 def test_every_flow_has_a_call_estimate():
     from mlsrag.flows import FLOWS
 

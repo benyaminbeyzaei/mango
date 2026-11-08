@@ -1,0 +1,11 @@
+# RunConfig: retrieve by routing to the 2 nearest of 256 topic clusters.
+name: topics-k256-m2
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+retriever: topic
+k: 5
+params:
+  index: rag/extensions/platform/configs/pipelines/topics-k256.yaml
+  m: 2

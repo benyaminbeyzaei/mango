@@ -32,7 +32,7 @@ Tests: `pytest rag/extensions/platform` (fast); `pytest -m slow rag/extensions/p
 `Retriever.search(vec, k) -> [(record_id, score)]` (`ExactRetriever`: enc_a or enc_b; `BM25Retriever` sets
 `uses_question = True`, so its `search(query_vec, k, question)` ranks by the question text and ignores the
 vector; the API refuses vector input without `input.question` for such retrievers),
-`ContextBuilder.build(question, record_ids) -> prompt` (`SimpleContext`),
+`ContextBuilder.build(question, record_ids, trace=None) -> prompt` (`SimpleContext`, `BudgetedContext`, `DedupeContext`; see Context builders),
 `Generator.generate(prompt) -> answer` (`GatewayGenerator`, the course system prompt, temperature 0.1).
 
 ## RunConfig fields
@@ -40,7 +40,7 @@ vector; the API refuses vector input without `input.question` for such retriever
 `name`; `asr` (cached | whisper1 | course); `asr_cache` (JSONL, relative to the checkout root);
 `query_encoder` (gte-small | bge-small); `corpus_index` (enc_a | enc_b); `mismatch_policy`
 (error | as-is | re-encode | translate: gte-small belongs to enc_a, bge-small to enc_b; see below); `retriever` (exact | topic | bm25 | grep); `k` (5);
-`context_builder` (simple); `generator_model`; `judge_model`; `flow` (standard | grep-static | grep-agentic); `params` (free dict).
+`context_builder` (simple | budgeted | dedupe | with-summaries); `generator_model`; `judge_model`; `flow` (standard | grep-static | grep-agentic); `params` (free dict).
 A YAML/JSON file with these keys works anywhere a preset name does.
 
 ## Commands (run from the checkout root)
@@ -116,7 +116,63 @@ mlsrag compare <run-dir> <run-dir> ...       # Markdown table, one column per ru
   same config, subset and generation mode (`--force` reruns; with `--fresh` only a fresh run is
   reused, otherwise it reruns fresh), judges unless `--no-judge` (again
   if the saved verdicts used another judge model; `--no-generate` runs retrieval only), and writes
-  `rag/extensions/results/matrices/<name>/summary.json` and `summary.md`.
+  `rag/extensions/results/matrices/<name>/summary.json` and `summary.md`. An optional `override:`
+  sets top-level RunConfig fields on every config (e.g. `asr_cache` for the dev split, or
+  `context_builder`); `params` would replace the whole dict, so override it only on purpose.
+
+## Context builders
+
+All three write the course prompt (`rag/src/context_builder.py`) around the evidence they keep.
+
+- `simple`: the full text of the top k records (the course baseline).
+- `budgeted` (`params.budget_tokens`, 800): records in rank order until the evidence reaches the
+  budget; the record that crosses it is cut at the last sentence end that fits (dropped if none
+  fits). The budget counts evidence only, not the question or the instructions. Tokens are a
+  word-based estimate (words × 1.3), enough to compare prompt sizes; the real prompt tokens are in
+  the trace's gateway cost.
+- `dedupe` (`params.dedupe_threshold`, 0.9, and `params.budget_tokens`): drops a record whose enc_a
+  cosine similarity to an already kept record is above the threshold (vectors from `stages.enc_a()`,
+  not re-embedded; records without a vector, such as raptor summaries, are kept), then the budget.
+
+Counters per query: `context.records_used`, `context.tokens`, `context.truncated` (0/1),
+`context.dropped_duplicates` (dedupe only). `configs/context-budgeted.yaml` and
+`configs/context-dedupe.yaml` are the baseline with each builder; `configs/matrices/matrix-context-smoke.yaml`
+compares the three on the smoke subset.
+
+## How to run the experiments
+
+The primary question: retrieval strategy vs cost per correct answer. Controls, the same in every
+row of matrices A and B and stated in each matrix file's header: the whisper-1 transcript cache, gte-small on enc_a,
+k=5, generator `Qwen/Qwen3.5-397B-A17B-FP8` at temperature 0.1, judge
+`mistralai/Mistral-Small-4-119B-2603` through the course evaluator, the course context prompt and
+`grep_v1`. Always pass `--fresh`: latency and cost are valid only for fresh runs (judge calls stay cached).
+
+| Matrix file (`configs/matrices/`) | Subset | Mode | ELM calls (fresh) |
+|---|---|---|---|
+| A `matrix-a-smoke.yaml` (11 retrieval configs) | practice-smoke20 | `--no-generate` | 140 (100 grep flow, 40 toc-llm routing) |
+| A `matrix-a-retrieval.yaml` | practice-20pct (70) | `--no-generate` | 490, after filling the transcript cache (below) |
+| A `matrix-a-retrieval-dev.yaml` | dev-20pct (25) | `--no-generate` | 175 |
+| B `matrix-b-answers.yaml` (7 configs, simple context) | dev-20pct | generate + judge | 275 + 175 judge |
+| B `matrix-b-answers-budgeted.yaml` (same rows, budgeted) | dev-20pct | generate + judge | 275 + 175 judge |
+| C `matrix-c-secondary.yaml` (encoder policies) | dev-20pct | `--no-generate` | 0 |
+
+Matrix C varies the encoder and index (gte-small queries on enc_b under each mismatch policy), so its
+controls are the rest. The practice transcript cache covers only the smoke subset: before matrix A on
+practice-20pct, fill it once (50 whisper-1 calls, 268 audio s, about $0.03; a cached run cannot transcribe):
+`mlsrag transcribe --asr whisper1 --subset practice-20pct --out rag/.cache/transcripts/whisper1-practice.jsonl`.
+The dev cache already covers dev-20pct.
+
+Matrix B's rows are one representative per family; after matrix A on the 20 % subsets, replace each
+with its family's best setting. Matrix C gains the ASR comparison once course transcripts exist.
+A `dev-all` run (125 queries) costs five times the dev-20pct numbers.
+
+```bash
+mlsrag matrix --matrix rag/extensions/platform/configs/matrices/matrix-a-smoke.yaml --no-generate --fresh
+mlsrag estimate --config grep-agentic --subset dev-20pct --judge --fresh   # one config's bound
+```
+
+Only the smoke matrices are run by agents. **The 20 % and full-split runs need Benyamin's go-ahead**,
+and he starts them.
 
 ## Encoder policies (query encoder vs corpus index)
 

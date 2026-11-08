@@ -145,7 +145,7 @@ class SimpleContext:
         self.data = data
         self.inner = SimpleContextBuilder()
 
-    def build(self, question, record_ids) -> str:
+    def build(self, question, record_ids, trace=None) -> str:
         return self.inner.build(question, record_ids, self.data)["prompt"]
 
 
@@ -289,7 +289,7 @@ class Stages:
     # .search(query_vec, k, trace=None) -> [(record_id, score)]; with `uses_question = True` the flow
     # also passes question=<transcript>; with `uses_vector = False` it skips encoding and passes None
     retriever: object
-    context: object  # .build(question, record_ids) -> prompt
+    context: object  # .build(question, record_ids, trace=None) -> prompt
     generator: object | None  # .generate(prompt) -> str; None for retrieval-only runs
     gateway: object = None  # for flows that call a model themselves (grep)
 
@@ -317,8 +317,23 @@ RETRIEVERS = {
     "bm25": lambda config, gateway, data: bm25_retriever(data),
     "grep": lambda config, gateway, data: grep_index(data),  # only for the grep flows, which call scan()
 }
+def budgeted_context(config, data):
+    from .context import BudgetedContext
+
+    return BudgetedContext(data, config.params.get("budget_tokens", 800))
+
+
+def dedupe_context(config, data):
+    from .context import DedupeContext
+
+    return DedupeContext(data, *enc_a(), threshold=config.params.get("dedupe_threshold", 0.9),
+                         budget_tokens=config.params.get("budget_tokens", 800))
+
+
 CONTEXT_BUILDERS = {
     "simple": lambda config, gateway, data: SimpleContext(data),
+    "budgeted": lambda config, gateway, data: budgeted_context(config, data),
+    "dedupe": lambda config, gateway, data: dedupe_context(config, data),
     "with-summaries": lambda config, gateway, data: summary_context(config, data),
 }
 

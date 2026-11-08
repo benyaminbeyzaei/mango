@@ -32,7 +32,7 @@ def finish(stages, config, trace, ranked_ids, scores, context_ids=None) -> dict:
     a["scores"] = scores
     with trace.span("context"):
         ids = ranked_ids[: config.k] if context_ids is None else context_ids
-        a["prompt"] = stages.context.build(a["transcript"], ids)
+        a["prompt"] = stages.context.build(a["transcript"], ids, trace)
     a["answer"] = None
     if stages.generator is not None:
         with trace.span("generate"):

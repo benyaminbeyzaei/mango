@@ -1,0 +1,15 @@
+# Matrix B (dev-20pct, context simple): retrieval strategy vs cost per correct answer.
+# Variable: the retriever (best per family from matrix A); this file fixes context_builder: simple,
+# matrix-b-answers-budgeted.yaml is the same rows with the other builder.
+# Generation + judge: run with --fresh. dev-all only on Benyamin's decision.
+# Controls (same in every row): whisper-1 transcript cache (rag/.cache/transcripts/whisper1-<split>.jsonl),
+# query encoder gte-small, corpus vectors enc_a (course embeddings/corpus_enc_a.npy), k=5,
+# generator Qwen/Qwen3.5-397B-A17B-FP8 at temperature 0.1 with the course system prompt,
+# judge mistralai/Mistral-Small-4-119B-2603 (course evaluator, cached), prompts: course context prompt,
+# grep_v1 for the grep flows. Run every matrix with --fresh: latency and cost are valid only then.
+# Expected cost: see "How to run the experiments" in the platform README (from mlsrag estimate).
+name: b-answers-simple
+subset: dev-20pct
+override: {asr_cache: rag/.cache/transcripts/whisper1-dev.jsonl, context_builder: simple}
+# One representative per family; replace each with the best setting of its family from matrix A.
+configs: [baseline, bm25, grep-agentic, topics-k256-m4, toc-centroid-m4, raptor-lite-expand, lazy-graph-rr]

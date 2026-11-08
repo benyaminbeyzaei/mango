@@ -70,7 +70,7 @@ class FakeASR:
 
 
 class FakeContext:
-    def build(self, question, record_ids):
+    def build(self, question, record_ids, trace=None):
         return ",".join(record_ids)
 
 
