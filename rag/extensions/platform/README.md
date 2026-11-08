@@ -301,6 +301,11 @@ standard flow; the others are called exactly as before.
   free) or `llm` (one call per query, `params.question_model`, default the generator model; counted
   by `mlsrag estimate`), then 1-hop neighbours; records ranked by direct matches, then 1-hop matches,
   then cosine. Counters `kg.entities_matched`, `kg.entities_1hop`, `kg.candidates`.
+  Extraction model: `meta-llama/Llama-3.3-70B-Instruct` (plan 018: ~4.4 s and ~520 tokens per
+  record; Qwen3.5 took ~156 s and ~7,000 tokens because of its hidden reasoning). The budget is
+  spent: 1 Qwen + 599 Llama attempts, 598 records extracted, 3,919 entities, 3,727 edges. The
+  configs `kg-spacy-dev-sub600.yaml` and `kg-llm-dev-sub600.yaml` (question model Llama) run it on
+  `dev` restricted to those 600 records.
 
 ```bash
 mlsrag preprocess run --pipeline lazy-graph --config rag/extensions/platform/configs/pipelines/lazy-graph.yaml

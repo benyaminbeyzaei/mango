@@ -1,0 +1,44 @@
+{
+  "retrieval": {
+    "Recall@5": 0.7796190476190477,
+    "Recall@10": 0.823047619047619,
+    "Recall@20": 0.9424761904761906,
+    "Recall@100": 0.9706666666666667,
+    "MRR@10": 0.848,
+    "NDCG@10": 0.7896896961949876
+  },
+  "answers": null,
+  "cost": {
+    "elm_calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.03213243559002876,
+    "encode": 85.04639608319849,
+    "retrieve": 30.906384310219437,
+    "context": 0.0530555984005332,
+    "generate": null,
+    "end_to_end": {
+      "mean": 116.30109379533678,
+      "p50": 114.6056680008769,
+      "p95": 148.4888792037964
+    }
+  },
+  "resources": {
+    "cpu_s": 37.760192671999995,
+    "peak_rss_mb": 591.06640625
+  },
+  "run": {
+    "run_id": "20261108-1854-baseline-dev-sub600-dev-20pct",
+    "config_name": "baseline-dev-sub600",
+    "subset": "dev-20pct",
+    "started": "2026-11-08T18:54:36",
+    "finished": "2026-11-08T18:54:39",
+    "git_commit": "d49c35f425ff47d46afcc5e2f7127db90a829f15",
+    "fresh": true,
+    "n_queries": 25
+  }
+}

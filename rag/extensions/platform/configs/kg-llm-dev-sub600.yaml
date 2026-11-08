@@ -1,0 +1,13 @@
+# RunConfig: LLM knowledge graph on dev, question entities by one Llama call per query, restricted to the 600 KG records.
+name: kg-llm-dev-sub600
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-dev.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+k: 5
+retriever: kg
+params:
+  index: rag/extensions/platform/configs/pipelines/kg.yaml
+  question_entities: llm
+  question_model: meta-llama/Llama-3.3-70B-Instruct
+  record_subset: rag/extensions/platform/subsets/records-dev-relevant-d275.txt

@@ -1,5 +1,5 @@
 # KG pipeline (mlsrag preprocess run --pipeline kg --config <this file>). Budget: at most 600 LLM calls.
 # Every record in qrels_dev.tsv (325) plus 275 random distractors (seed 0) = 600 records.
 select: {mode: dev-relevant, distractors: 275, seed: 0}
-kg_extract: {model: Qwen/Qwen3.5-397B-A17B-FP8}
+kg_extract: {model: meta-llama/Llama-3.3-70B-Instruct}  # plan 018: Qwen took ~156 s per record
 kg_index: {}
