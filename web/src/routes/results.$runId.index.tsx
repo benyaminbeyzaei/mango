@@ -11,10 +11,12 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import {
+  NOT_FRESH,
   fmt,
   flatten,
   isCached,
   isGatewaySpan,
+  isTimeOrCost,
   unit,
   useRun,
   useRunQueries,
@@ -56,6 +58,7 @@ function RunDetail() {
   if (!run.data || !queries.data) return <p>Loading {runId}…</p>
 
   const flat = flatten({ ...run.data.metrics, run: undefined })
+  const fresh = run.data.metrics.run.fresh === true
   const rows = queries.data
     .map(row)
     .filter((r) => String(r.query_id).includes(filter))
@@ -84,6 +87,7 @@ function RunDetail() {
       <p className="text-sm text-muted-foreground">
         config {run.data.metrics.run.config_name}, subset{" "}
         {run.data.metrics.run.subset}, {run.data.metrics.run.n_queries} queries
+        {!fresh && `; ${NOT_FRESH}`}
       </p>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -106,12 +110,18 @@ function RunDetail() {
                           {unit(k)}
                         </span>
                       </dt>
-                      <dd
-                        className="text-right font-mono"
-                        title={String(flat[k])}
-                      >
-                        {fmt(flat[k])}
-                      </dd>
+                      {isTimeOrCost(k) && !fresh ? (
+                        <dd className="text-right font-mono" title={NOT_FRESH}>
+                          –
+                        </dd>
+                      ) : (
+                        <dd
+                          className="text-right font-mono"
+                          title={String(flat[k])}
+                        >
+                          {fmt(flat[k])}
+                        </dd>
+                      )}
                     </div>
                   ))}
                 </dl>

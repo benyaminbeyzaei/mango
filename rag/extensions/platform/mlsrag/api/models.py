@@ -68,6 +68,7 @@ class RunSummary(BaseModel):
     subset: str
     n_queries: int
     finished: str | None
+    fresh: bool = Field(False, description="latency and cost are valid only for fresh runs")
     retrieval: dict[str, float] = Field(description="metrics.json retrieval block: Recall@k, MRR@10, NDCG@10")
     cost: dict = Field(description="metrics.json cost block: elm_calls, tokens, audio_seconds, est_usd")
 
@@ -99,6 +100,7 @@ class StartRunRequest(BaseModel):
     subset: str = "practice-smoke20"
     generate: bool = True
     allow_full: bool = False
+    fresh: bool = Field(False, description="skip cache reads so latency and cost are valid")
 
 
 class JobStatus(BaseModel):

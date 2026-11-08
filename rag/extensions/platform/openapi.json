@@ -967,6 +967,12 @@
             ],
             "title": "Finished"
           },
+          "fresh": {
+            "type": "boolean",
+            "title": "Fresh",
+            "description": "latency and cost are valid only for fresh runs",
+            "default": false
+          },
           "retrieval": {
             "additionalProperties": {
               "type": "number"
@@ -1021,6 +1027,12 @@
           "allow_full": {
             "type": "boolean",
             "title": "Allow Full",
+            "default": false
+          },
+          "fresh": {
+            "type": "boolean",
+            "title": "Fresh",
+            "description": "skip cache reads so latency and cost are valid",
             "default": false
           }
         },

@@ -101,3 +101,36 @@ def test_log_line_has_no_key(gateway, monkeypatch):
     assert SECRET not in text
     line = json.loads(text.splitlines()[0])
     assert line["op"] == "chat" and line["model"] == "m" and line["cached"] is False
+
+
+def test_fresh_skips_cache_reads_but_writes(gateway, monkeypatch):
+    calls = install(gateway, monkeypatch, [fake_response("a"), fake_response("b")])
+    gateway.fresh = True
+    msgs = [{"role": "user", "content": "q"}]
+    assert gateway.chat("m", msgs) == "a"
+    assert gateway.chat("m", msgs) == "b"
+    assert len(calls) == 2
+    assert [s.attrs["cached"] for s in gateway.trace.spans] == [False, False]
+    assert gateway.trace.cost["m"]["calls"] == 2
+    assert len(list(gateway.cache_dir.glob("*.json"))) == 1  # written (and overwritten)
+    gateway.fresh = False
+    assert gateway.chat("m", msgs) == "b"  # a normal gateway reads what fresh wrote
+    assert len(calls) == 2
+
+
+def test_fresh_embed_recomputes(gateway, monkeypatch):
+    encoded = []
+
+    class FakeEncoder:
+        def encode(self, texts, **kwargs):
+            encoded.append(texts)
+            return [[1.0, 0.0] for _ in texts]
+
+    monkeypatch.setattr(gateway, "encoder", lambda name: FakeEncoder())
+    gateway.embed("enc", ["q"])
+    gateway.embed("enc", ["q"])
+    assert len(encoded) == 1
+    gateway.fresh = True
+    gateway.embed("enc", ["q"])
+    assert len(encoded) == 2
+    assert [s.attrs["cached"] for s in gateway.trace.spans] == [False, True, False]

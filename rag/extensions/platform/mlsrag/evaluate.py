@@ -128,10 +128,11 @@ def estimate(config, subset, judge=False, repeats=1) -> dict:
     }
 
 
-def format_estimate(e) -> str:
+def format_estimate(e, fresh=False) -> str:
     c = e["calls"]
+    mode = "fresh: every listed call is made (judge stays cached)" if fresh else "upper bound, cached calls are free"
     return (
-        f"{e['config']} on {e['subset']} ({e['queries']} queries), upper bound, cached calls are free:\n"
+        f"{e['config']} on {e['subset']} ({e['queries']} queries), {mode}:\n"
         f"  generation calls: {c['generation']}\n"
         f"  judge calls:      {c['judge']}\n"
         f"  flow calls:       {c['flow']}\n"

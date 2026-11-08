@@ -8,7 +8,7 @@ import yaml
 from . import evaluate, runner
 from .config import PRESETS, RunConfig, load_config
 from .course import paths
-from .results import list_runs, load_run, markdown_table, summary_row
+from .results import COST_KEYS, list_runs, load_run, markdown_table, summary_row
 from .subsets import check_subset
 
 CONFIGS_DIR = Path(__file__).resolve().parents[1] / "configs"
@@ -28,11 +28,13 @@ def config_hash(config) -> str:
     return hashlib.sha256(config.model_dump_json().encode()).hexdigest()[:12]
 
 
-def find_run(config, subset, generate):
-    """The newest completed run with the same config, subset and generation mode."""
+def find_run(config, subset, generate, fresh=False):
+    """The newest completed run with the same config, subset and generation mode (and fresh, if asked)."""
     want = config_hash(config)
     for run_dir in reversed(list_runs(paths.results_dir)):
         run = load_run(run_dir)
+        if fresh and not run["metrics"]["run"].get("fresh", False):
+            continue
         if (run["metrics"]["run"]["subset"] == subset
                 and config_hash(RunConfig(**run["config"])) == want
                 and (run["metrics"]["latency_ms"]["generate"] is not None) == generate):
@@ -40,7 +42,7 @@ def find_run(config, subset, generate):
     return None
 
 
-def run_matrix(path, judge=True, generate=True, force=False, allow_full=False, yes=False):
+def run_matrix(path, judge=True, generate=True, force=False, allow_full=False, yes=False, fresh=False):
     spec = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     subset = spec["subset"]
     check_subset(subset, allow_full)
@@ -52,18 +54,18 @@ def run_matrix(path, judge=True, generate=True, force=False, allow_full=False, y
         if not generate:
             e["elm_calls"] -= e["calls"]["generation"]
             e["calls"]["generation"] = 0
-        print(evaluate.format_estimate(e))
+        print(evaluate.format_estimate(e, fresh))
     print(f"matrix total: {sum(e['elm_calls'] for e in estimates)} ELM calls (upper bound)")
     if not yes and input("Proceed? [y/N] ").strip().lower() != "y":
         raise SystemExit("aborted")
 
     rows = []
     for config in configs:
-        run_dir = None if force else find_run(config, subset, generate)
+        run_dir = None if force else find_run(config, subset, generate, fresh)
         if run_dir:
             print(f"{config.name}: reusing {run_dir.name}")
         else:
-            run_dir, _ = runner.run(config, subset, generate=generate, allow_full=allow_full)
+            run_dir, _ = runner.run(config, subset, generate=generate, allow_full=allow_full, fresh=fresh)
         answers = load_run(run_dir)["metrics"]["answers"]
         if judge and (answers is None or answers["judge_model"] != config.judge_model):
             evaluate.judge(run_dir)
@@ -75,8 +77,9 @@ def run_matrix(path, judge=True, generate=True, force=False, allow_full=False, y
         json.dumps({"name": spec["name"], "subset": subset, "rows": rows}, indent=2) + "\n",
         encoding="utf-8")
     header = list(rows[0])
+    table = [[("–" if k in COST_KEYS and not r["fresh"] else r[k]) for k in header] for r in rows]
+    note = "" if all(r["fresh"] for r in rows) else "\n– latency and cost: not a fresh run\n"
     (out / "summary.md").write_text(
-        f"# Matrix {spec['name']} on {subset}\n\n"
-        + markdown_table(header, [[r[k] for k in header] for r in rows]),
+        f"# Matrix {spec['name']} on {subset}\n\n" + markdown_table(header, table) + note,
         encoding="utf-8")
     return out

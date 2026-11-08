@@ -5,7 +5,8 @@ import { LatencyBreakdown } from "@/components/charts/latency-breakdown"
 import { PerQueryStrip } from "@/components/charts/per-query-strip"
 import { QualityCostScatter } from "@/components/charts/quality-cost-scatter"
 import {
-  cachedShare,
+  NOT_FRESH,
+  isTimeOrCost,
   uniqueIds,
   flatten,
   runDate,
@@ -88,26 +89,22 @@ function Compare() {
     configs.some((c) => c[f] !== configs[0][f])
   )
 
-  // A run with cache hits is not a latency or cost sample: its latency and cost are shown as "–".
-  const cached = queries.map(cachedShare)
-  const isTimeOrCost = (k: string) =>
-    k.startsWith("latency_ms") || k.startsWith("cost")
+  // Latency and cost of a run made without --fresh are shown as "–".
+  const fresh = details.map((d) => d.metrics.run.fresh === true)
   const sample = (i: number, k: string) =>
-    isTimeOrCost(k) && cached[i] > 0 ? null : (flat[i][k] ?? null)
-  const cachedNote = cached.some((c) => c > 0) && (
-    <>
-      Left out as latency and cost samples because some remote calls were cache
-      hits:{" "}
+    isTimeOrCost(k) && !fresh[i] ? null : (flat[i][k] ?? null)
+  const cachedNote = fresh.some((f) => !f) && (
+    <span title={NOT_FRESH}>
+      No latency or cost shown for{" "}
       {series
-        .map((s, i) => [s.label, cached[i]] as const)
-        .filter(([, c]) => c > 0)
-        .map(([label, c]) => `${label} (${Math.round(100 * c)}% cache hits)`)
+        .filter((_, i) => !fresh[i])
+        .map((s) => s.label)
         .join(", ")}
-      .
-    </>
+      : {NOT_FRESH}.
+    </span>
   )
   const xValue = (i: number) => {
-    if (cached[i] > 0) return null
+    if (!fresh[i]) return null
     return x === "calls"
       ? details[i].metrics.cost.elm_calls / details[i].metrics.run.n_queries
       : (flat[i]["latency_ms.end_to_end.mean"] ?? null)
