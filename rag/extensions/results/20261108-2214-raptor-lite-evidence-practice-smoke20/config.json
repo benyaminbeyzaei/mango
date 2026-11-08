@@ -1,17 +1,18 @@
 {
-  "name": "grep-agentic",
+  "name": "raptor-lite-evidence",
   "asr": "cached",
   "asr_cache": "rag/.cache/transcripts/whisper1-practice.jsonl",
   "query_encoder": "gte-small",
   "corpus_index": "enc_a",
   "mismatch_policy": "error",
-  "retriever": "grep",
+  "retriever": "raptor-lite",
   "k": 5,
-  "context_builder": "simple",
+  "context_builder": "with-summaries",
   "generator_model": "Qwen/Qwen3.5-397B-A17B-FP8",
   "judge_model": "mistralai/Mistral-Small-4-119B-2603",
-  "flow": "grep-agentic",
+  "flow": "standard",
   "params": {
-    "grep_model": "Qwen/Qwen3.5-397B-A17B-FP8"
+    "index": "rag/extensions/platform/configs/pipelines/topics-k256.yaml",
+    "summary_as_evidence": true
   }
 }

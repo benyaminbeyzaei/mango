@@ -44,6 +44,7 @@ def test_matrix_override_applies_to_every_config(tmp_path, monkeypatch):
         matrix.run_matrix(path)
     assert seen[0].retriever == "exact" and seen[0].context_builder == "budgeted"
     assert seen[0].asr_cache.endswith("whisper1-dev.jsonl")
+    assert seen[0].name == "baseline+context_builder=budgeted"  # asr_cache is not in the name
 
 
 @needs_data

@@ -61,3 +61,25 @@ python rag/scripts/evaluate_answers.py --split practice --candidates rag/results
 The dry run checks candidate IDs and coverage without calling ELM. The last command scores correctness, grounding and completeness (0–4 each; normalised score = sum / 12). Choose a new candidate file and output directory for each experiment. Set `ELM_JUDGE_MODEL` in `rag/.env` for a separate judge model, or pass `--repeats` for repeated judging.
 
 > Generation and judging send one ELM request per query (and per repeat): try `--limit 5` with `--allow-subset` first.
+
+## 6. Optional: run our experiment matrices
+
+The platform (`rag/extensions/platform/`, see its `README.md`) runs on any machine with the course data; no GPU, since it uses cached or whisper-1 transcripts. Install it in the RAG environment with `pip install -e "rag/extensions/platform[dev]"`, or use Docker (`docker compose run --rm cli mlsrag ...`). The committed results are smoke and 20 % subsets. A full split needs a copy of a matrix file with `subset: dev-all` (or `practice-all`) and both flags:
+
+```bash
+mlsrag transcribe --asr whisper1 --subset dev-all --allow-full --out rag/.cache/transcripts/whisper1-dev.jsonl
+mlsrag estimate --config baseline --subset dev-all --judge --fresh      # calls for one config, nothing sent
+mlsrag matrix --matrix my-matrix-b-dev-all.yaml --fresh --allow-full --yes
+```
+
+Estimated cost on `dev-all` (125 queries), after the transcript cache is filled (100 whisper-1 calls, 550 audio s, about $0.06; `practice-all` needs 330, about $0.17). The chat models are free university-hosted ELM models; wall time is at one request at a time, judging not included:
+
+| Matrix | Mode | ELM calls | Wall time |
+|---|---|---|---|
+| A, 11 retrieval configs (`matrix-a-retrieval-dev.yaml`) | `--no-generate` | 875 | ~14 h |
+| A on `practice-all` (350 queries) | `--no-generate` | 2,450 | ~39 h |
+| B, 7 configs, generation + judge (`matrix-b-answers.yaml`) | generate + judge | 1,375 + 875 judge | ~23 h + judge |
+| B with the budgeted builder (`matrix-b-answers-budgeted.yaml`) | generate + judge | 1,375 + 875 judge | ~22 h + judge |
+| C, encoder policies (`matrix-c-secondary.yaml`) | `--no-generate` | 0 | minutes |
+
+Without `--allow-full` every command refuses a full split; without `--yes` the matrix prints its estimate and waits for `y`.

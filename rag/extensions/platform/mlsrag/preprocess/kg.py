@@ -64,9 +64,9 @@ def run_extract(inputs, config, ctx):
     todo = [r for r in records if r["record_id"] not in done]
     # every kg_extract output (other models or prompts too) shares the one budget
     spent = sum(len(Ledger(p).rows()) for p in ctx.out_dir.parent.glob("*/ledger.jsonl"))
-    budget = MAX_CALLS - spent
+    budget = max(MAX_CALLS - spent, 0)  # a negative slice would still run calls
     ctx.log(f"kg_extract: {len(done)} records done, {len(todo)} to go, {budget} calls left")
-    ask(ctx, ledger, len(records), min(len(todo), max(budget, 0)))
+    ask(ctx, ledger, len(records), min(len(todo), budget))
     for i, r in enumerate(todo[:budget], start=1):
         prompt = build_prompt(r["text"], attempt=attempts.get(r["record_id"], 0))
         input_hash = hashlib.sha256(prompt.encode()).hexdigest()[:16]

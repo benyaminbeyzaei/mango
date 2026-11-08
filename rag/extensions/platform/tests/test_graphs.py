@@ -103,6 +103,11 @@ def test_kg_extract_respects_the_call_budget_and_index(tmp_path, monkeypatch):
     (tmp_path / "kg-other-model").mkdir()  # another config's output shares the same budget
     kg.run_extract({"select": sel}, {"model": "m2"}, ctx(tmp_path / "kg-other-model", gw))
     assert gw.calls == 4
+    monkeypatch.setattr(kg, "MAX_CALLS", 3)  # 4 calls spent, budget now negative: still no call
+    (tmp_path / "kg-overspent").mkdir()
+    sel3 = write_records(tmp_path / "select3", ids=IDS[:3])
+    kg.run_extract({"select": sel3}, {"model": "m3"}, ctx(tmp_path / "kg-overspent", gw))
+    assert gw.calls == 4
 
     kg.run_index({"kg_extract": tmp_path / "kg"}, {}, ctx(tmp_path / "index"))
     index = json.loads((tmp_path / "index" / "index.json").read_text())
