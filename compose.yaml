@@ -1,4 +1,4 @@
-# docker compose up                → API + web client on http://localhost:8000
+# docker compose up                → API + web client on http://localhost:8000 (this machine only)
 # docker compose run --rm cli mlsrag run --config baseline --subset practice-smoke20 --no-generate
 x-app: &app
   build:
@@ -19,7 +19,7 @@ services:
   app:
     <<: *app
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"  # localhost only: the API has no token and spends ELM calls
   cli:
     <<: *app
     profiles: [cli]

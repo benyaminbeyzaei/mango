@@ -44,6 +44,12 @@ def test_matrix_override_applies_to_every_config(tmp_path, monkeypatch):
         matrix.run_matrix(path)
     assert seen[0].retriever == "exact" and seen[0].context_builder == "budgeted"
     assert seen[0].asr_cache.endswith("whisper1-dev.jsonl")
+    assert seen[0].name == "baseline+context_builder=budgeted"  # asr_cache is not in the name
+
+
+def test_matrix_override_name_is_a_folder_name():
+    config = matrix.with_override(baseline(), {"generator_model": "meta-llama/Llama-3.3-70B-Instruct"})
+    assert config.name == "baseline+generator_model=meta-llama_Llama-3.3-70B-Instruct"
 
 
 @needs_data

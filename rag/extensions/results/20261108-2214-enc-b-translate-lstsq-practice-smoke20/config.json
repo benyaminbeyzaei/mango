@@ -1,0 +1,17 @@
+{
+  "name": "enc-b-translate-lstsq",
+  "asr": "cached",
+  "asr_cache": "rag/.cache/transcripts/whisper1-practice.jsonl",
+  "query_encoder": "gte-small",
+  "corpus_index": "enc_b",
+  "mismatch_policy": "translate",
+  "retriever": "exact",
+  "k": 5,
+  "context_builder": "simple",
+  "generator_model": "Qwen/Qwen3.5-397B-A17B-FP8",
+  "judge_model": "mistralai/Mistral-Small-4-119B-2603",
+  "flow": "standard",
+  "params": {
+    "map": "lstsq"
+  }
+}

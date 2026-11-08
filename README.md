@@ -138,6 +138,12 @@ group information, and run the PDF checker before submission. Follow the course
 submission brief for hand-in arrangements and the module guides for technical
 requirements.
 
+## Platform and experiments (rag/extensions/platform)
+
+Our RAG experiments run through `mlsrag`, a traced, cached and costed wrapper around the unchanged course code, with a web client (`web/`) and Docker (`docker compose up`).
+The course scripts above stay the reference for the reported numbers; the platform adds retrieval strategies, experiment matrices and results under `rag/extensions/results/`.
+Start at [rag/extensions/platform/README.md](rag/extensions/platform/README.md).
+
 ## GPU Compatibility
 
 The CUDA tutorial examples are plain CUDA C++ and need CUDA 11.6 or newer (for `-arch=native`). They were tested on the Teaching partition with CUDA 12.8 on NVIDIA GeForce RTX 2080 Ti (sm_75) and NVIDIA H200 MIG 1g.18gb (sm_90). Your allocation may give you a different GPU. Build on the compute node, so that `-arch=native` matches the GPU you were given.
