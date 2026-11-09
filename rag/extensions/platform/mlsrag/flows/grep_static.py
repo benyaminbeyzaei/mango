@@ -4,7 +4,7 @@ import json
 from ..prompts import grep_v1
 from .standard import RANKED_DEPTH, finish
 
-DEFAULT_MODEL = "Qwen/Qwen3.5-397B-A17B-FP8"
+DEFAULT_MODEL = "meta-llama/Llama-3.3-70B-Instruct"  # plan 021: Qwen reasoning made each pattern call ~70-100 s
 
 
 def parse_json(text):
