@@ -6,7 +6,7 @@ import pytest
 
 from mlsrag.preprocess import ledger, summarise
 from mlsrag.retrievers.raptor import SummaryData, SummaryRetriever
-from mlsrag.retrievers.toc import TocRetriever, parse_ids
+from mlsrag.retrievers.toc import SECTIONS_PROMPT, TOPICS_PROMPT, TocRetriever, parse_ids
 from mlsrag.trace import Trace
 
 
@@ -74,6 +74,47 @@ def test_toc_llm_route_falls_back_to_centroids_on_bad_reply():
     assert [r for r, _ in hits] == ["a", "b"]
     assert g.trace.counters["toc.llm_fallbacks"] == 2
 
+
+def test_toc_llm_prompts_unchanged():  # prompt text is part of the cache key
+    assert SECTIONS_PROMPT == (
+        "Question: {question}\n\nA document collection is organised into these sections:\n{options}\n\n"
+        "Which sections (at most {n}) most likely contain the answer? "
+        'Reply with JSON only: {{"ids": [<section numbers>]}}')
+    assert TOPICS_PROMPT == (
+        "Question: {question}\n\nThese are the topics of the most likely sections:\n{options}\n\n"
+        "Which topics (at most {n}) most likely contain the answer? "
+        'Reply with JSON only: {{"ids": [<topic numbers>]}}')
+
+
+def test_toc_llm_topics_route_lists_each_sections_topic_names():
+    vectors, ids = toy_corpus()
+    g = ScriptedGateway(['{"ids": [1]}', '{"ids": [2]}'])
+    hits = TocRetriever(toy_toc(), vectors, ids, sections=2, m=4, route="llm-topics", gateway=g).search(
+        np.array([1.0, 0, 0]), k=10, trace=g.trace, question="where is z")
+    assert [r for r, _ in hits] == ["f", "e"]
+    assert "0. XY: x and y\n   Topics: X; Y\n1. Z: z\n   Topics: Z" in g.prompts[0]
+    assert g.prompts[1].startswith("Question: where is z\n\nThese are the topics")  # topic step as in llm
+    assert g.trace.counters["toc.llm_calls"] == 2
+
+
+def test_toc_llm_flat_route_one_call_over_all_topics():
+    vectors, ids = toy_corpus()
+    g = ScriptedGateway(['{"ids": [1, 2]}'])
+    hits = TocRetriever(toy_toc(), vectors, ids, m=4, route="llm-flat", gateway=g).search(
+        np.array([1.0, 0, 0]), k=10, trace=g.trace, question="q")
+    assert len(g.prompts) == 1 and "0. X: x\n1. Y: y\n2. Z: z" in g.prompts[0]
+    assert sorted(r for r, _ in hits) == ["c", "d", "e", "f"]  # members of topics 1 and 2
+    assert g.trace.counters["toc.llm_calls"] == 1
+    assert g.trace.counters["toc.candidates_scanned"] == 4
+
+
+def test_toc_llm_flat_route_falls_back_to_centroid_route():
+    vectors, ids = toy_corpus()
+    g = ScriptedGateway(["no idea"])
+    hits = TocRetriever(toy_toc(), vectors, ids, sections=1, m=1, route="llm-flat", gateway=g).search(
+        np.array([1.0, 0, 0]), k=10, trace=g.trace, question="q")
+    assert [r for r, _ in hits] == ["a", "b"]
+    assert g.trace.counters["toc.llm_fallbacks"] == 1
 
 def toy_summaries():
     # summary 0 sits near the z records; summary 1 near x

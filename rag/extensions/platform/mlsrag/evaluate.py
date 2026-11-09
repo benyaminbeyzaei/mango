@@ -15,8 +15,11 @@ FLOW_CALLS_PER_QUERY = {"standard": 0, "grep-static": 1, "grep-agentic": 4, "gre
 
 
 def retriever_calls_per_query(config) -> int:
-    """ELM calls the retriever makes per query: toc with route: llm picks sections, then topics."""
-    return 2 if config.retriever == "toc" and config.params.get("route", "centroid") == "llm" else 0
+    """ELM calls the retriever makes per query: toc routes llm and llm-topics pick sections, then topics;
+    llm-flat picks topics in one call."""
+    if config.retriever != "toc":
+        return 0
+    return {"llm": 2, "llm-topics": 2, "llm-flat": 1}.get(config.params.get("route", "centroid"), 0)
 
 
 def read_jsonl(path):

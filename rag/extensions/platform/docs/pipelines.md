@@ -49,7 +49,7 @@ mlsrag preprocess run --pipeline raptor --config rag/extensions/platform/configs
 mlsrag matrix --matrix rag/extensions/platform/configs/matrices/matrix-toc-raptor-smoke.yaml --no-generate
 ```
 
-**TOC** (`retriever: toc`, `params: {index, sections: 2, m: 4, route: centroid | llm, route_model}`).
+**TOC** (`retriever: toc`, `params: {index, sections: 2, m: 4, route: centroid | llm | llm-topics | llm-flat, route_model}`).
 Stage `section` runs k-means (n=16) on the 256 topic centroids and names each section from its
 topics' labels (one LLM call per section, ledger); `toc_index` writes `toc.json` (sections →
 topics → record ids) and both centroid files. With `route: centroid` the query takes the
@@ -57,9 +57,12 @@ topics → record ids) and both centroid files. With `route: centroid` the query
 then searches those topics' members exactly (no LLM). With `route: llm` one chat call picks up to
 `sections` sections from the 16 titles and a second picks up to `m` topics from those sections'
 labels (Llama 3.3 by default; an unusable reply falls back to the centroids and counts
-`toc.llm_fallbacks`). The retriever sets `uses_question = True`, so the flow passes it the transcript. Trace:
+`toc.llm_fallbacks`). `route: llm-topics` is the same two calls, but the section prompt lists the
+names of each section's 16 topics under its title. `route: llm-flat` skips the sections: one call
+shows all 256 topics (number, label, summary) and picks up to `m` of them; an unusable reply takes
+the centroid route. The retriever sets `uses_question = True`, so the flow passes it the transcript. Trace:
 span `toc.route`, counters `toc.sections_probed`, `toc.topics_probed`, `toc.llm_calls`,
-`toc.candidates_scanned`; `mlsrag estimate` counts the 2 routing calls per query.
+`toc.candidates_scanned`; `mlsrag estimate` counts 2 routing calls per query (1 for `llm-flat`).
 
 **RAPTOR-lite** (`retriever: raptor-lite`, `params: {index, summary_as_evidence: false, expand_top: 3}`).
 One level of RAPTOR (Sarthi et al., ICLR 2024): stage `summarise` writes one summary (at most 120

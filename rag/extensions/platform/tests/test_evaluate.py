@@ -147,3 +147,9 @@ def test_matrix_reuses_a_judged_run_and_writes_summary(tmp_path, monkeypatch):
     rows = json.loads((out / "summary.json").read_text())["rows"]
     assert [r["run"] for r in rows] == [run_dir.name] and rows[0]["answer_norm"] == 0.25
     assert run_dir.name in (out / "summary.md").read_text()
+
+
+def test_retriever_calls_per_query_by_toc_route():
+    calls = {name: evaluate.retriever_calls_per_query(matrix.resolve_config(name))
+             for name in ("toc-centroid-m4", "toc-llm-m4", "toc-llm-topics-m4", "toc-llm-flat-m4", "baseline")}
+    assert calls == {"toc-centroid-m4": 0, "toc-llm-m4": 2, "toc-llm-topics-m4": 2, "toc-llm-flat-m4": 1, "baseline": 0}

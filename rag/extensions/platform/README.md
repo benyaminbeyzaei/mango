@@ -158,7 +158,8 @@ gte-small on enc_a, k=5, generator `Qwen/Qwen3.5-397B-A17B-FP8` at temperature 0
 Qwen's hidden reasoning took ~70-100 s per call); answers stay on Qwen. Always pass `--fresh`.
 
 Wall time (queries one at a time, from the fresh smoke runs): Qwen generation ~52 s, grep static ~1.4 s,
-grep agentic ~5.6 s, grep feedback ~7.7 s per query (Llama-3.3), toc-llm ~1 s, all other retrievers < 0.2 s. Judge time is
+grep agentic ~5.6 s, grep feedback ~7.7 s per query (Llama-3.3), toc-llm ~1.1 s, toc-llm-topics ~1.5 s,
+toc-llm-flat ~2.4 s, all other retrievers < 0.2 s. Judge time is
 not measured.
 
 The fresh Qwen grep runs (`results/20261108-1949-grep-static-practice-smoke20`,
@@ -169,9 +170,9 @@ MRR@10 0.350 → 0.175, ~304 s → ~5.6 s per query (Qwen → Llama, practice-sm
 
 | Matrix file (`configs/matrices/`) | Subset | Mode | ELM calls (fresh) | Wall time |
 |---|---|---|---|---|
-| A `matrix-a-smoke.yaml` (11 retrieval configs) | practice-smoke20 | `--no-generate` | 220 (180 grep, 40 toc-llm) | ~5.5 min |
-| A `matrix-a-retrieval.yaml` | practice-20pct (70) | `--no-generate` | 770, after filling the transcript cache | ~19 min |
-| A `matrix-a-retrieval-dev.yaml` | dev-20pct (25) | `--no-generate` | 275 | ~7 min |
+| A `matrix-a-smoke.yaml` (13 retrieval configs) | practice-smoke20 | `--no-generate` | 280 (180 grep, 100 toc-llm: 40 + 40 + 20) | ~7 min |
+| A `matrix-a-retrieval.yaml` | practice-20pct (70) | `--no-generate` | 980, after filling the transcript cache | ~24 min |
+| A `matrix-a-retrieval-dev.yaml` | dev-20pct (25) | `--no-generate` | 350 | ~9 min |
 | B `matrix-b-answers.yaml` (7 configs, simple context) | dev-20pct | generate + judge | 375 + 175 judge | ~2.6 h + judge |
 | B `matrix-b-answers-budgeted.yaml` (same rows, budgeted) | dev-20pct | generate + judge | 375 + 175 judge | ~2.6 h + judge |
 | C `matrix-c-secondary.yaml` (encoder policies) | dev-20pct | `--no-generate` | 0 | ~1 min |
