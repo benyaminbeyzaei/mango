@@ -4,6 +4,7 @@ import json
 from ..prompts import grep_v1
 from .standard import RANKED_DEPTH, finish
 
+HELPER_TIMEOUT = 900  # seconds; Qwen with reasoning can think for over 3 min on one grep call (plan 025)
 DEFAULT_MODEL = "meta-llama/Llama-3.3-70B-Instruct"  # plan 021: Qwen reasoning made each pattern call ~70-100 s
 
 
@@ -37,7 +38,7 @@ def ask(stages, config, trace, prompt):
     model = config.params.get("grep_model", DEFAULT_MODEL)
     trace.count("grep.llm_calls")
     reply = stages.gateway.chat(
-        model, [{"role": "user", "content": prompt}], temperature=0.0, tag=grep_v1.VERSION
+        model, [{"role": "user", "content": prompt}], temperature=0.0, tag=grep_v1.VERSION, timeout=HELPER_TIMEOUT
     )
     value = parse_json(reply)
     if value is None:
