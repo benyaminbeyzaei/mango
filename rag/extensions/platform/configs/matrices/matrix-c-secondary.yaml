@@ -8,7 +8,8 @@
 # retriever exact, k=5,
 # generator Qwen/Qwen3.5-397B-A17B-FP8 at temperature 0.1 with the course system prompt,
 # judge mistralai/Mistral-Small-4-119B-2603 (course evaluator, cached), prompts: course context prompt,
-# grep_v1 for the grep flows. Run every matrix with --fresh: latency and cost are valid only then.
+# grep_v1 for the grep flows, grep helper calls on meta-llama/Llama-3.3-70B-Instruct (plan 021).
+# Run every matrix with --fresh: latency and cost are valid only then.
 # Expected cost: see "How to run the experiments" in the platform README (from mlsrag estimate).
 name: c-secondary
 subset: dev-20pct

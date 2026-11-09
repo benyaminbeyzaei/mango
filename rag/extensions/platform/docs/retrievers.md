@@ -79,8 +79,9 @@ Configs `configs/bm25.yaml`, `configs/grep-static.yaml`, `configs/grep-agentic.y
   cached) and `bm25.index_mb` (pickle size). Only records with a positive score are
   returned; a query that is empty after tokenising returns nothing.
 - **Grep static** (`retriever: grep`, `flow: grep-static`): one LLM call (`params.grep_model`,
-  default Qwen) turns the transcript into 3 to 8 plain patterns, a case-insensitive `re` scan over
-  all 24,000 texts ranks records by patterns matched, then total matches, then shorter text.
+  default Llama-3.3: Qwen's hidden reasoning took ~70-100 s per call, plan 021) turns the
+  transcript into 3 to 8 plain patterns, a case-insensitive `re` scan over all 24,000 texts
+  ranks records by patterns matched, then total matches, then shorter text.
   Invalid patterns and patterns that match the empty string are dropped and counted.
   `retriever: grep` is only valid with the two grep flows.
 - **Grep agentic** (`flow: grep-agentic`): the static step, then up to 2 refinement calls (the

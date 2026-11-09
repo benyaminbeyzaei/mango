@@ -155,18 +155,26 @@ The primary question: retrieval strategy vs cost per correct answer. Controls, t
 of matrices A and B and stated in each matrix file's header: the whisper-1 transcript cache,
 gte-small on enc_a, k=5, generator `Qwen/Qwen3.5-397B-A17B-FP8` at temperature 0.1, judge
 `mistralai/Mistral-Small-4-119B-2603` through the course evaluator, the course context prompt and
-`grep_v1`. Always pass `--fresh`.
+`grep_v1`. The grep flows make their pattern calls on `meta-llama/Llama-3.3-70B-Instruct` (plan 021:
+Qwen's hidden reasoning took ~70-100 s per call); answers stay on Qwen. Always pass `--fresh`.
 
-Wall time (queries one at a time, from the fresh smoke runs): Qwen generation ~52 s, grep static ~94 s,
-grep agentic ~304 s per query, toc-llm ~1 s, all other retrievers < 0.2 s. Judge time is not measured.
+Wall time (queries one at a time, from the fresh smoke runs): Qwen generation ~52 s, grep static ~1.4 s,
+grep agentic ~5.6 s per query (Llama-3.3), toc-llm ~1 s, all other retrievers < 0.2 s. Judge time is
+not measured.
+
+The fresh Qwen grep runs (`results/20261108-1949-grep-static-practice-smoke20`,
+`results/20261108-2021-grep-agentic-practice-smoke20`) are kept for the helper-model comparison
+with the Llama runs (`results/20261109-1134-grep-*`): grep static Recall@10 0.108 → 0.133,
+MRR@10 0.172 → 0.111, ~94 s → ~1.4 s per query; grep agentic Recall@10 0.208 → 0.067,
+MRR@10 0.350 → 0.175, ~304 s → ~5.6 s per query (Qwen → Llama, practice-smoke20).
 
 | Matrix file (`configs/matrices/`) | Subset | Mode | ELM calls (fresh) | Wall time |
 |---|---|---|---|---|
-| A `matrix-a-smoke.yaml` (11 retrieval configs) | practice-smoke20 | `--no-generate` | 140 (100 grep, 40 toc-llm) | ~2.2 h |
-| A `matrix-a-retrieval.yaml` | practice-20pct (70) | `--no-generate` | 490, after filling the transcript cache | ~7.8 h |
-| A `matrix-a-retrieval-dev.yaml` | dev-20pct (25) | `--no-generate` | 175 | ~2.8 h |
-| B `matrix-b-answers.yaml` (7 configs, simple context) | dev-20pct | generate + judge | 275 + 175 judge | ~4.6 h + judge |
-| B `matrix-b-answers-budgeted.yaml` (same rows, budgeted) | dev-20pct | generate + judge | 275 + 175 judge | ~4.5 h + judge |
+| A `matrix-a-smoke.yaml` (11 retrieval configs) | practice-smoke20 | `--no-generate` | 140 (100 grep, 40 toc-llm) | ~3 min |
+| A `matrix-a-retrieval.yaml` | practice-20pct (70) | `--no-generate` | 490, after filling the transcript cache | ~10 min |
+| A `matrix-a-retrieval-dev.yaml` | dev-20pct (25) | `--no-generate` | 175 | ~4 min |
+| B `matrix-b-answers.yaml` (7 configs, simple context) | dev-20pct | generate + judge | 275 + 175 judge | ~2.6 h + judge |
+| B `matrix-b-answers-budgeted.yaml` (same rows, budgeted) | dev-20pct | generate + judge | 275 + 175 judge | ~2.6 h + judge |
 | C `matrix-c-secondary.yaml` (encoder policies) | dev-20pct | `--no-generate` | 0 | ~1 min |
 
 Matrix C varies the encoder and index. The practice transcript cache covers only the smoke subset:

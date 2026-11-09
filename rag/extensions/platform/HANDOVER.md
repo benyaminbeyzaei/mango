@@ -34,14 +34,15 @@
 - 017: measurement fixes (local embeddings are not remote calls, BM25 skips encode).
 - 018: KG extraction with Llama-3.3 (598 records) and the KG rows on the 600-record subset.
 - 019: `--fresh`: latency and cost are valid only for fresh runs.
+- 021: grep pattern calls on Llama-3.3 (Qwen's reasoning took ~70-100 s per call); answers stay on Qwen.
 
 ## Open items
 
 - **Full runs to schedule** (each needs Benyamin's go-ahead; numbers from `mlsrag estimate`,
   wall time at one request at a time, judging not included):
   - fill the practice transcript cache for practice-20pct: 50 whisper-1 calls, ~$0.03;
-  - matrix A on practice-20pct: 490 ELM calls, ~7.8 h; on dev-20pct: 175 calls, ~2.8 h;
-  - matrix B (simple and budgeted) on dev-20pct: 275 + 175 judge calls each, ~4.5 h + judging each;
+  - matrix A on practice-20pct: 490 ELM calls, ~10 min; on dev-20pct: 175 calls, ~4 min;
+  - matrix B (simple and budgeted) on dev-20pct: 275 + 175 judge calls each, ~2.6 h + judging each;
   - matrix C on dev-20pct: 0 ELM calls;
   - `dev-all` costs five times the dev-20pct numbers (see the Guide page for the full-split table).
 - **Course ASR transcripts** from the teammate (the CUDA model on the cluster): needed for
