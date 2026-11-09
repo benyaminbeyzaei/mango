@@ -8,8 +8,8 @@
 - `web/`: the client (Docs, Models, Results, Interactive, Guide), served by `mlsrag serve` or Docker.
 - `compose.yaml` + `Dockerfile`: `docker compose up` from a clean clone (sequence in the README,
   checked on 2026-11-08: about 6 minutes including the image build).
-- `rag/extensions/results/`: 22 runs, all fresh (`run.fresh: true`), and four matrix summaries:
-  `a-smoke` (11 retrievers, retrieval only), `context-smoke` (judged baseline, budgeted, dedupe),
+- `rag/extensions/results/`: 28 runs, all fresh (`run.fresh: true`), and four matrix summaries:
+  `a-smoke` (14 retrievers, retrieval only), `context-smoke` (judged baseline, budgeted, dedupe),
   `encoders-smoke` (encoder policies), `toc-raptor-smoke`.
 
 ## What each plan produced
@@ -43,6 +43,8 @@
 - 026: the two graph retrievers removed with their configs, runs, dev record subset and dependencies.
 - 027: TOC routes `llm-topics` (section prompt lists topic names) and `llm-flat` (one call over all
   256 topics) as new matrix A rows; `llm` kept.
+- 028: `raptor-tree` (soft membership, whole-cluster summaries, 16 section summaries, one collapsed
+  index; 439 Llama calls, 50 min build) as a new matrix A row; `raptor-lite` kept unchanged.
 
 ## Open items
 

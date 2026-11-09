@@ -10,4 +10,4 @@
 name: a-retrieval
 subset: practice-20pct
 configs: [baseline, bm25, grep-static, grep-agentic, grep-feedback, topics-k256-m2, topics-k256-m4, topics-k256-m8,
-          toc-centroid-m4, toc-llm-m4, toc-llm-topics-m4, toc-llm-flat-m4, raptor-lite-expand]
+          toc-centroid-m4, toc-llm-m4, toc-llm-topics-m4, toc-llm-flat-m4, raptor-lite-expand, raptor-tree-expand]

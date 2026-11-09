@@ -23,9 +23,9 @@ rag/extensions/platform/
 │   ├── stages.py       the five stage interfaces, RETRIEVERS, CONTEXT_BUILDERS, build_stages
 │   ├── context.py      budgeted and dedupe context builders
 │   ├── flows/          standard, grep-static, grep-agentic, grep-feedback: one query
-│   ├── retrievers/     bm25, grep, topic, toc, raptor-lite
+│   ├── retrievers/     bm25, grep, topic, toc, raptor (raptor-lite, raptor-tree)
 │   ├── prompts/        grep_v1
-│   ├── preprocess/     pipelines of hashed, resumable stages (topics, toc, raptor)
+│   ├── preprocess/     pipelines of hashed, resumable stages (topics, toc, raptor, raptor-tree)
 │   ├── runner.py       run a config over a subset → a results folder
 │   ├── results.py      metrics.json schema, load_run, list_runs, compare
 │   ├── evaluate.py     judging through the course evaluator, call estimates
@@ -43,7 +43,7 @@ rag/extensions/platform/
 **RunConfig** (`config.py`). One experiment's settings, a pydantic model: `name`; `asr` (cached |
 whisper1 | course) and `asr_cache`; `query_encoder` (gte-small | bge-small); `corpus_index` (enc_a |
 enc_b) and `mismatch_policy` (error | as-is | re-encode | translate); `retriever` (exact | topic |
-toc | raptor-lite | bm25 | grep); `k` (5); `context_builder` (simple | budgeted |
+toc | raptor-lite | raptor-tree | bm25 | grep); `k` (5); `context_builder` (simple | budgeted |
 dedupe | with-summaries); `generator_model`; `judge_model`; `flow` (standard | grep-static |
 grep-agentic | grep-feedback); `params` (free dict for the retriever's options). A YAML file works like a preset name.
 
@@ -170,7 +170,7 @@ MRR@10 0.350 → 0.175, ~304 s → ~5.6 s per query (Qwen → Llama, practice-sm
 
 | Matrix file (`configs/matrices/`) | Subset | Mode | ELM calls (fresh) | Wall time |
 |---|---|---|---|---|
-| A `matrix-a-smoke.yaml` (13 retrieval configs) | practice-smoke20 | `--no-generate` | 280 (180 grep, 100 toc-llm: 40 + 40 + 20) | ~7 min |
+| A `matrix-a-smoke.yaml` (14 retrieval configs) | practice-smoke20 | `--no-generate` | 280 (180 grep, 100 toc-llm: 40 + 40 + 20) | ~7 min |
 | A `matrix-a-retrieval.yaml` | practice-20pct (70) | `--no-generate` | 980, after filling the transcript cache | ~24 min |
 | A `matrix-a-retrieval-dev.yaml` | dev-20pct (25) | `--no-generate` | 350 | ~9 min |
 | B `matrix-b-answers.yaml` (7 configs, simple context) | dev-20pct | generate + judge | 375 + 175 judge | ~2.6 h + judge |

@@ -1,4 +1,4 @@
-# Preprocessing pipelines (topics, toc, raptor)
+# Preprocessing pipelines (topics, toc, raptor, raptor-tree)
 
 Part of the [mlsrag README](../README.md).
 
@@ -38,7 +38,7 @@ work, keep a `Ledger(ctx.out_dir / "ledger.jsonl")` and skip `ledger.done_ids()`
 the pipeline's list in `mlsrag/preprocess/__init__.py` with `Stage(name, run, inputs=[...])`, and
 bump `version` whenever you change what it writes.
 
-## Two-level table of contents (`toc`) and RAPTOR-lite (`raptor`)
+## Two-level table of contents (`toc`), RAPTOR-lite (`raptor`) and RAPTOR-tree (`raptor-tree`)
 
 Both pipelines share the `topics` stages and folder (same config file, `configs/pipelines/topics-k256.yaml`),
 so the clusters and labels are computed once.
@@ -46,6 +46,7 @@ so the clusters and labels are computed once.
 ```bash
 mlsrag preprocess run --pipeline toc    --config rag/extensions/platform/configs/pipelines/topics-k256.yaml  # 16 LLM calls
 mlsrag preprocess run --pipeline raptor --config rag/extensions/platform/configs/pipelines/topics-k256.yaml  # 256 LLM calls
+mlsrag preprocess run --pipeline raptor-tree --config rag/extensions/platform/configs/pipelines/topics-k256.yaml  # 423 + 16 LLM calls
 mlsrag matrix --matrix rag/extensions/platform/configs/matrices/matrix-toc-raptor-smoke.yaml --no-generate
 ```
 
@@ -58,7 +59,7 @@ then searches those topics' members exactly (no LLM). With `route: llm` one chat
 `sections` sections from the 16 titles and a second picks up to `m` topics from those sections'
 labels (Llama 3.3 by default; an unusable reply falls back to the centroids and counts
 `toc.llm_fallbacks`). `route: llm-topics` is the same two calls, but the section prompt lists the
-names of each section's 16 topics under its title. `route: llm-flat` skips the sections: one call
+names of each section's topics (4-36) under its title. `route: llm-flat` skips the sections: one call
 shows all 256 topics (number, label, summary) and picks up to `m` of them; an unusable reply takes
 the centroid route. The retriever sets `uses_question = True`, so the flow passes it the transcript. Trace:
 span `toc.route`, counters `toc.sections_probed`, `toc.topics_probed`, `toc.llm_calls`,
@@ -74,3 +75,19 @@ summary that ranks is replaced by its cluster's `expand_top` members most simila
 `summary:<cluster>`, which needs `context_builder: with-summaries` to put its text in the prompt
 (it never counts as relevant in the retrieval metrics). Trace: span `raptor.search`, counters
 `raptor.summary_hits`, `raptor.candidates_scanned`. No LLM calls at query time.
+
+**RAPTOR-tree** (`retriever: raptor-tree`, same `params`; plan 028). Pipeline `raptor-tree` reuses
+the `topics` clusters and the `toc` sections and fixes RAPTOR-lite's three gaps at about 6 % of
+full RAPTOR's cost. `soft_members` (no LLM): a record also joins its second-nearest centroid when
+`cos2 >= cos1 - delta`, with `delta` the `share` (0.15) quantile of `cos1 - cos2`, written to the
+manifest. `summarise_full` (Llama 3.3, prompt `v1` of `preprocess/tree.py`): one summary (at most
+150 words) per cluster from the full text of all its members; a cluster over `max_input_tokens`
+(24 k, estimated as characters / 4) is summarised in parts and one more call combines them; the
+stage logs its call plan first and stops above `max_calls` (450). `section_summarise`: one
+summary per section from its topics' summaries. `tree_index` embeds the 256 + 16 summaries
+(rows `t<cluster>` level 1, `s<section>` level 2). Search is the collapsed tree: one exact search
+over the 24,000 records and 272 summaries; a level-1 hit expands to its cluster's members
+(primary and soft), a level-2 hit to all its section's members, `expand_top` most similar to the
+query each; with `summary_as_evidence: true` the id is `summary:t<cluster>` or `summary:s<section>`.
+Extra counters `raptor.level1_hits`, `raptor.level2_hits`. Configs `raptor-tree-expand.yaml`,
+`raptor-tree-evidence.yaml`.

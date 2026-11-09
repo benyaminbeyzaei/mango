@@ -1,0 +1,12 @@
+# RunConfig: records + the two-level summary tree (256 cluster + 16 section summaries) searched together; a summary hit is itself evidence.
+name: raptor-tree-evidence
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+retriever: raptor-tree
+context_builder: with-summaries
+k: 5
+params:
+  index: rag/extensions/platform/configs/pipelines/topics-k256.yaml
+  summary_as_evidence: true
