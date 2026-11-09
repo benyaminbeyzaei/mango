@@ -45,3 +45,5 @@ practice subsets (the selection is built around the dev qrels). The file for the
 `subsets/records-dev-relevant-d275.txt`, written from the `select` stage's `records.jsonl`.
 Restricted numbers are only comparable with other restricted numbers: with 600 instead of 24,000
 records, flat dense Recall@10 on `dev-20pct` goes from 0.597 to 0.823.
+Only the standard flow filters candidates by it; the grep flows ignore it (their metrics would be
+restricted but their retrieval not), so do not set it on a grep config.

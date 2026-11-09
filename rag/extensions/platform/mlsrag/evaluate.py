@@ -46,7 +46,8 @@ def write_candidates(run_dir) -> Path:
                 "audio_file": manifest[qid]["audio_file"],
                 "transcript": a["transcript"],
                 "answer": a["answer"],
-                "retrieved_record_ids": a["ranked_ids"][: config["k"]],
+                # the ids the answer's context was built from; older traces lack them
+                "retrieved_record_ids": a.get("context_ids", a["ranked_ids"][: config["k"]]),
                 "timing": {
                     "asr_ms": ms.get("asr"),
                     "embedding_ms": ms.get("encode"),

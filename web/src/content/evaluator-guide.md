@@ -76,10 +76,10 @@ Estimated cost on `dev-all` (125 queries), after the transcript cache is filled.
 
 | Matrix | Mode | ELM calls | Wall time |
 |---|---|---|---|
-| A, 11 retrieval configs (`matrix-a-retrieval-dev.yaml`) | `--no-generate` | 875 | ~14 h |
-| A on `practice-all` (350 queries) | `--no-generate` | 2,450 | ~39 h |
-| B, 7 configs, generation + judge (`matrix-b-answers.yaml`) | generate + judge | 1,375 + 875 judge | ~23 h + judge |
-| B with the budgeted builder (`matrix-b-answers-budgeted.yaml`) | generate + judge | 1,375 + 875 judge | ~22 h + judge |
+| A, 12 retrieval configs (`matrix-a-retrieval-dev.yaml`) | `--no-generate` | 1,375 | ~33 min |
+| A on `practice-all` (350 queries) | `--no-generate` | 3,850 | ~1.5 h |
+| B, 8 configs, generation + judge (`matrix-b-answers.yaml`) | generate + judge | 2,000 + 1,000 judge | ~15 h + judge |
+| B with the budgeted builder (`matrix-b-answers-budgeted.yaml`) | generate + judge | 2,000 + 1,000 judge | ~15 h + judge |
 | C, encoder policies (`matrix-c-secondary.yaml`) | `--no-generate` | 0 | minutes |
 
 Without `--allow-full` every command refuses a full split; without `--yes` the matrix prints its estimate and waits for `y`.
