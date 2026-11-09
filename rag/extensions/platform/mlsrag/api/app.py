@@ -253,10 +253,7 @@ def create_app(web_dir=None, results_dir=None) -> FastAPI:
             load_subset(body.subset)
         except ValueError as err:
             raise HTTPException(400, str(err)) from err
-        estimate = evaluate.estimate(config, body.subset)
-        if not body.generate:  # estimate() always counts generation
-            estimate["elm_calls"] -= estimate["calls"]["generation"]
-            estimate["calls"]["generation"] = 0
+        estimate = evaluate.estimate(config, body.subset, generate=body.generate)
         job = JobStatus(id=uuid.uuid4().hex[:12], status="running", estimate=estimate)
         jobs[job.id] = job
 

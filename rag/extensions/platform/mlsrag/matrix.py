@@ -8,7 +8,7 @@ import yaml
 from . import evaluate, runner
 from .config import PRESETS, RunConfig, load_config
 from .course import paths
-from .results import COST_KEYS, list_runs, load_run, markdown_table, summary_row
+from .results import list_runs, load_run, markdown_table, summary_row
 from .subsets import check_subset
 
 CONFIGS_DIR = Path(__file__).resolve().parents[1] / "configs"
@@ -59,11 +59,8 @@ def run_matrix(path, judge=True, generate=True, force=False, allow_full=False, y
     configs = [with_override(resolve_config(name), override) for name in spec["configs"]]
     judge = judge and generate  # nothing to judge without answers
 
-    estimates = [evaluate.estimate(c, subset, judge=judge) for c in configs]
+    estimates = [evaluate.estimate(c, subset, judge=judge, generate=generate) for c in configs]
     for e in estimates:
-        if not generate:
-            e["elm_calls"] -= e["calls"]["generation"]
-            e["calls"]["generation"] = 0
         print(evaluate.format_estimate(e, fresh))
     print(f"matrix total: {sum(e['elm_calls'] for e in estimates)} ELM calls (upper bound)")
     if not yes and input("Proceed? [y/N] ").strip().lower() != "y":
@@ -87,8 +84,8 @@ def run_matrix(path, judge=True, generate=True, force=False, allow_full=False, y
         json.dumps({"name": spec["name"], "subset": subset, "rows": rows}, indent=2) + "\n",
         encoding="utf-8")
     header = list(rows[0])
-    table = [[("–" if k in COST_KEYS and not r["fresh"] else r[k]) for k in header] for r in rows]
-    note = "" if all(r["fresh"] for r in rows) else "\n– latency and cost: not a fresh run\n"
+    table = [list(r.values()) for r in rows]
+    note = "" if all(r["fresh"] for r in rows) else "\nLatency and cost shown as -: not a fresh run.\n"
     (out / "summary.md").write_text(
         f"# Matrix {spec['name']} on {subset}\n\n" + markdown_table(header, table) + note,
         encoding="utf-8")

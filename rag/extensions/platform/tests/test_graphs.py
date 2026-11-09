@@ -72,7 +72,7 @@ class FakeGateway:
         self.replies = replies
         self.calls = 0
 
-    def chat(self, model, messages, temperature=0.0):
+    def chat(self, model, messages, temperature=0.0, max_tokens=None):
         self.calls += 1
         self.trace.add_cost(prompt_tokens=100, completion_tokens=20, model=model)
         text = messages[0]["content"]

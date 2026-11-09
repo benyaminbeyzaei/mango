@@ -34,7 +34,7 @@ pnpm --dir web gen:api          # ../rag/extensions/platform/openapi.json -> src
 ## Interactive mode
 
 `/interactive` is a chat page. Pick a config (a preset from `GET /api/configs`, or edit any `RunConfig`
-field under **Config → Advanced**; the controls are built from `/openapi.json`), then type a question or
+field under **Config → Advanced**; options come from the `RunConfig` type and `GET /api/models`), then type a question or
 record one with the microphone button. Each question is answered on its own (no conversation context):
 text goes to `POST /api/query`, a recording (WebM, or MP4 on Safari) to `POST /api/query/audio`, where
 whisper-1 transcribes it. Under each answer, **What ran** names the implementation and time of every

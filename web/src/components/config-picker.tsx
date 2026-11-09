@@ -1,13 +1,7 @@
-// Preset dropdown plus an "advanced" panel with one control per RunConfig field (built from /openapi.json).
+// Preset dropdown plus an "advanced" panel with one control per RunConfig field.
 import { useState } from "react"
 
-import {
-  useConfigs,
-  useModels,
-  useRunConfigSchema,
-  type FieldSchema,
-  type RunConfig,
-} from "@/api/queries"
+import { useConfigs, useModels, type RunConfig } from "@/api/queries"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -68,6 +62,9 @@ export function PresetSelect({
   )
 }
 
+// A control for a field: a list of options, or a text box ("optional": empty means null).
+type Kind = readonly string[] | "text" | "optional" | "number" | "params"
+
 export function ConfigPicker({
   config,
   onChange,
@@ -76,14 +73,30 @@ export function ConfigPicker({
   onChange: (config: RunConfig) => void
 }) {
   const configs = useConfigs()
-  const schema = useRunConfigSchema()
   const models = useModels()
-  const choices: Record<string, string[] | undefined> = {
-    retriever: models.data?.retrievers,
-    context_builder: models.data?.context_builders,
-    generator_model: models.data?.chat_models,
-    judge_model: models.data?.chat_models,
-    flow: models.data?.flows,
+  // Every RunConfig field, in the order of mlsrag/config.py; until /api/models loads, a text box.
+  const fields: Record<keyof RunConfig, Kind> = {
+    name: "text",
+    asr: ["cached", "whisper1", "course"] satisfies RunConfig["asr"][],
+    asr_cache: "optional",
+    query_encoder: [
+      "gte-small",
+      "bge-small",
+    ] satisfies RunConfig["query_encoder"][],
+    corpus_index: ["enc_a", "enc_b"] satisfies RunConfig["corpus_index"][],
+    mismatch_policy: [
+      "error",
+      "as-is",
+      "re-encode",
+      "translate",
+    ] satisfies RunConfig["mismatch_policy"][],
+    retriever: models.data?.retrievers ?? "text",
+    k: "number",
+    context_builder: models.data?.context_builders ?? "text",
+    generator_model: models.data?.chat_models ?? "text",
+    judge_model: models.data?.chat_models ?? "text",
+    flow: models.data?.flows ?? "text",
+    params: "params",
   }
   const set = (field: string, value: unknown) =>
     onChange({ ...config, [field]: value })
@@ -105,23 +118,16 @@ export function ConfigPicker({
         <summary className="cursor-pointer text-sm font-medium">
           Advanced: every RunConfig field
         </summary>
-        {schema.isError && (
-          <p className="mt-2 text-sm text-destructive">
-            {schema.error.message}
-          </p>
-        )}
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          {schema.data &&
-            Object.entries(schema.data).map(([field, s]) => (
-              <Field
-                key={field}
-                field={field}
-                schema={s}
-                choices={choices[field]}
-                value={config[field as keyof RunConfig]}
-                onChange={(v) => set(field, v)}
-              />
-            ))}
+          {Object.entries(fields).map(([field, kind]) => (
+            <Field
+              key={field}
+              field={field}
+              kind={kind}
+              value={config[field as keyof RunConfig]}
+              onChange={(v) => set(field, v)}
+            />
+          ))}
         </div>
       </details>
     </div>
@@ -130,22 +136,19 @@ export function ConfigPicker({
 
 function Field({
   field,
-  schema,
-  choices,
+  kind,
   value,
   onChange,
 }: {
   field: string
-  schema: FieldSchema
-  choices?: string[]
+  kind: Kind
   value: unknown
   onChange: (value: unknown) => void
 }) {
   const id = `cfg-${field}`
   const label = <Label htmlFor={id}>{field}</Label>
-  const options = schema.enum ?? choices
 
-  if (field === "params")
+  if (kind === "params")
     return (
       <div className="flex flex-col gap-1 sm:col-span-2">
         {label}
@@ -157,7 +160,7 @@ function Field({
         />
       </div>
     )
-  if (options) {
+  if (typeof kind !== "string") {
     const current = String(value)
     return (
       <div className="flex flex-col gap-1">
@@ -168,15 +171,15 @@ function Field({
           value={current}
           onChange={(e) => onChange(e.target.value)}
         >
-          {!options.includes(current) && <option>{current}</option>}
-          {options.map((o) => (
+          {!kind.includes(current) && <option>{current}</option>}
+          {kind.map((o) => (
             <option key={o}>{o}</option>
           ))}
         </select>
       </div>
     )
   }
-  if (schema.type === "integer")
+  if (kind === "number")
     return (
       <div className="flex flex-col gap-1">
         {label}
@@ -189,7 +192,7 @@ function Field({
         />
       </div>
     )
-  const nullable = schema.anyOf?.some((t) => t.type === "null")
+  const nullable = kind === "optional"
   return (
     <div className="flex flex-col gap-1">
       {label}

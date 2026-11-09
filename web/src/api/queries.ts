@@ -8,15 +8,6 @@ export type RunConfig = components["schemas"]["RunConfig"]
 export type QueryResponse = components["schemas"]["QueryResponse"]
 export type ConfigEntry = components["schemas"]["ConfigEntry"]
 
-// The field schema the advanced config panel is built from (FastAPI serves /openapi.json).
-export type FieldSchema = {
-  type?: string
-  enum?: string[]
-  anyOf?: { type?: string }[]
-  title?: string
-  default?: unknown
-}
-
 export function useConfigs() {
   return useQuery({
     queryKey: ["configs"],
@@ -35,21 +26,6 @@ export function useModels() {
       const { data, error } = await api.GET("/api/models")
       if (error) throw new Error("could not load /api/models")
       return data
-    },
-  })
-}
-
-export function useRunConfigSchema() {
-  return useQuery({
-    queryKey: ["openapi"],
-    queryFn: async () => {
-      const res = await fetch("/openapi.json")
-      if (!res.ok) throw new Error("could not load /openapi.json")
-      const doc = await res.json()
-      return doc.components.schemas.RunConfig.properties as Record<
-        string,
-        FieldSchema
-      >
     },
   })
 }

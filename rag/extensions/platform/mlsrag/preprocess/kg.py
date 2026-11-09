@@ -6,12 +6,10 @@ through the ledger; never more than MAX_CALLS attempts in total, failures includ
 the phrases stage) its types, its records and its neighbours over the relations. Entity resolution
 is that string match only: "Apple" and "Apple Inc." stay two entities.
 """
-import hashlib
 import json
 import re
-import time
 
-from .ledger import Ledger, ask
+from .ledger import ItemsFailed, Ledger, run_items
 from .phrases import load_nlp, normalise
 
 PROMPT_VERSION = "v1"
@@ -48,47 +46,23 @@ def parse_graph(reply) -> dict:
     return {"entities": [e for e in entities if e["name"]], "relations": relations}
 
 
-def tokens_so_far(trace) -> dict:
-    return {k: sum(v[k] for v in trace.cost.values()) for k in ("prompt_tokens", "completion_tokens")}
-
-
 def run_extract(inputs, config, ctx):
     records = [json.loads(line) for line in (inputs["select"] / "records.jsonl").open(encoding="utf-8")]
     if len(records) > MAX_CALLS:
         raise ValueError(f"{len(records)} records selected > {MAX_CALLS}; this plan extracts at most {MAX_CALLS}")
     ledger = Ledger(ctx.out_dir / "ledger.jsonl")
     done = ledger.done_ids()
-    attempts = {}
-    for r in ledger.rows():
-        attempts[r["item_id"]] = attempts.get(r["item_id"], 0) + 1
-    todo = [r for r in records if r["record_id"] not in done]
+    todo = [r["record_id"] for r in records if r["record_id"] not in done]
     # every kg_extract output (other models or prompts too) shares the one budget
     spent = sum(len(Ledger(p).rows()) for p in ctx.out_dir.parent.glob("*/ledger.jsonl"))
     budget = max(MAX_CALLS - spent, 0)  # a negative slice would still run calls
-    ctx.log(f"kg_extract: {len(done)} records done, {len(todo)} to go, {budget} calls left")
-    ask(ctx, ledger, len(records), min(len(todo), budget))
-    for i, r in enumerate(todo[:budget], start=1):
-        prompt = build_prompt(r["text"], attempt=attempts.get(r["record_id"], 0))
-        input_hash = hashlib.sha256(prompt.encode()).hexdigest()[:16]
-        before = tokens_so_far(ctx.trace)
-        start = time.perf_counter()
-        try:
-            reply = ctx.gateway.chat(config["model"], [{"role": "user", "content": prompt}], temperature=0.0)
-            graph = parse_graph(reply)
-        except Exception as err:  # recorded; retried on the next run while the budget lasts
-            ms = (time.perf_counter() - start) * 1000.0
-            spent_tokens = sum(tokens_so_far(ctx.trace).values()) - sum(before.values())
-            ledger.append(r["record_id"], input_hash, "failed", tokens=spent_tokens, latency_ms=ms,
-                          error=f"{type(err).__name__}: {err}")
-            ctx.log(f"[{i}/{len(todo)}] {r['record_id']} FAILED: {err}")
-            continue
-        ms = (time.perf_counter() - start) * 1000.0
-        after = tokens_so_far(ctx.trace)
-        usage = {k: after[k] - before[k] for k in after}
-        ledger.append(r["record_id"], input_hash, "ok", output={**graph, "usage": usage},
-                      tokens=sum(usage.values()), latency_ms=ms)
-        ctx.log(f"[{i}/{len(todo)}] {r['record_id']}: {len(graph['entities'])} entities, "
-                f"{len(graph['relations'])} relations, {sum(usage.values())} tokens, {ms / 1000:.1f}s")
+    ctx.log(f"kg_extract: {budget} calls left")
+    over_budget = set(todo[budget:])
+    try:
+        run_items({r["record_id"]: r["text"] for r in records if r["record_id"] not in over_budget}, ctx,
+                  config["model"], build_prompt, parse_graph, usage=True)
+    except ItemsFailed as err:  # failed records are retried on the next run while the budget lasts
+        ctx.log(str(err))
 
     rows = ledger.rows()
     ok = ledger.ok_rows()
