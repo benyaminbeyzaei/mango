@@ -325,7 +325,7 @@ def build_stages(config, gateway, data) -> Stages:
     if config.context_builder not in CONTEXT_BUILDERS:
         raise ValueError(f"unknown context_builder {config.context_builder!r}; known: {sorted(CONTEXT_BUILDERS)}")
     if (config.retriever == "grep") != config.flow.startswith("grep-"):
-        raise ValueError("retriever grep goes with flow grep-static or grep-agentic, and only with them")
+        raise ValueError("retriever grep goes with flow grep-static, grep-agentic or grep-feedback, and only with them")
     return Stages(
         asr=asr,
         encoder=build_encoder(config, gateway),

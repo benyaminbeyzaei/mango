@@ -22,7 +22,7 @@ rag/extensions/platform/
 │   ├── gateway.py      ModelGateway.chat / embed / transcribe: cache, log, retries, cost
 │   ├── stages.py       the five stage interfaces, RETRIEVERS, CONTEXT_BUILDERS, build_stages
 │   ├── context.py      budgeted and dedupe context builders
-│   ├── flows/          standard, grep-static, grep-agentic: one query through the stages
+│   ├── flows/          standard, grep-static, grep-agentic, grep-feedback: one query
 │   ├── retrievers/     bm25, grep, topic, toc, raptor-lite, lazy-graph, kg
 │   ├── prompts/        grep_v1
 │   ├── preprocess/     pipelines of hashed, resumable stages (topics, toc, raptor, lazy-graph, kg)
@@ -45,7 +45,7 @@ whisper1 | course) and `asr_cache`; `query_encoder` (gte-small | bge-small); `co
 enc_b) and `mismatch_policy` (error | as-is | re-encode | translate); `retriever` (exact | topic |
 lazy-graph | kg | toc | raptor-lite | bm25 | grep); `k` (5); `context_builder` (simple | budgeted |
 dedupe | with-summaries); `generator_model`; `judge_model`; `flow` (standard | grep-static |
-grep-agentic); `params` (free dict for the retriever's options). A YAML file works like a preset name.
+grep-agentic | grep-feedback); `params` (free dict for the retriever's options). A YAML file works like a preset name.
 
 **Trace** (`trace.py`). One per query: timed `spans` (asr, encode, retrieve, context, generate and
 any inner ones), `counters` (e.g. `grep.llm_calls`), `cost` per model, `resources` (CPU, RSS) and
@@ -62,8 +62,8 @@ the transcript), `ContextBuilder.build(question, ids) -> prompt`, `Generator.gen
 answer`. `build_stages(config, gateway, data)` picks one implementation of each from the registries.
 
 **Flows** (`flows/`). A flow runs one query through the stages and fills the trace. `standard`: asr →
-encode → retrieve (100 ranked ids) → context (top k) → generate. `grep-static` and `grep-agentic`
-replace encode and retrieve with LLM-written regex scans.
+encode → retrieve (100 ranked ids) → context (top k) → generate. `grep-static`, `grep-agentic` and
+`grep-feedback` replace encode and retrieve with LLM-written regex scans.
 
 **Pipelines** (`preprocess/`). Offline work before a run (clusters, labels, summaries, graphs). Each
 stage writes to a folder named by a hash of its inputs, config and code version, so only changed
@@ -159,7 +159,7 @@ gte-small on enc_a, k=5, generator `Qwen/Qwen3.5-397B-A17B-FP8` at temperature 0
 Qwen's hidden reasoning took ~70-100 s per call); answers stay on Qwen. Always pass `--fresh`.
 
 Wall time (queries one at a time, from the fresh smoke runs): Qwen generation ~52 s, grep static ~1.4 s,
-grep agentic ~5.6 s per query (Llama-3.3), toc-llm ~1 s, all other retrievers < 0.2 s. Judge time is
+grep agentic ~5.6 s, grep feedback ~7.7 s per query (Llama-3.3), toc-llm ~1 s, all other retrievers < 0.2 s. Judge time is
 not measured.
 
 The fresh Qwen grep runs (`results/20261108-1949-grep-static-practice-smoke20`,
@@ -170,11 +170,11 @@ MRR@10 0.350 → 0.175, ~304 s → ~5.6 s per query (Qwen → Llama, practice-sm
 
 | Matrix file (`configs/matrices/`) | Subset | Mode | ELM calls (fresh) | Wall time |
 |---|---|---|---|---|
-| A `matrix-a-smoke.yaml` (11 retrieval configs) | practice-smoke20 | `--no-generate` | 140 (100 grep, 40 toc-llm) | ~3 min |
-| A `matrix-a-retrieval.yaml` | practice-20pct (70) | `--no-generate` | 490, after filling the transcript cache | ~10 min |
-| A `matrix-a-retrieval-dev.yaml` | dev-20pct (25) | `--no-generate` | 175 | ~4 min |
-| B `matrix-b-answers.yaml` (7 configs, simple context) | dev-20pct | generate + judge | 275 + 175 judge | ~2.6 h + judge |
-| B `matrix-b-answers-budgeted.yaml` (same rows, budgeted) | dev-20pct | generate + judge | 275 + 175 judge | ~2.6 h + judge |
+| A `matrix-a-smoke.yaml` (12 retrieval configs) | practice-smoke20 | `--no-generate` | 220 (180 grep, 40 toc-llm) | ~5.5 min |
+| A `matrix-a-retrieval.yaml` | practice-20pct (70) | `--no-generate` | 770, after filling the transcript cache | ~19 min |
+| A `matrix-a-retrieval-dev.yaml` | dev-20pct (25) | `--no-generate` | 275 | ~7 min |
+| B `matrix-b-answers.yaml` (8 configs, simple context) | dev-20pct | generate + judge | 400 + 200 judge | ~3 h + judge |
+| B `matrix-b-answers-budgeted.yaml` (same rows, budgeted) | dev-20pct | generate + judge | 400 + 200 judge | ~3 h + judge |
 | C `matrix-c-secondary.yaml` (encoder policies) | dev-20pct | `--no-generate` | 0 | ~1 min |
 
 Matrix C varies the encoder and index. The practice transcript cache covers only the smoke subset:

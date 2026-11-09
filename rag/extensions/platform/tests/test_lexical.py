@@ -110,6 +110,38 @@ def test_grep_agentic_stops_when_model_says_so():
 
 
 
+def test_grep_feedback_keeps_nothing_and_returns_the_static_ranking():
+    static, _, _ = run("grep-static", ['["roth"]'])
+    out, trace, gw = run("grep-feedback", ['["roth"]', "[]"])
+    assert out["ranked_ids"] == static["ranked_ids"] == ["r3", "r1"] and out["prompt"] == "r3,r1"
+    assert out["kept_ids"] == [] and trace.counters["grep.llm_calls"] == 2 and trace.counters["grep.kept"] == 0
+
+
+def test_grep_feedback_expands_from_kept_records_then_reranks(monkeypatch):
+    monkeypatch.setattr("mlsrag.flows.grep_feedback.POOL", 2)  # keep/rerank see the top 2 of the toy corpus
+    replies = ['["ira", "fund"]', '["r3"]', '["cat", "debt", "ira"]', '["r5", "zz"]']
+    out, trace, gw = run("grep-feedback", replies)
+    # static: r1, r3, r4 (top 2: r1, r3); kept r3; expand scan r3, r5, r1, r2 minus seen r1, r3 -> r5, r2
+    assert out["kept_ids"] == ["r3"] and out["patterns"] == [["ira", "fund"], ["cat", "debt", "ira"]]
+    assert TOY.records["r3"][:30] in gw.prompts[2] and TOY.records["r1"][:30] not in gw.prompts[2]
+    assert "[r5]" in gw.prompts[3] and "[r1]" not in gw.prompts[3]  # rerank pool: kept + new hits
+    # reranked, rest of the pool, rest of static, rest of the expansion
+    assert out["ranked_ids"] == ["r5", "r3", "r1", "r4", "r2"] and out["prompt"] == "r5"
+    assert out["scores"] == [1.0, 1.0, 2.0, 1.0, 1.0]
+    assert trace.counters["grep.llm_calls"] == 4 and trace.counters["grep.kept"] == 1
+
+
+def test_grep_feedback_keep_ignores_ids_outside_the_shown_candidates(monkeypatch):
+    monkeypatch.setattr("mlsrag.flows.grep_feedback.POOL", 2)
+    out, trace, gw = run("grep-feedback", ['["ira", "fund"]', '["zz", "r4", "r1", "r1"]', "no idea", "no idea"])
+    assert out["kept_ids"] == ["r1"]  # r4 is a hit but was not shown; zz is unknown; duplicate dropped
+    assert out["prompt"] == "r1,r3"  # rerank reply unusable: context falls back to the top k
+
+
+def test_grep_feedback_empty_rerank_reply_gives_an_empty_context():
+    out, trace, gw = run("grep-feedback", ['["roth"]', '["r1"]', '["tax"]', "[]"])
+    assert out["reranked_ids"] == [] and out["prompt"] == "" and out["ranked_ids"][0] == "r1"
+
 def test_build_stages_registers_grep(tmp_path):
     cfg = RunConfig(name="t", retriever="grep", flow="grep-static", asr_cache=str(tmp_path / "t.jsonl"))
     stages = build_stages(cfg, FakeGateway([]), TOY)
