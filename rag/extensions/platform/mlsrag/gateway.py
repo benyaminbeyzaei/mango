@@ -3,6 +3,7 @@
 Each call gets a span on the current trace, its cost (from the API usage), a line in
 rag/.cache/gateway.log.jsonl and a disk cache entry, so an identical call is free next time.
 With fresh=True, chat and embed skip the cache read (but still write), so latency and cost are real.
+transcribe has its own fresh argument, so `run --fresh` keeps whisper cached.
 """
 import hashlib
 import json
@@ -156,7 +157,7 @@ class ModelGateway:
         self._record("embed", encoder_name, key, span, result, cached, retries, sizes, remote=False)
         return np.asarray(result["vectors"], dtype=np.float32)
 
-    def transcribe(self, audio_path, model="whisper-1") -> str:
+    def transcribe(self, audio_path, model="whisper-1", fresh=False) -> str:
         audio_path = Path(audio_path)
         audio = audio_path.read_bytes()
         try:
@@ -175,7 +176,7 @@ class ModelGateway:
         sizes = {"audio_seconds": seconds}
         key = cache_key("transcribe", model, {"audio_sha256": hashlib.sha256(audio).hexdigest()})
         with self._trace().span("gateway.transcribe", model=model, **sizes) as span:
-            result, retries = cache_get(self.cache_dir, key), 0
+            result, retries = None if fresh else cache_get(self.cache_dir, key), 0
             cached = result is not None
             if not cached:
                 result, retries = with_retries(call, self._failure_log("transcribe", model, key, sizes))

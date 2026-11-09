@@ -48,11 +48,12 @@ class CachedASR:
 
 
 class WhisperASR:
-    def __init__(self, gateway):
+    def __init__(self, gateway, fresh=False):
         self.gateway = gateway
+        self.fresh = fresh  # skip the gateway's cache read, so the call (and its latency) is real
 
     def transcribe(self, audio_path) -> str:
-        return self.gateway.transcribe(audio_path, model="whisper-1")
+        return self.gateway.transcribe(audio_path, model="whisper-1", fresh=self.fresh)
 
 
 class CourseASR:

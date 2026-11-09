@@ -44,7 +44,7 @@ class FakeData:
 class FakeGateway:
     trace = None
 
-    def transcribe(self, audio_path, model="whisper-1"):
+    def transcribe(self, audio_path, model="whisper-1", fresh=False):
         assert audio_path.read_bytes() == b"RIFF fake wav"
         return "spoken question"
 
