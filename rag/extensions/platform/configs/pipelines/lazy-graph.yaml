@@ -1,5 +1,0 @@
-# Lazy-graph pipeline (mlsrag preprocess run --pipeline lazy-graph --config <this file>). No LLM.
-select: {mode: all}
-phrases: {processes: 4}
-lazy_graph: {min_records: 2}
-lazy_index: {}

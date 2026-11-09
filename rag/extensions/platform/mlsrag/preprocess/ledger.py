@@ -60,13 +60,13 @@ def tokens_so_far(trace) -> dict:
     return {k: sum(v[k] for v in trace.cost.values()) for k in ("prompt_tokens", "completion_tokens")}
 
 
-def run_items(items, ctx, model, build_prompt, parse, max_tokens=None, usage=False) -> dict:
+def run_items(items, ctx, model, build_prompt, parse, max_tokens=None) -> dict:
     """One chat call per item not yet `ok` in ctx.out_dir/ledger.jsonl; returns {item_id: output}.
 
     `items`: {item_id: data}. `build_prompt(data, attempt)` makes the prompt (attempt > 0 on a
     retry, so the gateway does not return the cached bad reply); `parse(reply)` raises on a bad one.
     A failure is recorded and the item retried on the next run; if any item is not `ok` at the end,
-    ItemsFailed. With `usage`, each output also gets {"usage": {prompt_tokens, completion_tokens}}.
+    ItemsFailed.
     """
     import hashlib
     import time
@@ -93,10 +93,8 @@ def run_items(items, ctx, model, build_prompt, parse, max_tokens=None, usage=Fal
             output, status, error = None, "failed", f"{type(err).__name__}: {err}"
         ms = (time.perf_counter() - start) * 1000.0
         after = tokens_so_far(ctx.trace)
-        spent = {k: after[k] - before[k] for k in after}
-        if usage and status == "ok":
-            output = {**output, "usage": spent}
-        ledger.append(item_id, input_hash, status, output=output, tokens=sum(spent.values()),
+        spent = sum(after[k] - before[k] for k in after)
+        ledger.append(item_id, input_hash, status, output=output, tokens=spent,
                       latency_ms=ms, error=error)
         ctx.log(f"[{n}/{len(todo)}] {item_id} {error or 'ok'}")
     ok = ledger.ok_rows()

@@ -80,8 +80,6 @@ def main(argv=None):
     sel.add_argument("--all", action="store_true", help="every corpus record")
     sel.add_argument("--ids", help="file with one record id per line")
     sel.add_argument("--sample", type=int, metavar="N", help="N random records")
-    sel.add_argument("--split", choices=["dev-relevant"], help="records in qrels_dev.tsv + distractors")
-    sel.add_argument("--distractors", type=int, default=0, metavar="M")
     sel.add_argument("--seed", type=int, default=0)
 
     sv = sub.add_parser("serve", help="run the HTTP API (routes under /api)")
@@ -153,8 +151,6 @@ def selection(args):
         return {"mode": "ids", "ids": ids}
     if args.sample is not None:
         return {"mode": "sample", "n": args.sample, "seed": args.seed}
-    if args.split:
-        return {"mode": args.split, "distractors": args.distractors, "seed": args.seed}
     return None
 
 

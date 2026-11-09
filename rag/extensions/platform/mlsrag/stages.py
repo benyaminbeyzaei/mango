@@ -2,7 +2,6 @@
 wrap the course code behind them."""
 import json
 from dataclasses import dataclass
-from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -230,31 +229,6 @@ def summary_context(config, data):
     return SimpleContext(SummaryData(data, rows))
 
 
-def lazy_graph_retriever(config):
-    """`params.index`: the lazy-graph pipeline config; `params.rerank_dense` (default true)."""
-    from .retrievers.graph import LazyGraphRetriever, load_index
-
-    index = load_index(stage_dir("lazy-graph", config, "lazy_index") / "index.json")
-    return LazyGraphRetriever(index, *enc_a(), rerank_dense=config.params.get("rerank_dense", True))
-
-
-def kg_retriever(config, gateway):
-    """`params.index`: the kg pipeline config; `params.question_entities`: spacy | llm
-    (`params.question_model`, default the generator model)."""
-    from .retrievers.graph import KGRetriever, load_index
-
-    index = load_index(stage_dir("kg", config, "kg_index") / "index.json")
-    return KGRetriever(index, *enc_a(), question_entities=config.params.get("question_entities", "spacy"),
-                       model=config.params.get("question_model", config.generator_model), gateway=gateway)
-
-
-@lru_cache(maxsize=8)
-def load_record_subset(path) -> frozenset:
-    """`params.record_subset`: a text file with one record id per line (relative to the checkout root)."""
-    lines = checkout_path(path).read_text(encoding="utf-8").splitlines()
-    return frozenset(line.strip() for line in lines if line.strip())
-
-
 @dataclass
 class Stages:
     asr: object  # .transcribe(audio_path) -> str
@@ -283,8 +257,6 @@ def grep_index(data):
 RETRIEVERS = {
     "exact": lambda config, gateway, data: ExactRetriever(config.corpus_index),
     "topic": lambda config, gateway, data: topic_retriever(config),
-    "lazy-graph": lambda config, gateway, data: lazy_graph_retriever(config),
-    "kg": lambda config, gateway, data: kg_retriever(config, gateway),
     "toc": lambda config, gateway, data: toc_retriever(config, gateway),
     "raptor-lite": lambda config, gateway, data: raptor_retriever(config),
     "bm25": lambda config, gateway, data: bm25_retriever(data),

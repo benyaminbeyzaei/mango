@@ -10,4 +10,4 @@
 name: a-smoke
 subset: practice-smoke20
 configs: [baseline, bm25, grep-static, grep-agentic, grep-feedback, topics-k256-m2, topics-k256-m4, topics-k256-m8,
-          toc-centroid-m4, toc-llm-m4, raptor-lite-expand, lazy-graph-rr]
+          toc-centroid-m4, toc-llm-m4, raptor-lite-expand]

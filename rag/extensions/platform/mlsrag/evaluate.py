@@ -15,10 +15,7 @@ FLOW_CALLS_PER_QUERY = {"standard": 0, "grep-static": 1, "grep-agentic": 4, "gre
 
 
 def retriever_calls_per_query(config) -> int:
-    """ELM calls the retriever makes per query: kg with question_entities: llm asks once;
-    toc with route: llm picks sections, then topics."""
-    if config.retriever == "kg":
-        return int(config.params.get("question_entities") == "llm")
+    """ELM calls the retriever makes per query: toc with route: llm picks sections, then topics."""
     return 2 if config.retriever == "toc" and config.params.get("route", "centroid") == "llm" else 0
 
 

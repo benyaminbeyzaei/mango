@@ -1,5 +1,4 @@
 """Every entry point refuses practice-all / dev-all without the explicit flag (plan 015)."""
-import json
 from types import SimpleNamespace
 
 import pytest
@@ -90,15 +89,11 @@ def test_preprocess_cli_yes_skips_the_question(monkeypatch):
     assert seen["confirm"] is cli.confirm
 
 
-def test_kg_prompt_shows_calls_left_and_pace(tmp_path):
-    from mlsrag.preprocess import kg
+def test_prompt_shows_calls_left_and_pace(tmp_path):
     from mlsrag.preprocess.ledger import Ledger
 
-    sel, out = tmp_path / "sel", tmp_path / "kg" / "h1"
-    sel.mkdir()
-    (sel / "records.jsonl").write_text("".join(json.dumps({"record_id": f"r{i}", "text": "t"}) + "\n" for i in range(3)))
-    Ledger(out / "ledger.jsonl").append("r0", "h", "ok", output={"entities": [], "relations": [], "usage": {}},
-                                        tokens=10, latency_ms=2000.0)
+    out = tmp_path / "h1"
+    Ledger(out / "ledger.jsonl").append("r0", "h", "ok", output="t", tokens=10, latency_ms=2000.0)
     Ledger(out / "ledger.jsonl").append("r1", "h", "failed", tokens=10, latency_ms=4000.0, error="bad json")
     messages = []
 
@@ -110,7 +105,7 @@ def test_kg_prompt_shows_calls_left_and_pace(tmp_path):
     ctx = SimpleNamespace(out_dir=out, gateway=CountingGateway(), trace=SimpleNamespace(cost={}),
                           log=logged.append, confirm=stop)
     with pytest.raises(SystemExit):
-        kg.run_extract({"select": sel}, {"model": "m"}, ctx)
+        run_items({f"r{i}": "t" for i in range(3)}, ctx, "m", lambda data, attempt: "p", str)
     assert ctx.gateway.calls == 0
     want = "3 items, 1 done after 2 calls; 2 ELM calls to make, mean 3.0s per call so far"
     assert messages == [want] and want in logged

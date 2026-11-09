@@ -2,15 +2,15 @@
 
 ## What exists
 
-- `mlsrag` (this folder): RunConfig, Trace, gateway, five stage interfaces, three flows, eight
+- `mlsrag` (this folder): RunConfig, Trace, gateway, five stage interfaces, three flows, six
   retrievers, four context builders, preprocessing pipelines, judging through the course evaluator,
   matrices, an HTTP API. Start at [README.md](README.md).
 - `web/`: the client (Docs, Models, Results, Interactive, Guide), served by `mlsrag serve` or Docker.
 - `compose.yaml` + `Dockerfile`: `docker compose up` from a clean clone (sequence in the README,
   checked on 2026-11-08: about 6 minutes including the image build).
-- `rag/extensions/results/`: 26 runs, all fresh (`run.fresh: true`), and four matrix summaries:
+- `rag/extensions/results/`: 22 runs, all fresh (`run.fresh: true`), and four matrix summaries:
   `a-smoke` (11 retrievers, retrieval only), `context-smoke` (judged baseline, budgeted, dedupe),
-  `encoders-smoke` (encoder policies), `toc-raptor-smoke`; plus six runs on the 600-record dev subset.
+  `encoders-smoke` (encoder policies), `toc-raptor-smoke`.
 
 ## What each plan produced
 
@@ -21,18 +21,18 @@
 - 005: encoder mismatch policies (re-encode, translate with fitted maps) and the ASR comparison harness.
 - 006: the FastAPI server and its OpenAPI contract.
 - 007: two-level TOC and RAPTOR-lite retrievers.
-- 008: lazy graph retriever, LLM knowledge-graph code, `record_subset` restriction.
+- 008: two graph retrievers (removed by 026).
 - 009: web client skeleton (routes, docs, models, guide).
 - 010: Docker image and compose for API, client and CLI.
 - 011: web Results mode (runs, comparison charts, run and query detail).
 - 012: web Interactive mode (text and voice, config picker, trace viewer).
 - 013: budgeted and dedupe context builders; experiment matrices A, B, C.
 - 014: this integration: clean-clone check, docs split into `docs/`, evaluator guide, stale runs
-  replaced by fresh ones, matrix override names, KG budget clamp, API bound to localhost.
+  replaced by fresh ones, matrix override names, API bound to localhost.
 - 015: one full-split guard for `run`, `transcribe`, `matrix` and the API.
 - 016: simplicity pass (trace argument, plain gateway cache and retry, config folders).
 - 017: measurement fixes (local embeddings are not remote calls, BM25 skips encode).
-- 018: KG extraction with Llama-3.3 (598 records) and the KG rows on the 600-record subset.
+- 018: runs for the 008 graph retrievers (removed by 026).
 - 019: `--fresh`: latency and cost are valid only for fresh runs.
 - 020: second simplicity pass (stage folders, one ledger loop, `estimate` generate flag, static config picker).
 - 021: grep pattern calls on Llama-3.3 (Qwen's reasoning took ~70-100 s per call); answers stay on Qwen.
@@ -40,6 +40,7 @@
 - 023: the grep-feedback flow (static grep, keep, one expansion from the kept records, rerank); matrix A and B rows.
 - 024: stale cost numbers fixed, `pnpm typecheck` checks the app, small simplifications, and the
   candidates file lists the ids the answer's context was built from.
+- 026: the two graph retrievers removed with their configs, runs, dev record subset and dependencies.
 
 ## Open items
 
@@ -47,7 +48,7 @@
   wall time at one request at a time, judging not included):
   - fill the practice transcript cache for practice-20pct: 50 whisper-1 calls, ~$0.03;
   - matrix A on practice-20pct: 770 ELM calls, ~19 min; on dev-20pct: 275 calls, ~7 min;
-  - matrix B (simple and budgeted) on dev-20pct: 400 + 200 judge calls each, ~3 h + judging each;
+  - matrix B (simple and budgeted) on dev-20pct: 375 + 175 judge calls each, ~2.6 h + judging each;
   - matrix C on dev-20pct: 0 ELM calls;
   - `dev-all` costs five times the dev-20pct numbers (see the Guide page for the full-split table).
 - **Course ASR transcripts** from the teammate (the CUDA model on the cluster): needed for

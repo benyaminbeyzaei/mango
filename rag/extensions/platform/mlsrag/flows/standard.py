@@ -1,8 +1,5 @@
 """The course baseline: asr -> encode -> retrieve -> context -> generate."""
-from ..stages import load_record_subset
-
 RANKED_DEPTH = 100  # keep this many ranked ids so Recall@100 can be computed
-ALL_CANDIDATES = 1_000_000  # more than the corpus: a retriever returns every candidate it has
 
 
 def retrieve(stages, config, trace, question) -> list[tuple[str, float]]:
@@ -12,16 +9,9 @@ def retrieve(stages, config, trace, question) -> list[tuple[str, float]]:
         with trace.span("encode"):
             vec = stages.encoder.encode(question)
     depth = max(config.k, RANKED_DEPTH)
-    subset = config.params.get("record_subset")  # compare on a record subset: keep only its ids
     extra = {"question": question} if getattr(stages.retriever, "uses_question", False) else {}
     with trace.span("retrieve"):
-        hits = stages.retriever.search(vec, ALL_CANDIDATES if subset else depth, trace=trace, **extra)
-        if subset:
-            record_ids = load_record_subset(subset)
-            trace.count("subset.candidates_in", len(hits))
-            hits = [h for h in hits if h[0] in record_ids]
-            trace.count("subset.candidates_kept", len(hits))
-            hits = hits[:depth]
+        hits = stages.retriever.search(vec, depth, trace=trace, **extra)
     return hits
 
 

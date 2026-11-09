@@ -9,7 +9,7 @@ Tests: `pytest rag/extensions/platform` (fast); `pytest -m slow rag/extensions/p
 
 Quickest way to the web client: [Run with Docker](#run-with-docker). More detail in `docs/`:
 [retrievers](docs/retrievers.md) (context builders, encoder policies, ASR comparison, BM25, grep, adding a
-retriever or flow), [pipelines](docs/pipelines.md), [graphs](docs/graphs.md), [HTTP API](docs/api.md).
+retriever or flow), [pipelines](docs/pipelines.md), [HTTP API](docs/api.md).
 
 ## Map
 
@@ -23,9 +23,9 @@ rag/extensions/platform/
 │   ├── stages.py       the five stage interfaces, RETRIEVERS, CONTEXT_BUILDERS, build_stages
 │   ├── context.py      budgeted and dedupe context builders
 │   ├── flows/          standard, grep-static, grep-agentic, grep-feedback: one query
-│   ├── retrievers/     bm25, grep, topic, toc, raptor-lite, lazy-graph, kg
+│   ├── retrievers/     bm25, grep, topic, toc, raptor-lite
 │   ├── prompts/        grep_v1
-│   ├── preprocess/     pipelines of hashed, resumable stages (topics, toc, raptor, lazy-graph, kg)
+│   ├── preprocess/     pipelines of hashed, resumable stages (topics, toc, raptor)
 │   ├── runner.py       run a config over a subset → a results folder
 │   ├── results.py      metrics.json schema, load_run, list_runs, compare
 │   ├── evaluate.py     judging through the course evaluator, call estimates
@@ -43,7 +43,7 @@ rag/extensions/platform/
 **RunConfig** (`config.py`). One experiment's settings, a pydantic model: `name`; `asr` (cached |
 whisper1 | course) and `asr_cache`; `query_encoder` (gte-small | bge-small); `corpus_index` (enc_a |
 enc_b) and `mismatch_policy` (error | as-is | re-encode | translate); `retriever` (exact | topic |
-lazy-graph | kg | toc | raptor-lite | bm25 | grep); `k` (5); `context_builder` (simple | budgeted |
+toc | raptor-lite | bm25 | grep); `k` (5); `context_builder` (simple | budgeted |
 dedupe | with-summaries); `generator_model`; `judge_model`; `flow` (standard | grep-static |
 grep-agentic | grep-feedback); `params` (free dict for the retriever's options). A YAML file works like a preset name.
 
@@ -65,7 +65,7 @@ answer`. `build_stages(config, gateway, data)` picks one implementation of each 
 encode → retrieve (100 ranked ids) → context (top k) → generate. `grep-static`, `grep-agentic` and
 `grep-feedback` replace encode and retrieve with LLM-written regex scans.
 
-**Pipelines** (`preprocess/`). Offline work before a run (clusters, labels, summaries, graphs). Each
+**Pipelines** (`preprocess/`). Offline work before a run (clusters, labels, summaries). Each
 stage writes to a folder named by a hash of its inputs, config and code version, so only changed
 stages rerun; LLM stages keep a per-item ledger and resume after a stop. See [docs/pipelines.md](docs/pipelines.md).
 
@@ -96,8 +96,7 @@ mlsrag matrix --matrix rag/extensions/platform/configs/matrices/matrix-a-smoke.y
 ```
 
 **Subsets** (`subsets/`, seed 0): `practice-smoke20` (20), `practice-20pct` (70), `dev-20pct` (25),
-`practice-all` (350), `dev-all` (125); `records-dev-relevant-d275.txt` is a record list (600) for
-`params.record_subset` ([docs/graphs.md](docs/graphs.md)).
+`practice-all` (350), `dev-all` (125).
 
 ## Cost rules
 
@@ -170,11 +169,11 @@ MRR@10 0.350 → 0.175, ~304 s → ~5.6 s per query (Qwen → Llama, practice-sm
 
 | Matrix file (`configs/matrices/`) | Subset | Mode | ELM calls (fresh) | Wall time |
 |---|---|---|---|---|
-| A `matrix-a-smoke.yaml` (12 retrieval configs) | practice-smoke20 | `--no-generate` | 220 (180 grep, 40 toc-llm) | ~5.5 min |
+| A `matrix-a-smoke.yaml` (11 retrieval configs) | practice-smoke20 | `--no-generate` | 220 (180 grep, 40 toc-llm) | ~5.5 min |
 | A `matrix-a-retrieval.yaml` | practice-20pct (70) | `--no-generate` | 770, after filling the transcript cache | ~19 min |
 | A `matrix-a-retrieval-dev.yaml` | dev-20pct (25) | `--no-generate` | 275 | ~7 min |
-| B `matrix-b-answers.yaml` (8 configs, simple context) | dev-20pct | generate + judge | 400 + 200 judge | ~3 h + judge |
-| B `matrix-b-answers-budgeted.yaml` (same rows, budgeted) | dev-20pct | generate + judge | 400 + 200 judge | ~3 h + judge |
+| B `matrix-b-answers.yaml` (7 configs, simple context) | dev-20pct | generate + judge | 375 + 175 judge | ~2.6 h + judge |
+| B `matrix-b-answers-budgeted.yaml` (same rows, budgeted) | dev-20pct | generate + judge | 375 + 175 judge | ~2.6 h + judge |
 | C `matrix-c-secondary.yaml` (encoder policies) | dev-20pct | `--no-generate` | 0 | ~1 min |
 
 Matrix C varies the encoder and index. The practice transcript cache covers only the smoke subset:
