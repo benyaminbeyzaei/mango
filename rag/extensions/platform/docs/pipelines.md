@@ -23,7 +23,6 @@ mlsrag preprocess run    --pipeline topics --config rag/extensions/platform/conf
 mlsrag preprocess status --pipeline topics --config ...   # per stage: hash, ok|partial|missing, time, ELM calls/tokens
 mlsrag preprocess clean  --pipeline topics --config ... --stage label
 # selection flags (override the config's select section): --all | --ids FILE | --sample N --seed S
-#   | --split dev-relevant --distractors M --seed S
 mlsrag run --config rag/extensions/platform/configs/topics-k256-m4.yaml --subset practice-smoke20 --no-generate
 ```
 

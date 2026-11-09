@@ -1,4 +1,4 @@
-# RunConfig: flat dense on dev, whole corpus (control for baseline-dev-sub600).
+# RunConfig: flat dense on dev, whole corpus.
 name: baseline-dev
 asr: cached
 asr_cache: rag/.cache/transcripts/whisper1-dev.jsonl

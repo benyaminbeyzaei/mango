@@ -13,4 +13,4 @@ name: b-answers-budgeted
 subset: dev-20pct
 override: {asr_cache: rag/.cache/transcripts/whisper1-dev.jsonl, context_builder: budgeted}
 # One representative per family; replace each with the best setting of its family from matrix A.
-configs: [baseline, bm25, grep-agentic, grep-feedback, topics-k256-m4, toc-centroid-m4, raptor-lite-expand, lazy-graph-rr]
+configs: [baseline, bm25, grep-agentic, grep-feedback, topics-k256-m4, toc-centroid-m4, raptor-lite-expand]
