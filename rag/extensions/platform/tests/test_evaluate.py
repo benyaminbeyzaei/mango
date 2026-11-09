@@ -9,6 +9,7 @@ from mlsrag.config import baseline
 from mlsrag.course import paths
 from mlsrag.evaluate import estimate, read_jsonl, write_candidates
 from mlsrag.results import list_runs, load_run
+from mlsrag.subsets import load_subset
 
 from conftest import needs_data
 
@@ -78,6 +79,24 @@ def test_candidates_follow_the_course_format(tmp_path):
                             "retrieved_record_ids", "timing"}
     assert all(len(r["retrieved_record_ids"]) == k and r["split"] == "practice" for r in rows)
     assert (paths.data_dir / rows[0]["audio_file"]).exists()
+
+
+@needs_data
+def test_candidates_list_the_ids_the_context_was_built_from(tmp_path):
+    qids = load_subset("practice-smoke20")[:2]
+    ranked = [f"r{i}" for i in range(10)]
+    rows = [  # a grep-feedback trace whose rerank kept 2 ids, and an older trace without context_ids
+        {"query_id": qids[0], "spans": [], "resources": {"wall_ms": 1},
+         "artifacts": {"transcript": "q", "answer": "a", "ranked_ids": ranked, "context_ids": ["r7", "r2"]}},
+        {"query_id": qids[1], "spans": [], "resources": {"wall_ms": 1},
+         "artifacts": {"transcript": "q", "answer": "a", "ranked_ids": ranked}},
+    ]
+    (tmp_path / "config.json").write_text(json.dumps({"k": 5}))
+    (tmp_path / "metrics.json").write_text(json.dumps({"run": {"subset": "practice-smoke20"}}))
+    (tmp_path / "queries.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    out = read_jsonl(write_candidates(tmp_path))
+    assert out[0]["retrieved_record_ids"] == ["r7", "r2"]
+    assert out[1]["retrieved_record_ids"] == ranked[:5]
 
 
 def generated_run(tmp_path):

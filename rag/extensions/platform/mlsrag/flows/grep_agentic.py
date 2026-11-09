@@ -8,9 +8,9 @@ from .standard import finish
 MAX_ITERATIONS = 3  # scans per query, so at most 1 + 2 + 1 = 4 LLM calls
 
 
-def show(stages, hits, chars):
+def show(stages, rids, chars):
     texts = stages.retriever.records
-    return "\n".join(f"[{rid}] {texts[rid][:chars]}" for rid, _, _ in hits)
+    return "\n".join(f"[{rid}] {texts[rid][:chars]}" for rid in rids)
 
 
 def retrieve(stages, config, trace, question):
@@ -23,7 +23,7 @@ def retrieve(stages, config, trace, question):
 
     for _ in range(MAX_ITERATIONS - 1):
         prompt = grep_v1.REFINE.format(
-            question=question, patterns=json.dumps(patterns), hits=show(stages, hits[:10], 200) or "(none)"
+            question=question, patterns=json.dumps(patterns), hits=show(stages, [rid for rid, _, _ in hits[:10]], 200) or "(none)"
         )
         reply = ask(stages, config, trace, prompt)
         new = clean_patterns(reply.get("patterns")) if isinstance(reply, dict) else []
@@ -37,10 +37,11 @@ def retrieve(stages, config, trace, question):
 
     kept = None  # None: no clean-up (no hits) or its reply was not a list; the context is then the top k
     if hits:
-        prompt = grep_v1.CLEANUP.format(question=question, hits=show(stages, hits[:20], 300), k=config.k)
+        top20 = [rid for rid, _, _ in hits[:20]]
+        prompt = grep_v1.CLEANUP.format(question=question, hits=show(stages, top20, 300), k=config.k)
         reply = ask(stages, config, trace, prompt)
         if isinstance(reply, list):
-            top = {rid for rid, _, _ in hits[:20]}
+            top = set(top20)
             kept = []
             for rid in reply:
                 if isinstance(rid, str) and rid in top and rid not in kept:

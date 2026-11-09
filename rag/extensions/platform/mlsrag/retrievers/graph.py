@@ -34,12 +34,13 @@ class GraphRanker:
 
     def rank(self, keys, query_vec, k, use_dense=True):
         """keys: {record_id: tuple, larger is better}; ties broken by cosine with the query
-        (if use_dense), then by corpus order. Returns [(record_id, cosine)]."""
+        (if use_dense), then by corpus order (the sort is stable, also with reverse=True).
+        Returns [(record_id, cosine)]."""
         rids = sorted(keys, key=self.row.__getitem__)
         q = np.asarray(query_vec, dtype=np.float32).reshape(-1)
         q = q / np.linalg.norm(q)
         dense = self.vectors[[self.row[r] for r in rids]] @ q if rids else np.zeros(0)
-        order = sorted(range(len(rids)), key=lambda i: (keys[rids[i]], dense[i] if use_dense else 0.0, -i),
+        order = sorted(range(len(rids)), key=lambda i: (keys[rids[i]], dense[i] if use_dense else 0.0),
                        reverse=True)
         return [(rids[i], float(dense[i])) for i in order[:k]]
 

@@ -127,6 +127,7 @@ def test_grep_feedback_expands_from_kept_records_then_reranks(monkeypatch):
     assert "[r5]" in gw.prompts[3] and "[r1]" not in gw.prompts[3]  # rerank pool: kept + new hits
     # reranked, rest of the pool, rest of static, rest of the expansion
     assert out["ranked_ids"] == ["r5", "r3", "r1", "r4", "r2"] and out["prompt"] == "r5"
+    assert out["context_ids"] == ["r5"]  # what the candidates file reports as retrieved
     assert out["scores"] == [1.0, 1.0, 2.0, 1.0, 1.0]
     assert trace.counters["grep.llm_calls"] == 4 and trace.counters["grep.kept"] == 1
 
@@ -170,6 +171,6 @@ def test_standard_flow_gives_bm25_the_question_and_reports_the_build_once(tmp_pa
     first, second = Trace("r", "q1", "t"), Trace("r", "q2", "t")
     out = get_flow("standard")("q1", "q1.wav", stages, cfg, first)
     get_flow("standard")("q2", "q2.wav", stages, cfg, second)
-    assert out["ranked_ids"] == ["r3", "r1"]  # "is a roth ira good"
+    assert out["ranked_ids"] == ["r3", "r1"] and out["context_ids"] == ["r3", "r1"]  # "is a roth ira good"
     assert "bm25.build_s" in first.counters and "bm25.build_s" not in second.counters
     assert "encode" not in [s.name for s in first.spans]

@@ -67,8 +67,8 @@ shown is the stored `metrics.json` or `queries.jsonl` value; tables print it in 
 
 Each chart (`src/components/charts/`, Recharts) has a **Show table** button that swaps it for a table of the same
 numbers. Remote calls served from the cache take about 1 ms and cost nothing, so they are not latency or cost
-samples: such spans are marked `(cached)`, and a run with any cache hit shows `–` for latency and cost in the
-comparison charts (the run page still lists its stored values). Per-query judge scores are not part of the trace, so the query page shows them only when
+samples: such spans are marked `(cached)`. Latency and cost are shown only for runs made with `--fresh`
+(`run.fresh` in `metrics.json`); for any other run the results list, the run page and the comparison show `–`. Per-query judge scores are not part of the trace, so the query page shows them only when
 a trace carries a `judge` field.
 
 ## Layout

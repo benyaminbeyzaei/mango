@@ -31,7 +31,7 @@ def retrieve(stages, config, trace, question):
 
     kept = []
     if hits0:
-        prompt = grep_v1.KEEP.format(question=question, hits=show(stages, hits0[:POOL], 300))
+        prompt = grep_v1.KEEP.format(question=question, hits=show(stages, static[:POOL], 300))
         kept = pick(ask(stages, config, trace, prompt), set(static[:POOL]))
     a["kept_ids"] = kept
     trace.count("grep.kept", len(kept))
@@ -52,8 +52,7 @@ def retrieve(stages, config, trace, question):
     expanded = [rid for rid, _, _ in hits1]
 
     pool = (kept + expanded)[:POOL]
-    prompt = grep_v1.CLEANUP.format(question=question, hits=show(stages, [(rid, 0, 0) for rid in pool], 300),
-                                    k=config.k)
+    prompt = grep_v1.CLEANUP.format(question=question, hits=show(stages, pool, 300), k=config.k)
     reply = ask(stages, config, trace, prompt)
     reranked = pick(reply, set(pool), config.k)
     a["reranked_ids"] = reranked

@@ -126,7 +126,8 @@ class ModelGateway:
             payload["tag"] = tag  # only when given, so untagged cache keys stay as they were
         key = cache_key("chat", model, payload)
         with self._trace().span("gateway.chat", model=model, **sizes) as span:
-            result, retries = None if self.fresh else cache_get(self.cache_dir, key), 0
+            result = None if self.fresh else cache_get(self.cache_dir, key)
+            retries = 0
             cached = result is not None
             if not cached:
                 result, retries = with_retries(call, self._failure_log("chat", model, key, sizes))
@@ -149,7 +150,8 @@ class ModelGateway:
         sizes = {"n_texts": len(texts)}
         key = cache_key("embed", encoder_name, {"texts": list(texts), "role": role})
         with self._trace().span("gateway.embed", model=encoder_name, **sizes) as span:
-            result, retries = None if self.fresh else cache_get(self.cache_dir, key), 0
+            result = None if self.fresh else cache_get(self.cache_dir, key)
+            retries = 0
             cached = result is not None
             if not cached:
                 result, retries = with_retries(call, self._failure_log("embed", encoder_name, key, sizes))
@@ -176,7 +178,8 @@ class ModelGateway:
         sizes = {"audio_seconds": seconds}
         key = cache_key("transcribe", model, {"audio_sha256": hashlib.sha256(audio).hexdigest()})
         with self._trace().span("gateway.transcribe", model=model, **sizes) as span:
-            result, retries = None if fresh else cache_get(self.cache_dir, key), 0
+            result = None if fresh else cache_get(self.cache_dir, key)
+            retries = 0
             cached = result is not None
             if not cached:
                 result, retries = with_retries(call, self._failure_log("transcribe", model, key, sizes))
