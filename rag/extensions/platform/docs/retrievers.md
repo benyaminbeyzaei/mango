@@ -14,7 +14,7 @@ All three write the course prompt (`rag/src/context_builder.py`) around the evid
   the trace's gateway cost.
 - `dedupe` (`params.dedupe_threshold`, 0.9, and `params.budget_tokens`): drops a record whose enc_a
   cosine similarity to an already kept record is above the threshold (vectors from `stages.enc_a()`,
-  not re-embedded; records without a vector, such as raptor summaries, are kept), then the budget.
+  not re-embedded; records without a vector, such as raptor-lite and raptor-tree summaries (see [pipelines.md](pipelines.md)), are kept), then the budget.
 
 Counters per query: `context.records_used`, `context.tokens`, `context.truncated` (0/1),
 `context.dropped_duplicates` (dedupe only). `configs/context-budgeted.yaml` and

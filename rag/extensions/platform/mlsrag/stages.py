@@ -209,23 +209,30 @@ def toc_retriever(config, gateway):
                         model=p.get("route_model", TOC_ROUTE_MODEL))
 
 
+def summary_index_dir(config):
+    """raptor-lite reads the `raptor` summary_index, raptor-tree the `raptor-tree` tree_index."""
+    if config.retriever == "raptor-tree":
+        return stage_dir("raptor-tree", config, "tree_index")
+    return stage_dir("raptor", config, "summary_index")
+
+
 def raptor_retriever(config):
-    """`params`: index (pipeline config), summary_as_evidence (false), expand_top (3)."""
+    """raptor-lite | raptor-tree. `params`: index (pipeline config), summary_as_evidence (false), expand_top (3)."""
     from .retrievers.raptor import SummaryRetriever, load_summaries
 
     p = config.params
     if p.get("summary_as_evidence", False) and config.context_builder != "with-summaries":
         raise ValueError("summary_as_evidence: true needs context_builder: with-summaries")
-    vectors, rows = load_summaries(stage_dir("raptor", config, "summary_index"))
+    vectors, rows = load_summaries(summary_index_dir(config))
     return SummaryRetriever(vectors, rows, *enc_a(), summary_as_evidence=p.get("summary_as_evidence", False),
                             expand_top=p.get("expand_top", 3))
 
 
 def summary_context(config, data):
-    """SimpleContext that can also show `summary:<cluster>` evidence from the raptor index."""
+    """SimpleContext that can also show `summary:<id>` evidence from the raptor-lite or raptor-tree index."""
     from .retrievers.raptor import SummaryData, load_summaries
 
-    _, rows = load_summaries(stage_dir("raptor", config, "summary_index"))
+    _, rows = load_summaries(summary_index_dir(config))
     return SimpleContext(SummaryData(data, rows))
 
 
@@ -259,6 +266,7 @@ RETRIEVERS = {
     "topic": lambda config, gateway, data: topic_retriever(config),
     "toc": lambda config, gateway, data: toc_retriever(config, gateway),
     "raptor-lite": lambda config, gateway, data: raptor_retriever(config),
+    "raptor-tree": lambda config, gateway, data: raptor_retriever(config),
     "bm25": lambda config, gateway, data: bm25_retriever(data),
     "grep": lambda config, gateway, data: grep_index(data),  # only for the grep flows, which call scan()
 }

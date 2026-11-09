@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
@@ -119,8 +120,8 @@ def test_toc_llm_flat_route_falls_back_to_centroid_route():
 def toy_summaries():
     # summary 0 sits near the z records; summary 1 near x
     return np.array([[0, 0.2, 1], [1, 0, 0]], dtype=np.float32), [
-        {"cluster": 0, "summary": "about z", "members": ["e", "c"]},
-        {"cluster": 1, "summary": "about x", "members": ["a", "b"]},
+        {"id": 0, "level": 1, "summary": "about z", "members": ["e", "c"]},
+        {"id": 1, "level": 1, "summary": "about x", "members": ["a", "b"]},
     ]
 
 
@@ -178,3 +179,103 @@ def test_run_items_resumes_and_retries(tmp_path):
     assert len((tmp_path / "ledger.jsonl").read_text().splitlines()) == 3
     failed = json.loads((tmp_path / "ledger.jsonl").read_text().splitlines()[1])
     assert failed["status"] == "failed" and failed["tokens"] == 10  # the call happened, the parse failed
+
+
+# RAPTOR-tree (plan 028)
+
+def test_raptor_lite_prompt_and_stage_hashes_unchanged():
+    import hashlib
+
+    from mlsrag.preprocess import PIPELINES, load_pipeline_config
+
+    assert hashlib.sha256(summarise.PROMPT_V1.encode()).hexdigest()[:16] == "b106d0599128eaa1"
+    config = load_pipeline_config(Path(__file__).parents[1] / "configs/pipelines/topics-k256.yaml")
+    hashes = PIPELINES["raptor"]().hashes(config)
+    assert (hashes["summarise"], hashes["summary_index"]) == ("182308c8a5898ec3", "ec8b28b76c03cb6d")
+
+
+def write_json(path, obj):
+    path.write_text(json.dumps(obj), encoding="utf-8")
+    return path
+
+
+def test_soft_members_join_second_centroid_within_delta(tmp_path, monkeypatch):
+    from mlsrag.preprocess import tree
+
+    vectors = {"a": [1, 0], "b": [0.8, 0.6], "c": [0, 1], "d": [0.3, 0.954]}
+    monkeypatch.setattr(tree, "load_vectors", lambda rids: np.array([vectors[r] for r in rids], dtype=np.float32))
+    cluster = tmp_path / "cluster"
+    cluster.mkdir()
+    np.save(cluster / "centroids.npy", np.eye(2, dtype=np.float32))
+    write_json(cluster / "clusters.json", [{"cluster": 0, "members": ["a", "b"]}, {"cluster": 1, "members": ["c", "d"]}])
+    counts = tree.soft_members_run({"cluster": cluster}, {"share": 0.25}, SimpleNamespace(out_dir=tmp_path))
+    # cos1 - cos2: a 1, b .2, c 1, d .654; the 25 % quantile is .54, so only b joins its second cluster
+    members = json.loads((tmp_path / "members.json").read_text())
+    assert [m["members"] for m in members] == [["a", "b"], ["c", "d", "b"]]
+    assert counts["records_with_second"] == 1 and abs(counts["delta"] - 0.54) < 0.01
+
+
+class SummaryGateway:
+    """Replies with a summary naming the prompt's first record line; embeds summaries with fixed vectors."""
+
+    def __init__(self, vectors=None):
+        self.prompts, self.trace, self.vectors = [], Trace("r", "q", "c"), vectors
+
+    def chat(self, model, messages, temperature=0.0, max_tokens=None):
+        self.prompts.append(messages[0]["content"])
+        first = next(line for line in messages[0]["content"].splitlines() if line.startswith("- "))
+        return "sum of " + first[2:]
+
+    def embed(self, encoder, texts, role="query"):
+        return self.vectors
+
+
+def test_summarise_full_splits_a_cluster_over_the_cap_and_combines(tmp_path):
+    from mlsrag.preprocess import tree
+
+    select, soft = tmp_path / "select", tmp_path / "soft"
+    select.mkdir()
+    soft.mkdir()
+    (select / "records.jsonl").write_text("".join(json.dumps({"record_id": r, "text": r * 40}) + "\n" for r in "abcde"))
+    write_json(soft / "members.json", [{"cluster": 0, "members": ["a"]}, {"cluster": 1, "members": ["b", "c", "d", "e"]}])
+    out = tmp_path / "out"
+    out.mkdir()
+    g = SummaryGateway()
+    ctx = SimpleNamespace(out_dir=out, gateway=g, trace=g.trace, log=lambda *a: None)
+    counts = tree.summarise_full_run({"select": select, "soft_members": soft}, {"model": "m", "max_input_tokens": 25}, ctx)
+    # each text is 11 tokens: cluster 1 splits into [b, c] and [d, e], then one combine call
+    assert counts["split_clusters"] == 1 and counts["calls_planned"] == 4 and len(g.prompts) == 4
+    assert "summaries of parts of one cluster" in g.prompts[3] and "- sum of " + "b" * 40 in g.prompts[3]
+    rows = [json.loads(line) for line in (out / "summaries.jsonl").read_text().splitlines()]
+    assert [r["parts"] for r in rows] == [1, 2] and rows[1]["summary"] == "sum of sum of " + "b" * 40
+    with pytest.raises(RuntimeError):
+        tree.summarise_full_run({"select": select, "soft_members": soft}, {"model": "m", "max_input_tokens": 25,
+                                                                           "max_calls": 3}, ctx)
+
+
+def test_level2_hit_expands_into_its_section_records(tmp_path):
+    from mlsrag.preprocess import tree
+
+    vectors, ids = toy_corpus()
+    d = {n: tmp_path / n for n in ("soft_members", "section", "summarise_full", "section_summarise", "out")}
+    for p in d.values():
+        p.mkdir()
+    write_json(d["soft_members"] / "members.json", [{"cluster": 0, "members": ["a", "b"]},
+                                                    {"cluster": 1, "members": ["c", "d", "e"]}])
+    write_json(d["section"] / "sections.json", [{"section": 0, "topics": [0, 1]}])
+    (d["summarise_full"] / "summaries.jsonl").write_text('{"cluster": 0, "summary": "x"}\n{"cluster": 1, "summary": "y"}\n')
+    (d["section_summarise"] / "summaries.jsonl").write_text('{"section": 0, "summary": "xy"}\n')
+    # level-1 summaries point nowhere useful; the level-2 summary sits on the query
+    g = SummaryGateway(np.array([[0, -1, 0], [-1, 0, 0], [0, 0.6, 0.8]], dtype=np.float32))
+    tree.tree_index_run({k: v for k, v in d.items() if k != "out"}, {}, SimpleNamespace(out_dir=d["out"], gateway=g))
+    from mlsrag.retrievers.raptor import load_summaries
+
+    sv, rows = load_summaries(d["out"])
+    assert [r["id"] for r in rows] == ["t0", "t1", "s0"] and rows[2]["members"] == ["a", "b", "c", "d", "e"]
+    trace = Trace("r", "q", "c")
+    hits = SummaryRetriever(sv, rows, vectors, ids, expand_top=2).search(np.array([0, 0.6, 0.8]), k=2, trace=trace)
+    assert [r for r, _ in hits] == ["e", "d"]  # a flat search gives e, f (f is not in the section)
+    assert trace.counters["raptor.level2_hits"] == 1 and trace.counters["raptor.level1_hits"] == 0
+    hits = SummaryRetriever(sv, rows, vectors, ids, summary_as_evidence=True).search(np.array([0, 0.6, 0.8]), k=1)
+    assert hits[0][0] == "summary:s0"
+    assert SummaryData(SimpleNamespace(record_text=lambda r: r), rows).record_text("summary:s0") == "xy"

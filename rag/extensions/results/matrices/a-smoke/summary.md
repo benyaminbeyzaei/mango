@@ -14,4 +14,5 @@
 | 20261108-2202-toc-llm-m4-practice-smoke20 | toc-llm-m4 | 0.212 | 0.275 | 0.292 | 0.421 | 0.317 | 0.235 | - | - | - | - | 1124.9 | 2.000 | 1340.3 | True |
 | 20261109-1632-toc-llm-topics-m4-practice-smoke20 | toc-llm-topics-m4 | 0.212 | 0.275 | 0.292 | 0.471 | 0.312 | 0.233 | - | - | - | - | 1524.6 | 2.000 | 2603.8 | True |
 | 20261109-1633-toc-llm-flat-m4-practice-smoke20 | toc-llm-flat-m4 | 0.263 | 0.271 | 0.287 | 0.404 | 0.317 | 0.240 | - | - | - | - | 2373.0 | 1.000 | 6199.5 | True |
-| 20261108-2202-raptor-lite-expand-practice-smoke20 | raptor-lite-expand | 0.404 | 0.450 | 0.550 | 0.779 | 0.479 | 0.376 | - | - | - | - | 104.1 | 0.000 | 0.000 | True |
+| 20261109-1728-raptor-lite-expand-practice-smoke20 | raptor-lite-expand | 0.404 | 0.450 | 0.550 | 0.779 | 0.479 | 0.376 | - | - | - | - | 109.0 | 0.000 | 0.000 | True |
+| 20261109-1728-raptor-tree-expand-practice-smoke20 | raptor-tree-expand | 0.404 | 0.475 | 0.550 | 0.779 | 0.479 | 0.386 | - | - | - | - | 102.0 | 0.000 | 0.000 | True |
