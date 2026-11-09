@@ -41,13 +41,15 @@
 - 024: stale cost numbers fixed, `pnpm typecheck` checks the app, small simplifications, and the
   candidates file lists the ids the answer's context was built from.
 - 026: the two graph retrievers removed with their configs, runs, dev record subset and dependencies.
+- 027: TOC routes `llm-topics` (section prompt lists topic names) and `llm-flat` (one call over all
+  256 topics) as new matrix A rows; `llm` kept.
 
 ## Open items
 
 - **Full runs to schedule** (each needs Benyamin's go-ahead; numbers from `mlsrag estimate`,
   wall time at one request at a time, judging not included):
   - fill the practice transcript cache for practice-20pct: 50 whisper-1 calls, ~$0.03;
-  - matrix A on practice-20pct: 770 ELM calls, ~19 min; on dev-20pct: 275 calls, ~7 min;
+  - matrix A on practice-20pct: 980 ELM calls, ~24 min; on dev-20pct: 350 calls, ~9 min;
   - matrix B (simple and budgeted) on dev-20pct: 375 + 175 judge calls each, ~2.6 h + judging each;
   - matrix C on dev-20pct: 0 ELM calls;
   - `dev-all` costs five times the dev-20pct numbers (see the Guide page for the full-split table).

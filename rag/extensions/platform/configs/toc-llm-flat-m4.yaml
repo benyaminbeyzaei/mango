@@ -1,0 +1,13 @@
+# RunConfig: flat TOC routing (llm-flat): one call picks 4 of all 256 topics (no section step);
+# an unusable reply falls back to the centroid route (2 sections, then 4 topics).
+name: toc-llm-flat-m4
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+retriever: toc
+k: 5
+params:
+  index: rag/extensions/platform/configs/pipelines/topics-k256.yaml
+  m: 4
+  route: llm-flat

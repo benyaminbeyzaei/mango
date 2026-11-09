@@ -3,6 +3,8 @@ then topics inside them, then the topics' members are searched exactly.
 
 route "centroid": nearest section centroids, then nearest topic centroids among their topics.
 route "llm": one chat call picks sections from their titles, one picks topics from their labels.
+route "llm-topics": as "llm", but the section prompt also lists the names of each section's topics.
+route "llm-flat": no section step; one chat call picks topics from all topics' labels.
 The LLM needs the question text: `uses_question = True` makes the flow pass it as `question=`.
 """
 import json
@@ -23,6 +25,18 @@ TOPICS_PROMPT = (
     "Which topics (at most {n}) most likely contain the answer? "
     'Reply with JSON only: {{"ids": [<topic numbers>]}}'
 )
+SECTIONS_TOPICS_PROMPT = (
+    "Question: {question}\n\nA document collection is organised into these sections, "
+    "each followed by the topics it contains:\n{options}\n\n"
+    "Which sections (at most {n}) most likely contain the answer? "
+    'Reply with JSON only: {{"ids": [<section numbers>]}}'
+)
+FLAT_PROMPT = (
+    "Question: {question}\n\nA document collection is organised into these topics:\n{options}\n\n"
+    "Which topics (at most {n}) most likely contain the answer? "
+    'Reply with JSON only: {{"ids": [<topic numbers>]}}'
+)
+ROUTES = ("centroid", "llm", "llm-topics", "llm-flat")
 
 
 def load_toc(path) -> dict:
@@ -53,8 +67,8 @@ class TocRetriever:
     uses_question = True
 
     def __init__(self, toc, vectors, ids, sections=2, m=4, route="centroid", gateway=None, model=None):
-        if route not in ("centroid", "llm"):
-            raise ValueError(f"route must be centroid or llm, not {route!r}")
+        if route not in ROUTES:
+            raise ValueError(f"route must be one of {ROUTES}, not {route!r}")
         self.toc = toc
         row = {rid: i for i, rid in enumerate(ids)}
         self.members = [np.array([row[r] for r in t["members"]], dtype=np.int64) for t in toc["topics"]]
@@ -67,6 +81,23 @@ class TocRetriever:
         allowed = np.asarray(allowed)
         return [int(i) for i in allowed[np.argsort(-(centroids[allowed] @ q), kind="stable")[:n]]]
 
+    def _centroid_route(self, q):
+        sections = self._nearest(self.toc["section_centroids"], q, range(len(self.toc["sections"])), self.n_sections)
+        topics_in = [t for s in sections for t in self.toc["sections"][s]["topics"]]
+        return sections, self._nearest(self.toc["topic_centroids"], q, topics_in, self.m)
+
+    def _sections_prompt(self, question):
+        if self.route == "llm":
+            options = "\n".join(f"{s['section']}. {s['title']}: {s['summary']}" for s in self.toc["sections"])
+            return SECTIONS_PROMPT.format(question=question, options=options, n=self.n_sections)
+        topics = self.toc["topics"]
+        options = "\n".join(f"{s['section']}. {s['title']}: {s['summary']}\n"
+                            f"   Topics: {'; '.join(topics[t]['topic'] for t in s['topics'])}" for s in self.toc["sections"])
+        return SECTIONS_TOPICS_PROMPT.format(question=question, options=options, n=self.n_sections)
+
+    def _topic_options(self, topics):
+        return "\n".join(f"{t}. {self.toc['topics'][t]['topic']}: {self.toc['topics'][t]['summary']}" for t in topics)
+
     def _ask(self, prompt, allowed, n, trace):
         reply = self.gateway.chat(self.model, [{"role": "user", "content": prompt}], temperature=0.0, max_tokens=100)
         trace.count("toc.llm_calls")
@@ -77,26 +108,26 @@ class TocRetriever:
         q = np.asarray(query_vec, dtype=np.float32).reshape(-1)
         q = q / np.linalg.norm(q)
         all_sections = list(range(len(self.toc["sections"])))
+        if self.route != "centroid" and question is None:
+            raise ValueError(f"route {self.route} needs the question text")
         with trace.span("toc.route", route=self.route):
             if self.route == "centroid":
-                sections = self._nearest(self.toc["section_centroids"], q, all_sections, self.n_sections)
+                sections, topics = self._centroid_route(q)
+            elif self.route == "llm-flat":
+                sections, all_topics = [], list(range(len(self.toc["topics"])))
+                topics = self._ask(FLAT_PROMPT.format(question=question, options=self._topic_options(all_topics),
+                                                      n=self.m), all_topics, self.m, trace)
+                if not topics:  # unusable reply: take the centroid route instead
+                    trace.count("toc.llm_fallbacks")
+                    sections, topics = self._centroid_route(q)
             else:
-                if question is None:
-                    raise ValueError("route llm needs the question text")
-                options = "\n".join(f"{s['section']}. {s['title']}: {s['summary']}" for s in self.toc["sections"])
-                sections = self._ask(SECTIONS_PROMPT.format(question=question, options=options, n=self.n_sections),
-                                     all_sections, self.n_sections, trace)
+                sections = self._ask(self._sections_prompt(question), all_sections, self.n_sections, trace)
                 if not sections:  # unusable reply: fall back to the centroids
                     trace.count("toc.llm_fallbacks")
                     sections = self._nearest(self.toc["section_centroids"], q, all_sections, self.n_sections)
-            topics_in = [t for s in sections for t in self.toc["sections"][s]["topics"]]
-            if self.route == "centroid":
-                topics = self._nearest(self.toc["topic_centroids"], q, topics_in, self.m)
-            else:
-                options = "\n".join(f"{t}. {self.toc['topics'][t]['topic']}: {self.toc['topics'][t]['summary']}"
-                                    for t in topics_in)
-                topics = self._ask(TOPICS_PROMPT.format(question=question, options=options, n=self.m),
-                                   topics_in, self.m, trace)
+                topics_in = [t for s in sections for t in self.toc["sections"][s]["topics"]]
+                topics = self._ask(TOPICS_PROMPT.format(question=question, options=self._topic_options(topics_in),
+                                                        n=self.m), topics_in, self.m, trace)
                 if not topics:
                     trace.count("toc.llm_fallbacks")
                     topics = self._nearest(self.toc["topic_centroids"], q, topics_in, self.m)
