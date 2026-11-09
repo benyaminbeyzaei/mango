@@ -1,0 +1,20 @@
+{
+  "name": "toc-llm-topics-m4-gpt5labels",
+  "asr": "cached",
+  "asr_cache": "rag/.cache/transcripts/whisper1-practice.jsonl",
+  "query_encoder": "gte-small",
+  "corpus_index": "enc_a",
+  "mismatch_policy": "error",
+  "retriever": "toc",
+  "k": 5,
+  "context_builder": "simple",
+  "generator_model": "Qwen/Qwen3.5-397B-A17B-FP8",
+  "judge_model": "mistralai/Mistral-Small-4-119B-2603",
+  "flow": "standard",
+  "params": {
+    "index": "rag/extensions/platform/configs/pipelines/topics-k256-gpt5.yaml",
+    "sections": 2,
+    "m": 4,
+    "route": "llm-topics"
+  }
+}

@@ -109,23 +109,32 @@ class ModelGateway:
     def chat(self, model, messages, temperature=0.0, max_tokens=None, tag=None, timeout=None) -> str:
         """`tag` (e.g. a prompt VERSION) enters the cache key when given. `timeout` (seconds) replaces
         the client's 180 s for this call only; it is not part of the cache key."""
+        gpt5 = model.startswith("gpt-5")  # rejects temperature and max_tokens; spends hidden reasoning tokens
+
         def call():
-            extra = {"max_tokens": max_tokens} if max_tokens else {}
+            if gpt5:
+                extra = {"reasoning_effort": "low"}
+                if max_tokens:
+                    extra["max_completion_tokens"] = max_tokens
+            else:
+                extra = {"temperature": temperature, **({"max_tokens": max_tokens} if max_tokens else {})}
             client = self.client() if timeout is None else self.client().with_options(timeout=timeout)
             with _remote_slots:
-                r = client.chat.completions.create(
-                    model=model, messages=messages, temperature=temperature, **extra
-                )
+                r = client.chat.completions.create(model=model, messages=messages, **extra)
+            details = getattr(r.usage, "completion_tokens_details", None)
             return {
-                "text": r.choices[0].message.content.strip(),
+                "text": (r.choices[0].message.content or "").strip(),
                 "prompt_tokens": r.usage.prompt_tokens if r.usage else 0,
                 "completion_tokens": r.usage.completion_tokens if r.usage else 0,
+                "reasoning_tokens": getattr(details, "reasoning_tokens", None) or 0,
             }
 
         sizes = {"input_chars": sum(len(m["content"]) for m in messages)}
         payload = {"messages": messages, "temperature": temperature, "max_tokens": max_tokens}
         if tag:
             payload["tag"] = tag  # only when given, so untagged cache keys stay as they were
+        if gpt5:
+            payload["reasoning_effort"] = "low"
         key = cache_key("chat", model, payload)
         with self._trace().span("gateway.chat", model=model, **sizes) as span:
             result = None if self.fresh else cache_get(self.cache_dir, key)
@@ -138,7 +147,8 @@ class ModelGateway:
         return result["text"]
 
     def embed(self, encoder_name, texts, role="query") -> np.ndarray:
-        """Normalised embeddings. `role` is recorded and keyed, not used yet (plan 005)."""
+        """Normalised embeddings. `role` ("query" or "passage") is recorded and enters the cache key; it does not
+        change the encoding (the bge query prefix is added by the caller, `stages.py`)."""
 
         def call():
             vecs = self.encoder(encoder_name).encode(
@@ -213,6 +223,7 @@ class ModelGateway:
             duration_ms=span.duration_ms, cache_key=key, **sizes,
             prompt_tokens=result.get("prompt_tokens"),
             completion_tokens=result.get("completion_tokens"),
+            reasoning_tokens=result.get("reasoning_tokens"),
         )
 
     def _log(self, **fields):

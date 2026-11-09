@@ -18,7 +18,17 @@
       "latency_ms": 108.16930524888448,
       "calls/q": 0.0,
       "tokens/q": 0.0,
-      "fresh": true
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.31645833333333334,
+          0.6418749999999999
+        ],
+        "NDCG@10": [
+          0.2439770897086578,
+          0.5245184620228015
+        ]
+      }
     },
     {
       "run": "20261108-1949-bm25-practice-smoke20",
@@ -36,7 +46,17 @@
       "latency_ms": 1.790799357695505,
       "calls/q": 0.0,
       "tokens/q": 0.0,
-      "fresh": true
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.08333333333333333,
+          0.30843749999999986
+        ],
+        "NDCG@10": [
+          0.0719280988520105,
+          0.2537213616068734
+        ]
+      }
     },
     {
       "run": "20261109-1134-grep-static-practice-smoke20",
@@ -54,7 +74,17 @@
       "latency_ms": 1404.8068558011437,
       "calls/q": 1.0,
       "tokens/q": 146.05,
-      "fresh": true
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.0375,
+          0.2625
+        ],
+        "NDCG@10": [
+          0.028121926330537107,
+          0.1314342936842923
+        ]
+      }
     },
     {
       "run": "20261109-1134-grep-agentic-practice-smoke20",
@@ -72,7 +102,17 @@
       "latency_ms": 5571.795851510251,
       "calls/q": 3.9,
       "tokens/q": 2714.0,
-      "fresh": true
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.0125,
+          0.1375
+        ],
+        "NDCG@10": [
+          0.01933890542304088,
+          0.17949360072963147
+        ]
+      }
     },
     {
       "run": "20261109-1426-grep-feedback-practice-smoke20",
@@ -90,7 +130,17 @@
       "latency_ms": 7727.85575625021,
       "calls/q": 3.9,
       "tokens/q": 3630.05,
-      "fresh": true
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.0540625,
+          0.29166666666666663
+        ],
+        "NDCG@10": [
+          0.06100776756814707,
+          0.2890123253746885
+        ]
+      }
     },
     {
       "run": "20261108-2202-topics-k256-m2-practice-smoke20",
@@ -108,7 +158,17 @@
       "latency_ms": 26.935237148427404,
       "calls/q": 0.0,
       "tokens/q": 0.0,
-      "fresh": true
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.15833333333333333,
+          0.4999999999999999
+        ],
+        "NDCG@10": [
+          0.13565325162993272,
+          0.40346268713571326
+        ]
+      }
     },
     {
       "run": "20261108-2202-topics-k256-m4-practice-smoke20",
@@ -126,7 +186,17 @@
       "latency_ms": 20.056141549139284,
       "calls/q": 0.0,
       "tokens/q": 0.0,
-      "fresh": true
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.2833333333333333,
+          0.6
+        ],
+        "NDCG@10": [
+          0.2194428029293671,
+          0.47759651923626206
+        ]
+      }
     },
     {
       "run": "20261108-2202-topics-k256-m8-practice-smoke20",
@@ -144,7 +214,17 @@
       "latency_ms": 20.44273494684603,
       "calls/q": 0.0,
       "tokens/q": 0.0,
-      "fresh": true
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.29166666666666663,
+          0.6083333333333333
+        ],
+        "NDCG@10": [
+          0.23893265709328415,
+          0.5085782009026394
+        ]
+      }
     },
     {
       "run": "20261108-2202-toc-centroid-m4-practice-smoke20",
@@ -162,7 +242,17 @@
       "latency_ms": 18.90131694090087,
       "calls/q": 0.0,
       "tokens/q": 0.0,
-      "fresh": true
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.2166666666666667,
+          0.5502083333333332
+        ],
+        "NDCG@10": [
+          0.1768686658011849,
+          0.4413866711040508
+        ]
+      }
     },
     {
       "run": "20261108-2202-toc-llm-m4-practice-smoke20",
@@ -180,7 +270,17 @@
       "latency_ms": 1124.9120119551662,
       "calls/q": 2.0,
       "tokens/q": 1340.35,
-      "fresh": true
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.125,
+          0.45
+        ],
+        "NDCG@10": [
+          0.10704823207115546,
+          0.381159936161378
+        ]
+      }
     },
     {
       "run": "20261109-1632-toc-llm-topics-m4-practice-smoke20",
@@ -198,7 +298,17 @@
       "latency_ms": 1524.615155599895,
       "calls/q": 2.0,
       "tokens/q": 2603.85,
-      "fresh": true
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.125,
+          0.45
+        ],
+        "NDCG@10": [
+          0.1053246592322811,
+          0.3795931796575704
+        ]
+      }
     },
     {
       "run": "20261109-1633-toc-llm-flat-m4-practice-smoke20",
@@ -216,7 +326,17 @@
       "latency_ms": 2373.0321366980206,
       "calls/q": 1.0,
       "tokens/q": 6199.5,
-      "fresh": true
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.11666666666666665,
+          0.4333333333333333
+        ],
+        "NDCG@10": [
+          0.1092697734012372,
+          0.38140190453615896
+        ]
+      }
     },
     {
       "run": "20261109-1728-raptor-lite-expand-practice-smoke20",
@@ -234,7 +354,17 @@
       "latency_ms": 109.04051445540972,
       "calls/q": 0.0,
       "tokens/q": 0.0,
-      "fresh": true
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.29166666666666663,
+          0.6083333333333333
+        ],
+        "NDCG@10": [
+          0.23893265709328415,
+          0.5085782009026394
+        ]
+      }
     },
     {
       "run": "20261109-1728-raptor-tree-expand-practice-smoke20",
@@ -252,7 +382,185 @@
       "latency_ms": 102.00349860242568,
       "calls/q": 0.0,
       "tokens/q": 0.0,
-      "fresh": true
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.31645833333333334,
+          0.6418749999999999
+        ],
+        "NDCG@10": [
+          0.2439770897086578,
+          0.5245184620228015
+        ]
+      }
+    },
+    {
+      "run": "20261109-1953-toc-centroid-m4-gpt5labels-practice-smoke20",
+      "config": "toc-centroid-m4-gpt5labels",
+      "Recall@5": 0.3458333333333333,
+      "Recall@10": 0.38333333333333336,
+      "Recall@20": 0.4,
+      "Recall@100": 0.5916666666666666,
+      "MRR@10": 0.37916666666666665,
+      "NDCG@10": 0.30647100734571714,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 872.0016476494493,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.2166666666666667,
+          0.5502083333333332
+        ],
+        "NDCG@10": [
+          0.1768686658011849,
+          0.4413866711040508
+        ]
+      }
+    },
+    {
+      "run": "20261109-1953-toc-llm-m4-gpt5labels-practice-smoke20",
+      "config": "toc-llm-m4-gpt5labels",
+      "Recall@5": 0.2125,
+      "Recall@10": 0.275,
+      "Recall@20": 0.31666666666666665,
+      "Recall@100": 0.4708333333333333,
+      "MRR@10": 0.35,
+      "NDCG@10": 0.2507944796301581,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 4009.938888862962,
+      "calls/q": 2.0,
+      "tokens/q": 3238.6,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.125,
+          0.44187499999999985
+        ],
+        "NDCG@10": [
+          0.1122058431263772,
+          0.3954547896981803
+        ]
+      }
+    },
+    {
+      "run": "20261109-1954-toc-llm-topics-m4-gpt5labels-practice-smoke20",
+      "config": "toc-llm-topics-m4-gpt5labels",
+      "Recall@5": 0.2875,
+      "Recall@10": 0.33333333333333337,
+      "Recall@20": 0.39166666666666666,
+      "Recall@100": 0.5791666666666666,
+      "MRR@10": 0.39166666666666666,
+      "NDCG@10": 0.28807377134889367,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 4527.538585805451,
+      "calls/q": 2.0,
+      "tokens/q": 5433.3,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.18333333333333332,
+          0.49187499999999973
+        ],
+        "NDCG@10": [
+          0.15271331316153108,
+          0.41992366340346987
+        ]
+      }
+    },
+    {
+      "run": "20261109-1956-toc-llm-flat-m4-gpt5labels-practice-smoke20",
+      "config": "toc-llm-flat-m4-gpt5labels",
+      "Recall@5": 0.2625,
+      "Recall@10": 0.3,
+      "Recall@20": 0.32916666666666666,
+      "Recall@100": 0.3958333333333333,
+      "MRR@10": 0.3333333333333333,
+      "NDCG@10": 0.25018287811882706,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 6543.058226906578,
+      "calls/q": 1.0,
+      "tokens/q": 13126.5,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.15,
+          0.45
+        ],
+        "NDCG@10": [
+          0.1303259101110628,
+          0.37342351628355763
+        ]
+      }
+    },
+    {
+      "run": "20261109-1958-raptor-tree-gpt5-expand-practice-smoke20",
+      "config": "raptor-tree-gpt5-expand",
+      "Recall@5": 0.4041666666666667,
+      "Recall@10": 0.475,
+      "Recall@20": 0.5499999999999999,
+      "Recall@100": 0.7791666666666666,
+      "MRR@10": 0.4791666666666667,
+      "NDCG@10": 0.3873824164458908,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 1036.3506216497626,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.31645833333333334,
+          0.6418749999999999
+        ],
+        "NDCG@10": [
+          0.24441173702921717,
+          0.530880004177982
+        ]
+      }
+    },
+    {
+      "run": "20261109-1958-raptor-tree-gpt5-evidence-practice-smoke20",
+      "config": "raptor-tree-gpt5-evidence",
+      "Recall@5": 0.4041666666666667,
+      "Recall@10": 0.475,
+      "Recall@20": 0.5499999999999999,
+      "Recall@100": 0.7791666666666666,
+      "MRR@10": 0.4791666666666667,
+      "NDCG@10": 0.38532400894418495,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 944.9763484648429,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.31645833333333334,
+          0.6418749999999999
+        ],
+        "NDCG@10": [
+          0.24361943972137617,
+          0.5236338503418148
+        ]
+      }
     }
   ]
 }

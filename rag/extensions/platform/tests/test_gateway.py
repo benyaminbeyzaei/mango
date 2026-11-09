@@ -175,3 +175,22 @@ def test_timeout_applies_to_one_call_only(gateway, monkeypatch):
     gateway.chat("m", msgs)
     assert seen == [{"timeout": 900}]  # no timeout given: the shared client, unchanged
     assert len(created) == 2
+
+
+def test_gpt5_payload_and_unchanged_keys_for_other_models(gateway, monkeypatch):
+    """gpt-5 models get max_completion_tokens and no temperature; every other model's request and
+    cache key are exactly what they were before plan 030."""
+    calls = install(gateway, monkeypatch, [fake_response("a"), fake_response("b")])
+    msgs = [{"role": "user", "content": "q"}]
+    gateway.chat("meta-llama/Llama-3.3-70B-Instruct", msgs, max_tokens=300, tag="v1")
+    gateway.chat("gpt-5-mini", msgs, max_tokens=300)
+    assert calls[0] == {"model": "meta-llama/Llama-3.3-70B-Instruct", "messages": msgs,
+                        "temperature": 0.0, "max_tokens": 300}
+    assert calls[1] == {"model": "gpt-5-mini", "messages": msgs,
+                        "reasoning_effort": "low", "max_completion_tokens": 300}
+    old_key = gw_module.cache_key("chat", "meta-llama/Llama-3.3-70B-Instruct",
+                                  {"messages": msgs, "temperature": 0.0, "max_tokens": 300, "tag": "v1"})
+    keys = [json.loads(line)["cache_key"] for line in gateway.log_path.read_text().splitlines()]
+    assert keys[0] == old_key
+    assert keys[1] != gw_module.cache_key("chat", "gpt-5-mini", {"messages": msgs, "temperature": 0.0,
+                                                                  "max_tokens": 300})

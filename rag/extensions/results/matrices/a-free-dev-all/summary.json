@@ -3,7 +3,7 @@
   "subset": "dev-all",
   "rows": [
     {
-      "run": "20261109-1819-baseline-dev-all",
+      "run": "20261109-2013-baseline-dev-all",
       "config": "baseline",
       "Recall@5": 0.38235457875457873,
       "Recall@10": 0.478785347985348,
@@ -15,7 +15,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 112.24861211748794,
+      "latency_ms": 113.53040403360501,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -31,7 +31,7 @@
       }
     },
     {
-      "run": "20261109-1819-bm25-dev-all",
+      "run": "20261109-2014-bm25-dev-all",
       "config": "bm25",
       "Recall@5": 0.21563076923076924,
       "Recall@10": 0.2811413919413919,
@@ -43,7 +43,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 1.956540787126869,
+      "latency_ms": 1.9719246323220432,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -59,7 +59,7 @@
       }
     },
     {
-      "run": "20261109-1819-topics-k256-m2-dev-all",
+      "run": "20261109-2014-topics-k256-m2-dev-all",
       "config": "topics-k256-m2",
       "Recall@5": 0.3018402930402931,
       "Recall@10": 0.340137728937729,
@@ -71,7 +71,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 28.185970295686275,
+      "latency_ms": 32.65601252578199,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -87,7 +87,7 @@
       }
     },
     {
-      "run": "20261109-1819-topics-k256-m4-dev-all",
+      "run": "20261109-2014-topics-k256-m4-dev-all",
       "config": "topics-k256-m4",
       "Recall@5": 0.3278402930402931,
       "Recall@10": 0.42040439560439563,
@@ -99,7 +99,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 30.551477861590683,
+      "latency_ms": 30.59403914352879,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -115,7 +115,7 @@
       }
     },
     {
-      "run": "20261109-1819-topics-k256-m8-dev-all",
+      "run": "20261109-2014-topics-k256-m8-dev-all",
       "config": "topics-k256-m8",
       "Recall@5": 0.3631164835164835,
       "Recall@10": 0.4578710622710623,
@@ -127,7 +127,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 31.008031671866775,
+      "latency_ms": 33.80972312996164,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -143,7 +143,7 @@
       }
     },
     {
-      "run": "20261109-1819-toc-centroid-m4-dev-all",
+      "run": "20261109-2014-toc-centroid-m4-dev-all",
       "config": "toc-centroid-m4",
       "Recall@5": 0.29850695970695973,
       "Recall@10": 0.37640439560439565,
@@ -155,7 +155,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 30.004689262714237,
+      "latency_ms": 31.271829447243363,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -171,7 +171,7 @@
       }
     },
     {
-      "run": "20261109-1819-raptor-lite-expand-dev-all",
+      "run": "20261109-2014-raptor-lite-expand-dev-all",
       "config": "raptor-lite-expand",
       "Recall@5": 0.38235457875457873,
       "Recall@10": 0.468785347985348,
@@ -183,7 +183,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 110.65072617027909,
+      "latency_ms": 116.06172150326893,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -199,7 +199,7 @@
       }
     },
     {
-      "run": "20261109-1820-raptor-lite-evidence-dev-all",
+      "run": "20261109-2014-raptor-lite-evidence-dev-all",
       "config": "raptor-lite-evidence",
       "Recall@5": 0.38235457875457873,
       "Recall@10": 0.468785347985348,
@@ -211,7 +211,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 112.69930723402649,
+      "latency_ms": 113.87777064181864,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -227,7 +227,7 @@
       }
     },
     {
-      "run": "20261109-1820-raptor-tree-expand-dev-all",
+      "run": "20261109-2014-raptor-tree-expand-dev-all",
       "config": "raptor-tree-expand",
       "Recall@5": 0.38635457875457874,
       "Recall@10": 0.460785347985348,
@@ -239,7 +239,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 118.02695400873199,
+      "latency_ms": 121.90667442930862,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -255,7 +255,7 @@
       }
     },
     {
-      "run": "20261109-1820-raptor-tree-evidence-dev-all",
+      "run": "20261109-2015-raptor-tree-evidence-dev-all",
       "config": "raptor-tree-evidence",
       "Recall@5": 0.38235457875457873,
       "Recall@10": 0.468785347985348,
@@ -267,7 +267,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 113.95603762473911,
+      "latency_ms": 299.1929532638751,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -279,6 +279,62 @@
         "NDCG@10": [
           0.33405047562490153,
           0.46556753881434476
+        ]
+      }
+    },
+    {
+      "run": "20261109-2015-raptor-tree-gpt5-expand-dev-all",
+      "config": "raptor-tree-gpt5-expand",
+      "Recall@5": 0.38235457875457873,
+      "Recall@10": 0.476785347985348,
+      "Recall@20": 0.5792351648351648,
+      "Recall@100": 0.7274739926739927,
+      "MRR@10": 0.46052063492063494,
+      "NDCG@10": 0.4006079701172802,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 242.24694830132648,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4085192673992674,
+          0.5555986813186812
+        ],
+        "NDCG@10": [
+          0.33626133138442177,
+          0.46991518645423114
+        ]
+      }
+    },
+    {
+      "run": "20261109-2016-raptor-tree-gpt5-evidence-dev-all",
+      "config": "raptor-tree-gpt5-evidence",
+      "Recall@5": 0.38235457875457873,
+      "Recall@10": 0.476785347985348,
+      "Recall@20": 0.5792351648351648,
+      "Recall@100": 0.7274739926739927,
+      "MRR@10": 0.4604095238095238,
+      "NDCG@10": 0.40049249106830626,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 169.74918535305187,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4085192673992674,
+          0.5555986813186812
+        ],
+        "NDCG@10": [
+          0.33603326026269814,
+          0.46968711533250734
         ]
       }
     }

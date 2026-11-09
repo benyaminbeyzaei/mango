@@ -3,7 +3,7 @@
   "subset": "practice-all",
   "rows": [
     {
-      "run": "20261109-1811-baseline-practice-all",
+      "run": "20261109-1959-baseline-practice-all",
       "config": "baseline",
       "Recall@5": 0.4283372500515358,
       "Recall@10": 0.4847571634714492,
@@ -15,7 +15,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 108.43859061199639,
+      "latency_ms": 953.7241940732513,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -31,7 +31,7 @@
       }
     },
     {
-      "run": "20261109-1812-bm25-practice-all",
+      "run": "20261109-2005-bm25-practice-all",
       "config": "bm25",
       "Recall@5": 0.2545458668315811,
       "Recall@10": 0.2970686456400742,
@@ -43,7 +43,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 1.7019930247416986,
+      "latency_ms": 3.1999152880494615,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -59,7 +59,7 @@
       }
     },
     {
-      "run": "20261109-1812-topics-k256-m2-practice-all",
+      "run": "20261109-2005-topics-k256-m2-practice-all",
       "config": "topics-k256-m2",
       "Recall@5": 0.281573902288188,
       "Recall@10": 0.3276192537621109,
@@ -71,7 +71,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 21.574020335517293,
+      "latency_ms": 201.60409842085625,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -87,7 +87,7 @@
       }
     },
     {
-      "run": "20261109-1812-topics-k256-m4-practice-all",
+      "run": "20261109-2006-topics-k256-m4-practice-all",
       "config": "topics-k256-m4",
       "Recall@5": 0.32681344052772626,
       "Recall@10": 0.3821243042671614,
@@ -99,7 +99,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 25.2952075034513,
+      "latency_ms": 35.872256631597075,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -115,7 +115,7 @@
       }
     },
     {
-      "run": "20261109-1812-topics-k256-m8-practice-all",
+      "run": "20261109-2006-topics-k256-m8-practice-all",
       "config": "topics-k256-m8",
       "Recall@5": 0.37462296433725,
       "Recall@10": 0.43507668521954235,
@@ -127,7 +127,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 23.408355873211153,
+      "latency_ms": 36.252851345177206,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -143,7 +143,7 @@
       }
     },
     {
-      "run": "20261109-1812-toc-centroid-m4-practice-all",
+      "run": "20261109-2007-toc-centroid-m4-practice-all",
       "config": "toc-centroid-m4",
       "Recall@5": 0.29962296433725005,
       "Recall@10": 0.3552195423623995,
@@ -155,7 +155,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 23.15547044289165,
+      "latency_ms": 36.611373208995374,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -171,7 +171,7 @@
       }
     },
     {
-      "run": "20261109-1813-raptor-lite-expand-practice-all",
+      "run": "20261109-2007-raptor-lite-expand-practice-all",
       "config": "raptor-lite-expand",
       "Recall@5": 0.4283372500515358,
       "Recall@10": 0.48523335394763967,
@@ -183,7 +183,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 116.2142499276836,
+      "latency_ms": 114.8281191291088,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -199,7 +199,7 @@
       }
     },
     {
-      "run": "20261109-1813-raptor-lite-evidence-practice-all",
+      "run": "20261109-2008-raptor-lite-evidence-practice-all",
       "config": "raptor-lite-evidence",
       "Recall@5": 0.4283372500515358,
       "Recall@10": 0.4838047825190682,
@@ -211,7 +211,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 118.42599038467077,
+      "latency_ms": 116.23158282600343,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -227,7 +227,7 @@
       }
     },
     {
-      "run": "20261109-1814-raptor-tree-expand-practice-all",
+      "run": "20261109-2008-raptor-tree-expand-practice-all",
       "config": "raptor-tree-expand",
       "Recall@5": 0.4283372500515358,
       "Recall@10": 0.4847571634714492,
@@ -239,7 +239,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 116.02368880096557,
+      "latency_ms": 121.13857714093423,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -255,7 +255,7 @@
       }
     },
     {
-      "run": "20261109-1815-raptor-tree-evidence-practice-all",
+      "run": "20261109-2009-raptor-tree-evidence-practice-all",
       "config": "raptor-tree-evidence",
       "Recall@5": 0.4283372500515358,
       "Recall@10": 0.4847571634714492,
@@ -267,7 +267,7 @@
       "correctness": null,
       "grounding": null,
       "completeness": null,
-      "latency_ms": 114.39151753355483,
+      "latency_ms": 455.47076690825634,
       "calls/q": 0.0,
       "tokens/q": 0.0,
       "fresh": true,
@@ -279,6 +279,62 @@
         "NDCG@10": [
           0.38434695976030125,
           0.46046846642484807
+        ]
+      }
+    },
+    {
+      "run": "20261109-2012-raptor-tree-gpt5-expand-practice-all",
+      "config": "raptor-tree-gpt5-expand",
+      "Recall@5": 0.42690867862296433,
+      "Recall@10": 0.4838047825190682,
+      "Recall@20": 0.5817357245928674,
+      "Recall@100": 0.7680191713048855,
+      "MRR@10": 0.49191723356009076,
+      "NDCG@10": 0.4242384890694138,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 168.12658484559506,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.44257354153782724,
+          0.5263882549989694
+        ],
+        "NDCG@10": [
+          0.38487589576360604,
+          0.4613062567805281
+        ]
+      }
+    },
+    {
+      "run": "20261109-2013-raptor-tree-gpt5-evidence-practice-all",
+      "config": "raptor-tree-gpt5-evidence",
+      "Recall@5": 0.4283372500515358,
+      "Recall@10": 0.4847571634714492,
+      "Recall@20": 0.5817357245928674,
+      "Recall@100": 0.7680191713048855,
+      "MRR@10": 0.4924410430839003,
+      "NDCG@10": 0.4246295049759287,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 116.94196509796062,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4433419140383426,
+          0.5263950525664811
+        ],
+        "NDCG@10": [
+          0.38524796880006584,
+          0.46181797057034424
         ]
       }
     }
