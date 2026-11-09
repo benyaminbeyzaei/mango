@@ -35,6 +35,7 @@
 - 018: KG extraction with Llama-3.3 (598 records) and the KG rows on the 600-record subset.
 - 019: `--fresh`: latency and cost are valid only for fresh runs.
 - 021: grep pattern calls on Llama-3.3 (Qwen's reasoning took ~70-100 s per call); answers stay on Qwen.
+- 022: `seconds`/`audio_s` in new transcript cache lines, `transcribe --fresh` for whisper-1, ASR latency and RTF in `asr-compare`; whisper-1 measured on practice-smoke20.
 
 ## Open items
 
@@ -48,5 +49,8 @@
 - **Course ASR transcripts** from the teammate (the CUDA model on the cluster): needed for
   `mlsrag asr-compare` (no comparison is committed yet) and for matrix C's ASR row. Put them in
   `rag/.cache/transcripts/course-<split>.jsonl` (`{query_id, transcript}` per line).
+- **Course ASR latency** (plan 022): run `mlsrag transcribe --asr course` on practice-smoke20 on a
+  cluster GPU, then `asr-compare` it against `whisper1-practice-timed.jsonl`; exact commands in
+  [docs/retrievers.md, ASR latency](docs/retrievers.md#asr-latency). Nothing has been run on the cluster yet.
 - **The report** (`report/`): Benyamin writes the argument; the matrices above are its evidence.
 - A run that crashes leaves a folder without `metrics.json`; the listings ignore it, delete it by hand.

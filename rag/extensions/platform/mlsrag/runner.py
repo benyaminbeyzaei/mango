@@ -2,7 +2,9 @@
 import json
 import subprocess
 import time
+import wave
 from datetime import datetime
+from pathlib import Path
 
 from . import evaluate
 from .course import CourseData, mrr_at_k, ndcg_at_k, paths, recall_at_k
@@ -94,21 +96,40 @@ def run(config, subset, generate=True, results_dir=None, allow_full=False, fresh
     return out, metrics
 
 
-def transcribe(asr_name, subset, out_path, allow_full=False):
-    """Fill a transcript cache for a subset; ids already in the file are skipped."""
+def wav_seconds(path):
+    with wave.open(str(path)) as w:
+        return w.getnframes() / w.getframerate()
+
+
+def transcribe(asr_name, subset, out_path, allow_full=False, fresh=False):
+    """Fill a transcript cache for a subset; ids already in the file are skipped. Each new line
+    carries `seconds` (wall time of the call) and `audio_s` (WAV duration); the model load time
+    is not per query, so it goes once into <out>.meta.json. fresh=True makes whisper skip its
+    gateway cache read."""
     check_subset(subset, allow_full)
     out_path = checkout_path(out_path)
     data = CourseData(paths.data_dir)
     manifest = {row["query_id"]: row for row in data.load_audio_manifest()}
     trace = Trace("transcribe", "-", asr_name)
-    asr = WhisperASR(ModelGateway(trace)) if asr_name == "whisper1" else CourseASR()
 
     done = load_transcripts(out_path)
     todo = [q for q in load_subset(subset) if q not in done]
+    if not todo:
+        return {"skipped": len(done), "transcribed": 0, "cost": trace.cost}
+    start = time.perf_counter()
+    asr = WhisperASR(ModelGateway(trace), fresh=fresh) if asr_name == "whisper1" else CourseASR()
+    if asr_name == "course":
+        asr.adapter.prepare()  # loads the model, so the first query's time is inference only
+    meta = {"asr": asr_name, "load_seconds": time.perf_counter() - start, "fresh": fresh}
     out_path.parent.mkdir(parents=True, exist_ok=True)
+    Path(f"{out_path}.meta.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
     for i, qid in enumerate(todo, start=1):
-        text = asr.transcribe(paths.data_dir / manifest[qid]["audio_file"])
+        audio = paths.data_dir / manifest[qid]["audio_file"]
+        start = time.perf_counter()
+        text = asr.transcribe(audio)
+        row = {"query_id": qid, "transcript": text,
+               "seconds": time.perf_counter() - start, "audio_s": wav_seconds(audio)}
         with out_path.open("a", encoding="utf-8") as f:
-            f.write(json.dumps({"query_id": qid, "transcript": text}, ensure_ascii=False) + "\n")
-        print(f"[{i:>3}/{len(todo)}] {qid} {text[:60]!r}")
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
+        print(f"[{i:>3}/{len(todo)}] {qid} {row['seconds']:.2f}s {text[:60]!r}")
     return {"skipped": len(done), "transcribed": len(todo), "cost": trace.cost}

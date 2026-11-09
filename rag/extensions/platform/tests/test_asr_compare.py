@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from mlsrag.asr_compare import asr_compare, compare_transcripts, normalise
+from mlsrag.asr_compare import asr_compare, compare_transcripts, format_summary, latency, normalise
 from mlsrag.config import baseline
 from mlsrag.stages import checkout_path, load_transcripts
 
@@ -29,6 +29,27 @@ def test_compare_transcripts_identical_and_corrupted():
     r = compare_transcripts(a, b, ["q1", "q2"])
     assert r["wer"] == pytest.approx(1 / 9)  # one deletion in nine reference words
     assert r["agreement"] == 0.5
+
+
+def test_latency_from_two_small_timed_caches(tmp_path):
+    timed, untimed = tmp_path / "timed.jsonl", tmp_path / "untimed.jsonl"
+    rows = [{"query_id": f"q{i}", "transcript": "x", "seconds": float(i), "audio_s": 2.0} for i in range(1, 5)]
+    timed.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    write_cache(untimed, {f"q{i}": "x" for i in range(1, 5)})
+    ids = ["q1", "q2", "q3", "q4"]
+    lat = latency(timed, ids)
+    assert lat["n"] == 4 and lat["mean_s"] == 2.5 and lat["median_s"] == 2.5
+    assert lat["p95_s"] == pytest.approx(3.85) and lat["rtf"] == pytest.approx(10 / 8)
+    assert latency(untimed, ids) is None
+    assert latency(timed, ids[:2]) == {"n": 2, "mean_s": 1.5, "median_s": 1.5,
+                                       "p95_s": pytest.approx(1.95), "rtf": pytest.approx(3 / 4)}
+
+    summary = {"a": str(timed), "b": str(untimed), "wer": 0.0, "agreement": 1.0, "n_queries": 4,
+               "retrieval_a": dict.fromkeys(["Recall@5", "Recall@10", "MRR@10", "NDCG@10"], 0.5),
+               "latency_a": lat, "latency_b": None}
+    summary["retrieval_b"] = summary["retrieval_a"]
+    text = format_summary(summary)
+    assert "| ASR rtf | 1.250 | - |" in text and "| ASR p95_s |" in text
 
 
 @pytest.mark.slow

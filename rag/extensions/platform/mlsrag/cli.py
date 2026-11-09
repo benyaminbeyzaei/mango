@@ -29,6 +29,7 @@ def main(argv=None):
     tr.add_argument("--subset", default="practice-smoke20")
     tr.add_argument("--out", required=True, help="JSONL path, relative to the checkout root")
     tr.add_argument("--allow-full", action="store_true", help="allow practice-all / dev-all")
+    tr.add_argument("--fresh", action="store_true", help="whisper1: skip the gateway cache read, so latency is real (paid)")
 
     sub.add_parser("make-subsets", help="regenerate the subset files (seed 0)")
 
@@ -113,7 +114,7 @@ def main(argv=None):
         print(json.dumps(metrics, indent=2))
         print(f"results: {out}")
     elif args.command == "transcribe":
-        print(json.dumps(runner.transcribe(args.asr, args.subset, args.out, args.allow_full), indent=2))
+        print(json.dumps(runner.transcribe(args.asr, args.subset, args.out, args.allow_full, args.fresh), indent=2))
     elif args.command == "make-subsets":
         subsets.make_subsets()
         print(f"wrote subsets to {subsets.SUBSETS_DIR}")

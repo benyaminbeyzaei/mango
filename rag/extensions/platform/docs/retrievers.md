@@ -69,6 +69,58 @@ run on each cache. Output: `rag/extensions/results/asr-compare/<a>-vs-<b>-<subse
 disagreement between the two systems, not the accuracy of either; the retrieval metrics are the
 only quality signal.
 
+### ASR latency
+
+`mlsrag transcribe` writes `seconds` (wall time of the transcription call) and `audio_s` (the WAV
+duration) into every new cache line, and the one-off model load time into `<out>.meta.json`. Old
+lines without timings stay valid. `--fresh` makes whisper-1 skip the gateway's cache read (it still
+writes), so the time is a real API call; it is paid, so use it on smoke subsets only. When both
+caches carry timings for every query, `asr-compare` adds per side the mean, median and p95 seconds
+per query and the real-time factor (total seconds / total audio seconds), `null` otherwise.
+
+whisper-1 on practice-smoke20 (2026-11-09, from a laptop, network included):
+`rag/extensions/results/asr-latency/whisper1-practice-smoke20.json` (mean 1.35 s, median 1.13 s,
+p95 2.53 s, RTF 0.28, $0.009).
+
+#### The course ASR on the cluster (Benyamin runs this; agents do not)
+
+What it needs: the `mls-asr` conda environment and the 4.5 GB model from `hw1-asr/setup_env.sh`
+(run once on the head node, which has internet), the RAG venv with this package installed, and the
+course data installed under `rag/data/` (`rag/README.md`, Steps 1 and 2). `ASR_CUDA=none` runs the
+supplied PyTorch reference and needs no finished kernels; `ASR_CUDA=all` runs our hw1 kernels, so
+`make test` must pass first and `make -C hw1-asr lib` must be built on the GPU node in use. No ELM
+key or calls are needed: the course ASR runs locally on the GPU.
+
+```bash
+# head node (mlp.inf.ed.ac.uk), once: pull the branch and install this package into the RAG venv
+cd ~/edin-mls-26-autumn && git fetch origin && git checkout main && git pull
+source ~/mls-rag-env/bin/activate && python -m pip install -e rag/extensions/platform
+
+# GPU shell (one GPU, exit when done)
+srun -p Teaching --gres=gpu:1 --cpus-per-task=2 --mem=16G --time=00:30:00 --pty bash
+export PATH=/opt/cuda-12.8.0/bin:$PATH
+conda activate mls-asr
+export RAG_ASR_PYTHON="$(python -c 'import sys; print(sys.executable)')"
+source ~/mls-rag-env/bin/activate
+cd ~/edin-mls-26-autumn && nvidia-smi -L && make -C hw1-asr lib
+export ASR_CUDA=all     # our kernels; ASR_CUDA=none for the PyTorch reference (use another --out)
+mlsrag transcribe --asr course --subset practice-smoke20 \
+    --out rag/.cache/transcripts/course-practice-smoke20-timed.jsonl
+exit
+```
+
+Note the GPU from `nvidia-smi -L` with the numbers (speeds differ a lot between GPU types). Copy
+both files back into the main checkout (worktrees link `rag/.cache` to it); from outside the
+university network add `-J YOUR_UUN@ssh.inf.ed.ac.uk`:
+
+```bash
+scp 'YOUR_UUN@mlp.inf.ed.ac.uk:edin-mls-26-autumn/rag/.cache/transcripts/course-practice-smoke20-timed.jsonl*' \
+    .execution/edin-mls-26-autumn/rag/.cache/transcripts/
+```
+
+Then compare locally (no GPU, no ELM calls):
+`mlsrag asr-compare --a rag/.cache/transcripts/whisper1-practice-timed.jsonl --b rag/.cache/transcripts/course-practice-smoke20-timed.jsonl`.
+
 ## Lexical retrieval (BM25, grep)
 
 Configs `configs/bm25.yaml`, `configs/grep-static.yaml`, `configs/grep-agentic.yaml`.

@@ -134,3 +134,22 @@ def test_fresh_embed_recomputes(gateway, monkeypatch):
     gateway.embed("enc", ["q"])
     assert len(encoded) == 2
     assert [s.attrs["cached"] for s in gateway.trace.spans] == [False, True, False]
+
+
+def test_fresh_transcribe_skips_the_cache_read(gateway, monkeypatch, tmp_path):
+    audio = tmp_path / "q.wav"
+    audio.write_bytes(b"not a wav")  # duration unknown is fine here
+    calls = []
+
+    def create(**kwargs):
+        calls.append(kwargs)
+        return SimpleNamespace(text=f"t{len(calls)}")
+
+    monkeypatch.setattr(gateway._client.audio.transcriptions, "create", create)
+    assert gateway.transcribe(audio) == "t1"
+    assert gateway.transcribe(audio) == "t1"  # cached
+    assert len(calls) == 1
+    assert gateway.transcribe(audio, fresh=True) == "t2"
+    assert gateway.transcribe(audio, fresh=True) == "t3"
+    assert len(calls) == 3
+    assert gateway.transcribe(audio) == "t3"  # fresh still writes the cache
