@@ -29,3 +29,24 @@ Candidate forum answers (first 300 characters each):
 
 Return the ids of the candidates worth keeping to answer the question, most useful first,
 at most {k}. Reply with only a JSON list of ids."""
+
+KEEP = """Question: {question}
+
+Candidate forum answers (first 300 characters each):
+{hits}
+
+Return the ids of the candidates that help answer the question, most useful first.
+Return [] if none of them helps answer the question. Reply with only a JSON list of ids."""
+
+EXPAND = """You search a collection of short forum answers about personal finance with grep.
+Patterns are matched case-insensitively; records are ranked by how many patterns they match.
+
+Question: {question}
+Patterns already used: {patterns}
+
+Answers already found to be relevant (first 300 characters each):
+{kept}
+
+Write 3 to 8 new search patterns to find more answers like these, using words and phrases that
+appear in the kept answers or are typical of them. Use plain text; avoid regex symbols.
+Reply with only a JSON list of strings."""

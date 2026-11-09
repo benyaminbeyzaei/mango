@@ -11,7 +11,7 @@ from .stages import checkout_path, load_transcripts
 from .subsets import SUBSETS, load_subset
 
 # Upper bound on extra ELM calls per query that a flow makes besides generation.
-FLOW_CALLS_PER_QUERY = {"standard": 0, "grep-static": 1, "grep-agentic": 4}
+FLOW_CALLS_PER_QUERY = {"standard": 0, "grep-static": 1, "grep-agentic": 4, "grep-feedback": 4}
 
 
 def retriever_calls_per_query(config) -> int:

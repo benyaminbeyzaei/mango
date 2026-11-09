@@ -123,7 +123,8 @@ Then compare locally (no GPU, no ELM calls):
 
 ## Lexical retrieval (BM25, grep)
 
-Configs `configs/bm25.yaml`, `configs/grep-static.yaml`, `configs/grep-agentic.yaml`.
+Configs `configs/bm25.yaml`, `configs/grep-static.yaml`, `configs/grep-agentic.yaml`,
+`configs/grep-feedback.yaml`.
 
 - **BM25** (`retriever: bm25`, standard flow): `bm25s` over the record texts, tokens = lowercase
   `\w+` words minus English stop words. The index is pickled to `rag/.cache/bm25/<corpus hash>.pkl`;
@@ -135,18 +136,31 @@ Configs `configs/bm25.yaml`, `configs/grep-static.yaml`, `configs/grep-agentic.y
   transcript into 3 to 8 plain patterns, a case-insensitive `re` scan over all 24,000 texts
   ranks records by patterns matched, then total matches, then shorter text.
   Invalid patterns and patterns that match the empty string are dropped and counted.
-  `retriever: grep` is only valid with the two grep flows.
+  `retriever: grep` is only valid with the grep flows.
 - **Grep agentic** (`flow: grep-agentic`): the static step, then up to 2 refinement calls (the
   model sees the patterns and the top 10 hits, 200 characters each, and stops or gives new
   patterns), then one clean-up call that picks at most `k` ids from the top 20 hits (300
   characters each). The context gets only the kept ids (the top k if the reply was not a list);
   the ranking for the metrics is the kept ids, then the rest of the scan order. Cap: 3 scans per
   query (`MAX_ITERATIONS`), so at most 4 LLM calls (the smoke run averaged 3.65).
+- **Grep feedback** (`flow: grep-feedback`, plan 023): relevance feedback that never drops what
+  static grep found. The static step, then a keep call (`KEEP`: the top 20 hits, 300 characters
+  each; the model returns the helpful ids, or `[]`); if nothing is kept the ranking is the static
+  one (2 calls). Otherwise one expand call (`EXPAND`) writes new patterns from the kept records'
+  text (at most 5, 300 characters each), a second scan drops ids already in the static top 20, and
+  one rerank call (the `CLEANUP` prompt) picks at most `k` from the pool (kept ids, then new hits,
+  20 records). Context: the reranked ids (the top k if the reply was unusable). Ranking: reranked,
+  rest of the pool, rest of the static hits, rest of the new hits, cut at 100. At most 4 calls;
+  `grep.kept` counts the kept ids, `artifacts.kept_ids` and `reranked_ids` hold them. On
+  practice-smoke20 with Llama-3.3 (`results/20261109-1426-grep-feedback-practice-smoke20`) it kept
+  something in 19 of 20 queries (a relevant record in 7), the expansion found no relevant record
+  that static grep missed, and the gain over static (MRR@10 0.111 → 0.275, Recall@10 0.133 →
+  0.158, Recall@100 unchanged at 0.217) comes from the rerank; ~7.7 s and 3.9 calls per query.
 
 How costs are counted: the `retrieve` span of the grep flows covers every LLM call and scan, so
 `latency_ms.retrieve` is comparable with the dense retriever; `grep.scan` spans time the scans
 alone. Per-query counters in `queries.jsonl`: `grep.llm_calls`, `grep.iterations`,
-`grep.patterns`, `grep.matched_records`, `grep.invalid_patterns`, `grep.parse_errors`; the
+`grep.patterns`, `grep.matched_records`, `grep.invalid_patterns`, `grep.parse_errors`, `grep.kept`; the
 patterns per round are in `artifacts.patterns`. Tokens come from the gateway's `cost`, which counts
 only new calls (a rerun from the cache costs 0). The prompts are fixed (`VERSION = "grep_v1"`,
 passed to the gateway as `tag` so it enters the cache key); do not tune them on the dev split.
