@@ -19,6 +19,7 @@ def make_run(root, run_id, config_name, fresh):
     info = {"run_id": run_id, "config_name": config.name, "subset": "practice-smoke20",
             "started": "x", "finished": "x", "git_commit": None, "fresh": fresh}
     write_metrics(run_dir, build_metrics([ROW], info))
+    (run_dir / "queries.jsonl").write_text(json.dumps(ROW) + "\n")
     return run_dir
 
 

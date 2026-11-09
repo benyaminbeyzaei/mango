@@ -1,0 +1,286 @@
+{
+  "name": "a-free-dev-all",
+  "subset": "dev-all",
+  "rows": [
+    {
+      "run": "20261109-1819-baseline-dev-all",
+      "config": "baseline",
+      "Recall@5": 0.38235457875457873,
+      "Recall@10": 0.478785347985348,
+      "Recall@20": 0.5832351648351648,
+      "Recall@100": 0.7274739926739927,
+      "MRR@10": 0.46063174603174606,
+      "NDCG@10": 0.4016262102970457,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 112.24861211748794,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4092163003663004,
+          0.5582015384615384
+        ],
+        "NDCG@10": [
+          0.337978894106094,
+          0.4704018093136944
+        ]
+      }
+    },
+    {
+      "run": "20261109-1819-bm25-dev-all",
+      "config": "bm25",
+      "Recall@5": 0.21563076923076924,
+      "Recall@10": 0.2811413919413919,
+      "Recall@20": 0.3205318681318681,
+      "Recall@100": 0.49856263736263734,
+      "MRR@10": 0.26696190476190473,
+      "NDCG@10": 0.22737250719349492,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 1.956540787126869,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.21455615384615384,
+          0.35069329670329663
+        ],
+        "NDCG@10": [
+          0.17137531768386152,
+          0.2849306051259005
+        ]
+      }
+    },
+    {
+      "run": "20261109-1819-topics-k256-m2-dev-all",
+      "config": "topics-k256-m2",
+      "Recall@5": 0.3018402930402931,
+      "Recall@10": 0.340137728937729,
+      "Recall@20": 0.39011135531135527,
+      "Recall@100": 0.47148717948717944,
+      "MRR@10": 0.3423777777777778,
+      "NDCG@10": 0.28919758194853873,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 28.185970295686275,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.27092153846153844,
+          0.41440842490842494
+        ],
+        "NDCG@10": [
+          0.22864502284648333,
+          0.353570460533356
+        ]
+      }
+    },
+    {
+      "run": "20261109-1819-topics-k256-m4-dev-all",
+      "config": "topics-k256-m4",
+      "Recall@5": 0.3278402930402931,
+      "Recall@10": 0.42040439560439563,
+      "Recall@20": 0.480378021978022,
+      "Recall@100": 0.575810989010989,
+      "MRR@10": 0.3830730158730159,
+      "NDCG@10": 0.3420532779524443,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 30.551477861590683,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.3474448717948718,
+          0.4996715384615384
+        ],
+        "NDCG@10": [
+          0.2811338286827931,
+          0.4090981714202277
+        ]
+      }
+    },
+    {
+      "run": "20261109-1819-topics-k256-m8-dev-all",
+      "config": "topics-k256-m8",
+      "Recall@5": 0.3631164835164835,
+      "Recall@10": 0.4578710622710623,
+      "Recall@20": 0.5345875457875457,
+      "Recall@100": 0.6582490842490842,
+      "MRR@10": 0.4316730158730159,
+      "NDCG@10": 0.38067538233953657,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 31.008031671866775,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.38971010989010985,
+          0.5348309523809524
+        ],
+        "NDCG@10": [
+          0.31778680943375487,
+          0.4534760746026016
+        ]
+      }
+    },
+    {
+      "run": "20261109-1819-toc-centroid-m4-dev-all",
+      "config": "toc-centroid-m4",
+      "Recall@5": 0.29850695970695973,
+      "Recall@10": 0.37640439560439565,
+      "Recall@20": 0.4397113553113553,
+      "Recall@100": 0.5092776556776557,
+      "MRR@10": 0.3356730158730159,
+      "NDCG@10": 0.30185242776763904,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 30.004689262714237,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.30327714285714297,
+          0.44906164835164836
+        ],
+        "NDCG@10": [
+          0.2372756943100044,
+          0.3672275499475615
+        ]
+      }
+    },
+    {
+      "run": "20261109-1819-raptor-lite-expand-dev-all",
+      "config": "raptor-lite-expand",
+      "Recall@5": 0.38235457875457873,
+      "Recall@10": 0.468785347985348,
+      "Recall@20": 0.5792351648351648,
+      "Recall@100": 0.7274739926739927,
+      "MRR@10": 0.46363174603174606,
+      "NDCG@10": 0.39935235144197934,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 110.65072617027909,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.3967161904761905,
+          0.5452115384615384
+        ],
+        "NDCG@10": [
+          0.33582433776886994,
+          0.46630179100019736
+        ]
+      }
+    },
+    {
+      "run": "20261109-1820-raptor-lite-evidence-dev-all",
+      "config": "raptor-lite-evidence",
+      "Recall@5": 0.38235457875457873,
+      "Recall@10": 0.468785347985348,
+      "Recall@20": 0.5792351648351648,
+      "Recall@100": 0.7274739926739927,
+      "MRR@10": 0.45829841269841265,
+      "NDCG@10": 0.3977908312420109,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 112.69930723402649,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.3967161904761905,
+          0.5452115384615384
+        ],
+        "NDCG@10": [
+          0.33402004595823526,
+          0.4656614596036635
+        ]
+      }
+    },
+    {
+      "run": "20261109-1820-raptor-tree-expand-dev-all",
+      "config": "raptor-tree-expand",
+      "Recall@5": 0.38635457875457874,
+      "Recall@10": 0.460785347985348,
+      "Recall@20": 0.5732351648351648,
+      "Recall@100": 0.7254739926739927,
+      "MRR@10": 0.45934285714285716,
+      "NDCG@10": 0.39614166065987266,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 118.02695400873199,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.3902577289377289,
+          0.5359620146520147
+        ],
+        "NDCG@10": [
+          0.33341827555325876,
+          0.46415489531528686
+        ]
+      }
+    },
+    {
+      "run": "20261109-1820-raptor-tree-evidence-dev-all",
+      "config": "raptor-tree-evidence",
+      "Recall@5": 0.38235457875457873,
+      "Recall@10": 0.468785347985348,
+      "Recall@20": 0.5792351648351648,
+      "Recall@100": 0.7254739926739927,
+      "MRR@10": 0.45934285714285716,
+      "NDCG@10": 0.3979745118625338,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 113.95603762473911,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.3967161904761905,
+          0.5452115384615384
+        ],
+        "NDCG@10": [
+          0.33405047562490153,
+          0.46556753881434476
+        ]
+      }
+    }
+  ]
+}

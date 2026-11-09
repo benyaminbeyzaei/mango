@@ -3,7 +3,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from mlsrag.results import Metrics, build_metrics, compare, list_runs, load_run, write_metrics
+from mlsrag.results import Metrics, bootstrap_ci, build_metrics, compare, list_runs, load_run, write_metrics
 
 INFO = {"run_id": "r1", "config_name": "c", "subset": "practice-smoke20",
         "started": "2026-11-07T17:00:00", "finished": None, "git_commit": None}
@@ -61,3 +61,13 @@ def test_compare_puts_runs_side_by_side(tmp_path):
 def test_every_saved_run_follows_the_schema(run_dir):
     run = load_run(run_dir)  # validates metrics.json
     assert run["metrics"]["run"]["run_id"] == run_dir.name
+
+
+def test_bootstrap_ci_of_a_coin_flip_metric():
+    lo, hi = bootstrap_ci([0.0, 1.0] * 50)  # mean 0.5, standard error 0.05
+    assert [lo, hi] == pytest.approx([0.4, 0.6], abs=1e-9)  # mean +- 1.96 standard errors, as expected
+    assert bootstrap_ci([0.0, 1.0] * 50) == [lo, hi]  # fixed seed
+
+
+def test_bootstrap_ci_of_a_constant_metric_has_zero_width():
+    assert bootstrap_ci([0.3] * 20) == [pytest.approx(0.3)] * 2

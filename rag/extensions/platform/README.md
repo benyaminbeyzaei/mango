@@ -147,6 +147,8 @@ run         {run_id, config_name, subset, n_queries, started, finished, git_comm
   matrices that differ only in an override write distinguishable runs. A matrix reuses the newest
   finished run with the same config, subset and generation mode (with `--fresh`, only a fresh one;
   `--force` reruns), judges unless `--no-judge` (`--no-generate` runs retrieval only).
+  Each summary row carries `ci95`: a 95 % percentile bootstrap interval over the run's queries
+  (1,000 resamples, seed 0) for Recall@10 and NDCG@10, shown in `summary.md` as `0.485 [0.443, 0.526]`.
 
 ## How to run the experiments
 
@@ -176,12 +178,47 @@ MRR@10 0.350 → 0.175, ~304 s → ~5.6 s per query (Qwen → Llama, practice-sm
 | B `matrix-b-answers.yaml` (7 configs, simple context) | dev-20pct | generate + judge | 375 + 175 judge | ~2.6 h + judge |
 | B `matrix-b-answers-budgeted.yaml` (same rows, budgeted) | dev-20pct | generate + judge | 375 + 175 judge | ~2.6 h + judge |
 | C `matrix-c-secondary.yaml` (encoder policies) | dev-20pct | `--no-generate` | 0 | ~1 min |
+| A `matrix-a-free-practice-all.yaml` (10 no-LLM retrievers) | practice-all (350) | `--no-generate --allow-full` | 0 | ~4 min |
+| A `matrix-a-free-dev-all.yaml` (same rows) | dev-all (125) | `--no-generate --allow-full` | 0 | ~2 min |
+| C `matrix-c-practice-all.yaml` (baseline + 5 encoder policies) | practice-all | `--no-generate --allow-full` | 0 | ~3 min |
+| C `matrix-c-dev-all.yaml` (same rows) | dev-all | `--no-generate --allow-full` | 0 | ~1 min |
 
-Matrix C varies the encoder and index. The practice transcript cache covers only the smoke subset:
-before matrix A on practice-20pct, fill it once (50 whisper-1 calls, 268 audio s, about $0.03) with
-`mlsrag transcribe --asr whisper1 --subset practice-20pct --out rag/.cache/transcripts/whisper1-practice.jsonl`.
+Matrix C varies the encoder and index. Since plan 029 the local transcript caches cover all of
+practice (350) and dev (125), so no matrix makes whisper-1 calls here. They are not in git: a fresh
+clone fills them once (430 whisper-1 calls, 2,263 audio s, about $0.23; resumable) with
+`mlsrag transcribe --asr whisper1 --subset practice-all --allow-full --out rag/.cache/transcripts/whisper1-practice.jsonl`
+and the same with `dev-all` and `whisper1-dev.jsonl`.
 Matrix B's rows are one per family; after matrix A, replace each with its family's best setting.
 A `dev-all` run (125 queries) costs five times the dev-20pct numbers.
+
+**Full-split results for the no-LLM methods (plan 029).** The four `*-all` matrices above ran fresh
+on 2026-11-09 (after 430 whisper-1 calls filled both transcript caches, 2,263 audio s, ~$0.23).
+Their summaries give a 95 % percentile bootstrap interval over queries (1,000 resamples, seed 0) for
+Recall@10 and NDCG@10. Only `results/matrices/<name>/summary.{md,json}` is committed; the run
+folders they name stay local (~70 MB), so the web Compare page answers "no run" for them.
+Recall@10 [95 % CI]:
+
+| Config | practice-all | dev-all |
+|---|---|---|
+| baseline (gte-small, enc_a, exact) | 0.485 [0.443, 0.526] | 0.479 [0.409, 0.558] |
+| bm25 | 0.297 [0.256, 0.337] | 0.281 [0.215, 0.351] |
+| topics-k256-m2 / m4 / m8 | 0.328 / 0.382 / 0.435 [0.392, 0.477] | 0.340 / 0.420 / 0.458 [0.390, 0.535] |
+| toc-centroid-m4 | 0.355 [0.314, 0.396] | 0.376 [0.303, 0.449] |
+| raptor-lite / raptor-tree, expand and evidence | 0.484-0.485 | 0.461-0.469 |
+| enc-b-asis | 0.465 [0.422, 0.508] | 0.437 [0.365, 0.514] |
+| enc-b-reencode / reencode-prefix | 0.505 / 0.516 [0.476, 0.560] | 0.491 / 0.526 [0.455, 0.599] |
+| enc-b-translate-lstsq / procrustes | 0.467 / 0.422 [0.376, 0.463] | 0.473 / 0.425 [0.355, 0.497] |
+
+On practice-all, bm25, topics m=2 and m=4 and toc-centroid-m4 lie below the baseline's interval
+(non-overlapping), and m=8 is above m=2; topics m=8, every RAPTOR variant and every encoder policy
+overlap the baseline on Recall@10. On NDCG@10, enc-b-asis and enc-b-translate-procrustes lie below the
+baseline. Overlapping intervals do not show two methods are equal, only that 350 queries cannot
+separate them. Chosen on practice (dev only reports): topics m=8, raptor-lite-expand (the four RAPTOR
+rows are within 0.002 of the baseline), encoder policy `enc-b-reencode-prefix`; the same order holds
+on dev. Against the 20-question smoke runs: baseline best in matrix A, topics improving with m, toc
+below topics, bm25 far below all held; the smoke encoder ranking (lstsq best, prefix worst
+re-encode) did not: on both full splits prefix is best and lstsq is level with as-is. Full tables,
+NDCG@10 and latency are in the summaries.
 
 ## Run with Docker
 

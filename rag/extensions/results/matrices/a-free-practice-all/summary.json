@@ -1,0 +1,286 @@
+{
+  "name": "a-free-practice-all",
+  "subset": "practice-all",
+  "rows": [
+    {
+      "run": "20261109-1811-baseline-practice-all",
+      "config": "baseline",
+      "Recall@5": 0.4283372500515358,
+      "Recall@10": 0.4847571634714492,
+      "Recall@20": 0.5817357245928674,
+      "Recall@100": 0.7680191713048855,
+      "MRR@10": 0.4927108843537415,
+      "NDCG@10": 0.4247973501905161,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 108.43859061199639,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4433419140383426,
+          0.5263950525664811
+        ],
+        "NDCG@10": [
+          0.38527960380079346,
+          0.4620978716880195
+        ]
+      }
+    },
+    {
+      "run": "20261109-1812-bm25-practice-all",
+      "config": "bm25",
+      "Recall@5": 0.2545458668315811,
+      "Recall@10": 0.2970686456400742,
+      "Recall@20": 0.3595258709544424,
+      "Recall@100": 0.5162310863739435,
+      "MRR@10": 0.2822947845804989,
+      "NDCG@10": 0.24566593734090836,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 1.7019930247416986,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.2558337662337662,
+          0.3367918521954236
+        ],
+        "NDCG@10": [
+          0.20907679215151162,
+          0.279759601519944
+        ]
+      }
+    },
+    {
+      "run": "20261109-1812-topics-k256-m2-practice-all",
+      "config": "topics-k256-m2",
+      "Recall@5": 0.281573902288188,
+      "Recall@10": 0.3276192537621109,
+      "Recall@20": 0.38452401566687283,
+      "Recall@100": 0.47459204287775714,
+      "MRR@10": 0.38532199546485263,
+      "NDCG@10": 0.3017744437522658,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 21.574020335517293,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.2873695372088229,
+          0.3673297619047619
+        ],
+        "NDCG@10": [
+          0.26303623783899077,
+          0.3406403406236042
+        ]
+      }
+    },
+    {
+      "run": "20261109-1812-topics-k256-m4-practice-all",
+      "config": "topics-k256-m4",
+      "Recall@5": 0.32681344052772626,
+      "Recall@10": 0.3821243042671614,
+      "Recall@20": 0.44467985982271685,
+      "Recall@100": 0.5734213564213565,
+      "MRR@10": 0.4159875283446711,
+      "NDCG@10": 0.34186798138984253,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 25.2952075034513,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.33909330550401984,
+          0.425963589981447
+        ],
+        "NDCG@10": [
+          0.30132784641674765,
+          0.38197574963605463
+        ]
+      }
+    },
+    {
+      "run": "20261109-1812-topics-k256-m8-practice-all",
+      "config": "topics-k256-m8",
+      "Recall@5": 0.37462296433725,
+      "Recall@10": 0.43507668521954235,
+      "Recall@20": 0.5082036693465264,
+      "Recall@100": 0.6492762317048032,
+      "MRR@10": 0.45689455782312927,
+      "NDCG@10": 0.3848719435457758,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 23.408355873211153,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.39168761595547313,
+          0.4772156307977737
+        ],
+        "NDCG@10": [
+          0.3450766530482391,
+          0.42321327252388
+        ]
+      }
+    },
+    {
+      "run": "20261109-1812-toc-centroid-m4-practice-all",
+      "config": "toc-centroid-m4",
+      "Recall@5": 0.29962296433725005,
+      "Recall@10": 0.3552195423623995,
+      "Recall@20": 0.4060131931560503,
+      "Recall@100": 0.5315642135642135,
+      "MRR@10": 0.38062244897959185,
+      "NDCG@10": 0.31339134050552375,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 23.15547044289165,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.31415991032776747,
+          0.39634744897959173
+        ],
+        "NDCG@10": [
+          0.2763287227233373,
+          0.35264809995870955
+        ]
+      }
+    },
+    {
+      "run": "20261109-1813-raptor-lite-expand-practice-all",
+      "config": "raptor-lite-expand",
+      "Recall@5": 0.4283372500515358,
+      "Recall@10": 0.48523335394763967,
+      "Recall@20": 0.5817357245928674,
+      "Recall@100": 0.7680191713048855,
+      "MRR@10": 0.4924410430839003,
+      "NDCG@10": 0.4246893462525202,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 116.2142499276836,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.44238692022263454,
+          0.5265631725417439
+        ],
+        "NDCG@10": [
+          0.38491598563066204,
+          0.46158943575287
+        ]
+      }
+    },
+    {
+      "run": "20261109-1813-raptor-lite-evidence-practice-all",
+      "config": "raptor-lite-evidence",
+      "Recall@5": 0.4283372500515358,
+      "Recall@10": 0.4838047825190682,
+      "Recall@20": 0.5817357245928674,
+      "Recall@100": 0.7680191713048855,
+      "MRR@10": 0.4907743764172336,
+      "NDCG@10": 0.4230272670827409,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 118.42599038467077,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.442381648113791,
+          0.5246917439703155
+        ],
+        "NDCG@10": [
+          0.38407632806248065,
+          0.4599000824545927
+        ]
+      }
+    },
+    {
+      "run": "20261109-1814-raptor-tree-expand-practice-all",
+      "config": "raptor-tree-expand",
+      "Recall@5": 0.4283372500515358,
+      "Recall@10": 0.4847571634714492,
+      "Recall@20": 0.5817357245928674,
+      "Recall@100": 0.7651620284477427,
+      "MRR@10": 0.49040929705215425,
+      "NDCG@10": 0.4237934444068804,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 116.02368880096557,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4433419140383426,
+          0.5263950525664811
+        ],
+        "NDCG@10": [
+          0.38427817916053775,
+          0.4611547967860276
+        ]
+      }
+    },
+    {
+      "run": "20261109-1815-raptor-tree-evidence-practice-all",
+      "config": "raptor-tree-evidence",
+      "Recall@5": 0.4283372500515358,
+      "Recall@10": 0.4847571634714492,
+      "Recall@20": 0.5817357245928674,
+      "Recall@100": 0.7680191713048855,
+      "MRR@10": 0.4897539682539683,
+      "NDCG@10": 0.4232815299163947,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 114.39151753355483,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4433419140383426,
+          0.5263950525664811
+        ],
+        "NDCG@10": [
+          0.38434695976030125,
+          0.46046846642484807
+        ]
+      }
+    }
+  ]
+}

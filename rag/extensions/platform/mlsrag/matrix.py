@@ -8,7 +8,7 @@ import yaml
 from . import evaluate, runner
 from .config import PRESETS, RunConfig, load_config
 from .course import paths
-from .results import list_runs, load_run, markdown_table, summary_row
+from .results import CI_KEYS, fmt, list_runs, load_run, markdown_table, run_ci95, summary_row
 from .subsets import check_subset
 
 CONFIGS_DIR = Path(__file__).resolve().parents[1] / "configs"
@@ -50,6 +50,14 @@ def with_override(config, override):
     return RunConfig(**{**config.model_dump(), **override, "name": config.name + suffix})
 
 
+def with_ci(row, key):
+    """The table cell: "0.475 [0.410, 0.540]" for a metric with an interval, else the value."""
+    if key not in CI_KEYS:
+        return row[key]
+    lo, hi = row["ci95"][key]
+    return f"{fmt(row[key])} [{fmt(lo)}, {fmt(hi)}]"
+
+
 def run_matrix(path, judge=True, generate=True, force=False, allow_full=False, yes=False, fresh=False):
     spec = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     subset = spec["subset"]
@@ -76,15 +84,15 @@ def run_matrix(path, judge=True, generate=True, force=False, allow_full=False, y
         answers = load_run(run_dir)["metrics"]["answers"]
         if judge and (answers is None or answers["judge_model"] != config.judge_model):
             evaluate.judge(run_dir)
-        rows.append(summary_row(load_run(run_dir)))
+        rows.append({**summary_row(load_run(run_dir)), "ci95": run_ci95(run_dir)})
 
     out = paths.results_dir / "matrices" / spec["name"]
     out.mkdir(parents=True, exist_ok=True)
     (out / "summary.json").write_text(
         json.dumps({"name": spec["name"], "subset": subset, "rows": rows}, indent=2) + "\n",
         encoding="utf-8")
-    header = list(rows[0])
-    table = [list(r.values()) for r in rows]
+    header = [k for k in rows[0] if k != "ci95"]
+    table = [[with_ci(r, k) for k in header] for r in rows]
     note = "" if all(r["fresh"] for r in rows) else "\nLatency and cost shown as -: not a fresh run.\n"
     (out / "summary.md").write_text(
         f"# Matrix {spec['name']} on {subset}\n\n" + markdown_table(header, table) + note,
