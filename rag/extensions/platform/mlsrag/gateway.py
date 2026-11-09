@@ -106,12 +106,14 @@ class ModelGateway:
                 )
         return _encoders[name]
 
-    def chat(self, model, messages, temperature=0.0, max_tokens=None, tag=None) -> str:
-        """`tag` (e.g. a prompt VERSION) enters the cache key when given."""
+    def chat(self, model, messages, temperature=0.0, max_tokens=None, tag=None, timeout=None) -> str:
+        """`tag` (e.g. a prompt VERSION) enters the cache key when given. `timeout` (seconds) replaces
+        the client's 180 s for this call only; it is not part of the cache key."""
         def call():
             extra = {"max_tokens": max_tokens} if max_tokens else {}
+            client = self.client() if timeout is None else self.client().with_options(timeout=timeout)
             with _remote_slots:
-                r = self.client().chat.completions.create(
+                r = client.chat.completions.create(
                     model=model, messages=messages, temperature=temperature, **extra
                 )
             return {

@@ -1,0 +1,8 @@
+name: grep-feedback-mistral
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl
+retriever: grep
+flow: grep-feedback
+k: 5
+params:
+  grep_model: mistralai/Mistral-Small-4-119B-2603  # comparison row (plan 025): same flow, Mistral Small 4 as the helper

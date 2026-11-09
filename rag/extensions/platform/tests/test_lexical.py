@@ -58,7 +58,7 @@ class FakeGateway:
     def encoder(self, name):  # build_stages loads the query encoder
         return None
 
-    def chat(self, model, messages, temperature=0.0, max_tokens=None, tag=None):
+    def chat(self, model, messages, temperature=0.0, max_tokens=None, tag=None, timeout=None):
         assert tag == "grep_v1"
         self.prompts.append(messages[0]["content"])
         return self.replies.pop(0)

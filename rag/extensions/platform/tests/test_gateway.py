@@ -153,3 +153,25 @@ def test_fresh_transcribe_skips_the_cache_read(gateway, monkeypatch, tmp_path):
     assert gateway.transcribe(audio, fresh=True) == "t3"
     assert len(calls) == 3
     assert gateway.transcribe(audio) == "t3"  # fresh still writes the cache
+
+
+def test_timeout_applies_to_one_call_only(gateway, monkeypatch):
+    seen = []
+    real_with_options = gateway._client.with_options
+
+    def with_options(**kwargs):
+        seen.append(kwargs)
+        return real_with_options(**kwargs)
+
+    monkeypatch.setattr(gateway._client, "with_options", with_options)
+    created = []
+    monkeypatch.setattr(openai.resources.chat.completions.Completions, "create",
+                        lambda self, **kw: created.append(kw) or fake_response("ok"))
+    msgs = [{"role": "user", "content": "q"}]
+    assert gateway.chat("m", msgs, timeout=900) == "ok"
+    assert seen == [{"timeout": 900}]
+    assert gateway._client.timeout == 180  # the shared client keeps its default
+    gateway.fresh = True
+    gateway.chat("m", msgs)
+    assert seen == [{"timeout": 900}]  # no timeout given: the shared client, unchanged
+    assert len(created) == 2
