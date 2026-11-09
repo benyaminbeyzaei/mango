@@ -161,7 +161,8 @@ Qwen's hidden reasoning took ~70-100 s per call); answers stay on Qwen. Always p
 
 Wall time (queries one at a time, from the fresh smoke runs): Qwen generation ~52 s, grep static ~1.4 s,
 grep agentic ~5.6 s, grep feedback ~7.7 s per query (Llama-3.3), toc-llm ~1.1 s, toc-llm-topics ~1.5 s,
-toc-llm-flat ~2.4 s, all other retrievers < 0.2 s. Judge time is
+toc-llm-flat ~2.4 s, all other retrievers < 0.2 s (the plan 030 `toc-llm*-gpt5labels` runs took 4.0 / 4.5 / 6.5 s
+while another job loaded the CPU, so their latency is not comparable). Judge time is
 not measured.
 
 The fresh Qwen grep runs (`results/20261108-1949-grep-static-practice-smoke20`,
@@ -172,13 +173,13 @@ MRR@10 0.350 → 0.175, ~304 s → ~5.6 s per query (Qwen → Llama, practice-sm
 
 | Matrix file (`configs/matrices/`) | Subset | Mode | ELM calls (fresh) | Wall time |
 |---|---|---|---|---|
-| A `matrix-a-smoke.yaml` (14 retrieval configs) | practice-smoke20 | `--no-generate` | 280 (180 grep, 100 toc-llm: 40 + 40 + 20) | ~7 min |
+| A `matrix-a-smoke.yaml` (20 retrieval configs) | practice-smoke20 | `--no-generate` | 380 (180 grep, 200 toc-llm: 2 x (40 + 40 + 20)) | ~12 min |
 | A `matrix-a-retrieval.yaml` | practice-20pct (70) | `--no-generate` | 980, after filling the transcript cache | ~24 min |
 | A `matrix-a-retrieval-dev.yaml` | dev-20pct (25) | `--no-generate` | 350 | ~9 min |
 | B `matrix-b-answers.yaml` (7 configs, simple context) | dev-20pct | generate + judge | 375 + 175 judge | ~2.6 h + judge |
 | B `matrix-b-answers-budgeted.yaml` (same rows, budgeted) | dev-20pct | generate + judge | 375 + 175 judge | ~2.6 h + judge |
 | C `matrix-c-secondary.yaml` (encoder policies) | dev-20pct | `--no-generate` | 0 | ~1 min |
-| A `matrix-a-free-practice-all.yaml` (10 no-LLM retrievers) | practice-all (350) | `--no-generate --allow-full` | 0 | ~4 min |
+| A `matrix-a-free-practice-all.yaml` (12 no-LLM retrievers) | practice-all (350) | `--no-generate --allow-full` | 0 | ~4 min |
 | A `matrix-a-free-dev-all.yaml` (same rows) | dev-all (125) | `--no-generate --allow-full` | 0 | ~2 min |
 | C `matrix-c-practice-all.yaml` (baseline + 5 encoder policies) | practice-all | `--no-generate --allow-full` | 0 | ~3 min |
 | C `matrix-c-dev-all.yaml` (same rows) | dev-all | `--no-generate --allow-full` | 0 | ~1 min |
@@ -191,8 +192,9 @@ and the same with `dev-all` and `whisper1-dev.jsonl`.
 Matrix B's rows are one per family; after matrix A, replace each with its family's best setting.
 A `dev-all` run (125 queries) costs five times the dev-20pct numbers.
 
-**Full-split results for the no-LLM methods (plan 029).** The four `*-all` matrices above ran fresh
-on 2026-11-09 (after 430 whisper-1 calls filled both transcript caches, 2,263 audio s, ~$0.23).
+**Full-split results for the no-LLM methods (plans 029, 030).** The four `*-all` matrices above ran fresh
+on 2026-11-09, after 430 whisper-1 calls filled both transcript caches (2,263 audio s, ~$0.23); the two A
+matrices ran again for plan 030, with identical numbers for the earlier rows.
 Their summaries give a 95 % percentile bootstrap interval over queries (1,000 resamples, seed 0) for
 Recall@10 and NDCG@10. Only `results/matrices/<name>/summary.{md,json}` is committed; the run
 folders they name stay local (~70 MB), so the web Compare page answers "no run" for them.
@@ -205,6 +207,7 @@ Recall@10 [95 % CI]:
 | topics-k256-m2 / m4 / m8 | 0.328 / 0.382 / 0.435 [0.392, 0.477] | 0.340 / 0.420 / 0.458 [0.390, 0.535] |
 | toc-centroid-m4 | 0.355 [0.314, 0.396] | 0.376 [0.303, 0.449] |
 | raptor-lite / raptor-tree, expand and evidence | 0.484-0.485 | 0.461-0.469 |
+| raptor-tree with gpt-5-mini summaries (plan 030), expand / evidence | 0.484 / 0.485 | 0.477 / 0.477 [0.409, 0.556] |
 | enc-b-asis | 0.465 [0.422, 0.508] | 0.437 [0.365, 0.514] |
 | enc-b-reencode / reencode-prefix | 0.505 / 0.516 [0.476, 0.560] | 0.491 / 0.526 [0.455, 0.599] |
 | enc-b-translate-lstsq / procrustes | 0.467 / 0.422 [0.376, 0.463] | 0.473 / 0.425 [0.355, 0.497] |

@@ -10,4 +10,6 @@
 name: a-smoke
 subset: practice-smoke20
 configs: [baseline, bm25, grep-static, grep-agentic, grep-feedback, topics-k256-m2, topics-k256-m4, topics-k256-m8,
-          toc-centroid-m4, toc-llm-m4, toc-llm-topics-m4, toc-llm-flat-m4, raptor-lite-expand, raptor-tree-expand]
+          toc-centroid-m4, toc-llm-m4, toc-llm-topics-m4, toc-llm-flat-m4, raptor-lite-expand, raptor-tree-expand,
+          toc-centroid-m4-gpt5labels, toc-llm-m4-gpt5labels, toc-llm-topics-m4-gpt5labels, toc-llm-flat-m4-gpt5labels,
+          raptor-tree-gpt5-expand, raptor-tree-gpt5-evidence]

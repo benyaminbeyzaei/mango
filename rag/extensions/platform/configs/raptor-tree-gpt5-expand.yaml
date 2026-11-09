@@ -1,0 +1,13 @@
+# RunConfig: records + the two-level summary tree (256 cluster + 16 section summaries) searched together; a summary hit expands to its 3 best members.
+# Plan 030: the same tree (clusters, soft membership, split/combine rule), summaries written by gpt-5-mini.
+name: raptor-tree-gpt5-expand
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+retriever: raptor-tree
+k: 5
+params:
+  index: rag/extensions/platform/configs/pipelines/topics-k256-gpt5.yaml
+  summary_as_evidence: false
+  expand_top: 3

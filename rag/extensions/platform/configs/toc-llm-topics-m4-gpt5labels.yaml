@@ -1,0 +1,14 @@
+# RunConfig: two-level TOC routing (llm-topics): 2 of 16 sections shown with their topic names, then 4 topics inside them.
+# Plan 030: the same route over the TOC whose topic and section names were written by gpt-5-mini (label prompt v2, distinct names); the route model stays Llama-3.3.
+name: toc-llm-topics-m4-gpt5labels
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+retriever: toc
+k: 5
+params:
+  index: rag/extensions/platform/configs/pipelines/topics-k256-gpt5.yaml
+  sections: 2
+  m: 4
+  route: llm-topics

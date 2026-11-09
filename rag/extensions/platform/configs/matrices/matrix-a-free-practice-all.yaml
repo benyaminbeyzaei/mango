@@ -9,4 +9,5 @@
 name: a-free-practice-all
 subset: practice-all
 configs: [baseline, bm25, topics-k256-m2, topics-k256-m4, topics-k256-m8, toc-centroid-m4,
-          raptor-lite-expand, raptor-lite-evidence, raptor-tree-expand, raptor-tree-evidence]
+          raptor-lite-expand, raptor-lite-evidence, raptor-tree-expand, raptor-tree-evidence,
+          raptor-tree-gpt5-expand, raptor-tree-gpt5-evidence]

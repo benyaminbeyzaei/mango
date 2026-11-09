@@ -91,3 +91,23 @@ over the 24,000 records and 272 summaries; a level-1 hit expands to its cluster'
 query each; with `summary_as_evidence: true` the id is `summary:t<cluster>` or `summary:s<section>`.
 Extra counters `raptor.level1_hits`, `raptor.level2_hits`. Configs `raptor-tree-expand.yaml`,
 `raptor-tree-evidence.yaml`.
+
+**gpt-5-mini versions (plan 030).** `configs/pipelines/topics-k256-gpt5.yaml` is a copy of
+`topics-k256.yaml` that changes only `label`, `section`, `summarise_full` and `section_summarise`
+(model `gpt-5-mini`, a paid model named by Benyamin for these builds only; `max_tokens: 4000` leaves
+room for its hidden reasoning). `select`, `cluster` and `soft_members` keep their hashes and are
+reused; the Llama builds stay where they are. `label: {prompt: v2}` (selected in the config, so
+`prompt_version` and the old hash stay unchanged) shows the top words and the 8 records nearest the
+centroid (300 characters each), then renames every topic whose name another topic shares (ignoring
+case): one call per topic in a clash, seeing the clashing topics' records and the names already
+taken, at most 3 rounds, and the stage fails if a clash remains. Sections are named from the new
+topic names with the unchanged section prompt; the section membership (k-means on the centroids)
+is the same as before. The gateway sends models whose name starts with `gpt-5` no `temperature`,
+`max_completion_tokens` instead of `max_tokens`, and `reasoning_effort: low` (in their cache key),
+and logs `reasoning_tokens`; requests and cache keys of every other model are unchanged.
+Configs: `toc-{centroid,llm,llm-topics,llm-flat}-m4-gpt5labels.yaml` (the route model stays
+Llama-3.3) and `raptor-tree-gpt5-{expand,evidence}.yaml`.
+Built on 2026-11-09 at concurrency 1: labels and sections 272 calls, 171 k prompt and 43 k completion
+tokens (26 k of them reasoning), 19 min, US$0.13, no name clash so no rename call; RAPTOR-tree 439 calls,
+4.68 M prompt and 144 k completion tokens (55 k reasoning), 44 min, US$1.46 (list prices $0.25 / $2.00
+per M tokens; `results.py` prices only whisper, so run metrics show these builds as $0).

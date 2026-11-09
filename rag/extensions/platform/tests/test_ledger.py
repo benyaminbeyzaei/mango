@@ -1,3 +1,4 @@
+import json
 from types import SimpleNamespace
 
 from mlsrag.preprocess import label
@@ -105,3 +106,41 @@ def test_retry_after_bad_reply_uses_a_new_prompt(tmp_path):
         pass
     assert label.run(inputs, {"model": "m"}, ctx)["clusters"] == 1
     assert gw.prompts[0] != gw.prompts[1]
+
+
+class NamingGateway:
+    """First pass: every topic is called "Same"; a rename call names the topic after its first record."""
+
+    def __init__(self):
+        self.prompts = []
+
+    def chat(self, model, messages, temperature=0.0, max_tokens=None):
+        prompt = messages[0]["content"]
+        self.prompts.append(prompt)
+        if "This topic:" in prompt:
+            first = prompt.split("This topic:\n- ")[1].split("\n")[0]
+            return json.dumps({"topic": f"About {first}", "summary": "S."})
+        return '{"topic": "Same", "summary": "S."}'
+
+
+def test_label_v2_uses_nearest_records_and_renames_clashes(tmp_path, monkeypatch):
+    import numpy as np
+
+    sel, clu, out = tmp_path / "sel", tmp_path / "clu", tmp_path / "out"
+    for d in (sel, clu, out):
+        d.mkdir()
+    (sel / "records.jsonl").write_text("".join(
+        json.dumps({"record_id": f"r{i}", "text": f"record {i}"}) + "\n" for i in range(4)))
+    clusters = [{"cluster": c, "top_words": ["w"], "members": [f"r{c}", f"r{c + 2}"]} for c in range(2)]
+    (clu / "clusters.json").write_text(json.dumps(clusters))
+    np.save(clu / "centroids.npy", np.array([[1.0, 0.0], [1.0, 0.0]], dtype=np.float32))
+    # r2 and r3 lie nearer the centroid than r0 and r1, so they come first in each prompt
+    vectors = {"r0": [0.1, 1.0], "r1": [0.1, 1.0], "r2": [1.0, 0.0], "r3": [1.0, 0.0]}
+    monkeypatch.setattr(label, "load_vectors", lambda ids: np.array([vectors[r] for r in ids], dtype=np.float32))
+    gw = NamingGateway()
+    ctx = SimpleNamespace(out_dir=out, gateway=gw, trace=SimpleNamespace(cost={}), log=lambda *_: None)
+    counts = label.run({"select": sel, "cluster": clu}, {"model": "m", "prompt": "v2"}, ctx)
+    assert gw.prompts[0].index("record 2") < gw.prompts[0].index("record 0")
+    assert counts["rename_calls"] == 2
+    names = [json.loads(line)["topic"] for line in (out / "labels.jsonl").read_text().splitlines()]
+    assert names == ["About record 2", "About record 3"]

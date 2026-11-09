@@ -8,8 +8,8 @@
 - `web/`: the client (Docs, Models, Results, Interactive, Guide), served by `mlsrag serve` or Docker.
 - `compose.yaml` + `Dockerfile`: `docker compose up` from a clean clone (sequence in the README,
   checked on 2026-11-08: about 6 minutes including the image build).
-- `rag/extensions/results/`: 28 runs, all fresh (`run.fresh: true`), and four matrix summaries:
-  `a-smoke` (14 retrievers, retrieval only), `context-smoke` (judged baseline, budgeted, dedupe),
+- `rag/extensions/results/`: 36 smoke runs, all fresh (`run.fresh: true`), and four matrix summaries:
+  `a-smoke` (20 retrievers, retrieval only), `context-smoke` (judged baseline, budgeted, dedupe),
   `encoders-smoke` (encoder policies), `toc-raptor-smoke`. Plan 029 added four full-split matrix
   summaries for the no-LLM methods (`a-free-practice-all`, `a-free-dev-all`, `c-practice-all`,
   `c-dev-all`, with 95 % bootstrap intervals); their run folders are local only, not committed.
@@ -50,6 +50,10 @@
 - 029: whisper-1 transcripts for all of practice and dev (430 calls, ~$0.23); 95 % bootstrap
   intervals for Recall@10 and NDCG@10 in matrix summaries; matrices A (10 no-LLM retrievers) and C
   on practice-all and dev-all, fresh, summaries committed (results in the README).
+- 030: gpt-5-mini (paid, named for these two builds only) versions of the TOC labels (label prompt
+  `v2`: nearest records, distinct names) and of the RAPTOR-tree summaries, next to the Llama builds;
+  smoke rows for the four TOC routes and both RAPTOR-tree modes, full-split rows for RAPTOR-tree;
+  US$1.59 for 711 build calls.
 
 ## Open items
 

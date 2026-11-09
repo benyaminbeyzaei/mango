@@ -64,7 +64,7 @@ The dry run checks candidate IDs and coverage without calling ELM. The last comm
 
 ## 6. Optional: run our experiment matrices
 
-The platform (`rag/extensions/platform/`, see its `README.md`) runs on any machine with the course data; no GPU, since it uses cached or whisper-1 transcripts. Install it in the RAG environment with `pip install -e "rag/extensions/platform[dev]"`, or use Docker (`docker compose run --rm cli mlsrag ...`). The committed results are smoke and 20 % subsets. A full split needs a copy of a matrix file with `subset: dev-all` (or `practice-all`) and both flags:
+The platform (`rag/extensions/platform/`, see its `README.md`) runs on any machine with the course data; no GPU, since it uses cached or whisper-1 transcripts. Install it in the RAG environment with `pip install -e "rag/extensions/platform[dev]"`, or use Docker (`docker compose run --rm cli mlsrag ...`). The committed results are smoke runs (practice-smoke20), plus full-split (practice-all, dev-all) matrix summaries for every retriever that makes no LLM call at query time (plans 029 and 030); the LLM-routed TOC and grep methods have smoke results only. A full split needs a copy of a matrix file with `subset: dev-all` (or `practice-all`) and both flags:
 
 ```bash
 mlsrag transcribe --asr whisper1 --subset dev-all --allow-full --out rag/.cache/transcripts/whisper1-dev.jsonl
