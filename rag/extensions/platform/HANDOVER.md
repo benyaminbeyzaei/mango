@@ -1,4 +1,4 @@
-# Hand-over (2026-11-08)
+# Hand-over (2026-11-09)
 
 ## What exists
 
@@ -10,7 +10,9 @@
   checked on 2026-11-08: about 6 minutes including the image build).
 - `rag/extensions/results/`: 28 runs, all fresh (`run.fresh: true`), and four matrix summaries:
   `a-smoke` (14 retrievers, retrieval only), `context-smoke` (judged baseline, budgeted, dedupe),
-  `encoders-smoke` (encoder policies), `toc-raptor-smoke`.
+  `encoders-smoke` (encoder policies), `toc-raptor-smoke`. Plan 029 added four full-split matrix
+  summaries for the no-LLM methods (`a-free-practice-all`, `a-free-dev-all`, `c-practice-all`,
+  `c-dev-all`, with 95 % bootstrap intervals); their run folders are local only, not committed.
 
 ## What each plan produced
 
@@ -45,15 +47,18 @@
   256 topics) as new matrix A rows; `llm` kept.
 - 028: `raptor-tree` (soft membership, whole-cluster summaries, 16 section summaries, one collapsed
   index; 439 Llama calls, 50 min build) as a new matrix A row; `raptor-lite` kept unchanged.
+- 029: whisper-1 transcripts for all of practice and dev (430 calls, ~$0.23); 95 % bootstrap
+  intervals for Recall@10 and NDCG@10 in matrix summaries; matrices A (10 no-LLM retrievers) and C
+  on practice-all and dev-all, fresh, summaries committed (results in the README).
 
 ## Open items
 
 - **Full runs to schedule** (each needs Benyamin's go-ahead; numbers from `mlsrag estimate`,
   wall time at one request at a time, judging not included):
-  - fill the practice transcript cache for practice-20pct: 50 whisper-1 calls, ~$0.03;
+  - (done by 029: both transcript caches are full, and every no-LLM retriever has run on
+    practice-all and dev-all; what remains are the LLM methods below);
   - matrix A on practice-20pct: 980 ELM calls, ~24 min; on dev-20pct: 350 calls, ~9 min;
   - matrix B (simple and budgeted) on dev-20pct: 375 + 175 judge calls each, ~2.6 h + judging each;
-  - matrix C on dev-20pct: 0 ELM calls;
   - `dev-all` costs five times the dev-20pct numbers (see the Guide page for the full-split table).
 - **Course ASR transcripts** from the teammate (the CUDA model on the cluster): needed for
   `mlsrag asr-compare` (no comparison is committed yet) and for matrix C's ASR row. Put them in

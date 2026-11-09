@@ -147,6 +147,9 @@ def test_matrix_reuses_a_judged_run_and_writes_summary(tmp_path, monkeypatch):
     rows = json.loads((out / "summary.json").read_text())["rows"]
     assert [r["run"] for r in rows] == [run_dir.name] and rows[0]["answer_norm"] == 0.25
     assert run_dir.name in (out / "summary.md").read_text()
+    lo, hi = rows[0]["ci95"]["Recall@10"]
+    assert lo <= rows[0]["Recall@10"] <= hi
+    assert f"[{lo:.3f}, {hi:.3f}]" in (out / "summary.md").read_text()
 
 
 def test_retriever_calls_per_query_by_toc_route():

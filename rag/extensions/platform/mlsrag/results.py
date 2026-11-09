@@ -174,6 +174,25 @@ def summary_row(run) -> dict:
     return row
 
 
+CI_KEYS = ["Recall@10", "NDCG@10"]  # matrix summaries show a 95 % interval for these
+
+
+def bootstrap_ci(values, resamples=1000, seed=0) -> list[float]:
+    """95 % percentile bootstrap interval of the mean of per-query values."""
+    values = np.asarray(values, dtype=float)
+    rng = np.random.default_rng(seed)
+    means = values[rng.integers(0, len(values), (resamples, len(values)))].mean(axis=1)
+    lo, hi = np.percentile(means, [2.5, 97.5])
+    return [float(lo), float(hi)]
+
+
+def run_ci95(run_dir) -> dict[str, list[float]]:
+    """{metric: [lo, hi]} for CI_KEYS, resampling the queries in the run's queries.jsonl."""
+    lines = Path(run_dir, "queries.jsonl").read_text(encoding="utf-8").splitlines()
+    rows = [json.loads(line) for line in lines if line]
+    return {k: bootstrap_ci([r["metrics"][k] for r in rows]) for k in CI_KEYS}
+
+
 def fmt(v) -> str:
     if v is None:
         return "-"
