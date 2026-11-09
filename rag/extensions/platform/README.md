@@ -105,8 +105,8 @@ mlsrag matrix --matrix rag/extensions/platform/configs/matrices/matrix-a-smoke.y
   reads for chat and embed calls (it still writes them), so every system call is made and timed.
   Judge calls stay cached (the judge is the instrument, not the system); whisper and `asr: cached`
   stay as configured; preprocessing always keeps the cache. `metrics.json` records `run.fresh`.
-  **Latency and cost are valid only for fresh runs:** `matrix`, `compare` and the web client show
-  them as `–` for any other run; retrieval and answer scores are shown either way.
+  **Latency and cost are valid only for fresh runs:** `matrix` and `compare` show them as `-`
+  (the web client as `–`) for any other run; retrieval and answer scores are shown either way.
 - **Full splits** (`practice-all`, `dev-all`) need `--allow-full` on `run`, `transcribe` and `matrix`
   (`allow_full: true` on `POST /api/runs`); `mlsrag preprocess run` asks `y/N` before LLM calls unless `--yes`.
 - `matrix` prints its estimate and asks for `y` (`--yes` skips). Agents run only smoke matrices; the

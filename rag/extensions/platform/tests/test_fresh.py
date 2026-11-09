@@ -63,7 +63,7 @@ def test_summary_hides_latency_and_cost_of_non_fresh_runs(tmp_path, monkeypatch)
     assert rows[1]["latency_ms"] is None and rows[1]["calls/q"] is None and rows[1]["NDCG@10"] == 0.5
     md = (out / "summary.md").read_text()
     b_line = next(line for line in md.splitlines() if line.startswith("| b "))
-    assert b_line.count("–") == 3 and "not a fresh run" in md
+    assert b_line.endswith("| - | - | - | False |") and "not a fresh run" in md
 
 
 def test_old_metrics_without_fresh_count_as_not_fresh(tmp_path):

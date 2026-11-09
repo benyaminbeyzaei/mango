@@ -1,10 +1,8 @@
 """Label stage: one LLM call per cluster names its topic, through the gateway and a ledger."""
-import hashlib
 import json
 import re
-import time
 
-from .ledger import Ledger, ask
+from .ledger import Ledger, run_items
 
 PROMPT_VERSION = "v1"
 MAX_CLUSTERS = 512  # plan 002: never label more than this many clusters in one run
@@ -46,40 +44,13 @@ def run(inputs, config, ctx):
         texts[r["record_id"]] = r["text"]
 
     ledger = Ledger(ctx.out_dir / "ledger.jsonl")
-    done = ledger.done_ids()
-    failures = {}
-    for r in ledger.rows():
-        if r["status"] == "failed":
-            failures[r["item_id"]] = failures.get(r["item_id"], 0) + 1
-    todo = [c for c in clusters if c["cluster"] not in done]
-    ctx.log(f"label: {len(done)} clusters done, {len(todo)} to go")
-    ask(ctx, ledger, len(clusters), len(todo))
-    for i, c in enumerate(todo, start=1):
-        prompt = build_prompt(c, texts, attempt=failures.get(c["cluster"], 0))
-        input_hash = hashlib.sha256(prompt.encode()).hexdigest()[:16]
-        before = sum(v["prompt_tokens"] + v["completion_tokens"] for v in ctx.trace.cost.values())
-        start = time.perf_counter()
-        try:
-            reply = ctx.gateway.chat(config["model"], [{"role": "user", "content": prompt}], temperature=0.0)
-            label = parse_label(reply)
-        except Exception as err:  # recorded and retried on the next run
-            ms = (time.perf_counter() - start) * 1000.0
-            ledger.append(c["cluster"], input_hash, "failed", latency_ms=ms, error=f"{type(err).__name__}: {err}")
-            ctx.log(f"[{i}/{len(todo)}] cluster {c['cluster']} FAILED: {err}")
-            continue
-        tokens = sum(v["prompt_tokens"] + v["completion_tokens"] for v in ctx.trace.cost.values()) - before
-        ms = (time.perf_counter() - start) * 1000.0
-        ledger.append(c["cluster"], input_hash, "ok", output=label, tokens=tokens, latency_ms=ms)
-        ctx.log(f"[{i}/{len(todo)}] cluster {c['cluster']}: {label['topic']}")
-
-    ok = ledger.ok_rows()
-    failed = len(clusters) - len(ok)
-    if failed:
-        raise RuntimeError(f"{failed} clusters failed to label; re-run to retry them")
+    todo = len(clusters) - len(ledger.done_ids())
+    labels = run_items({c["cluster"]: c for c in clusters}, ctx, config["model"],
+                       lambda c, attempt: build_prompt(c, texts, attempt), parse_label)
     with (ctx.out_dir / "labels.jsonl").open("w", encoding="utf-8") as f:
         for c in clusters:
-            f.write(json.dumps({"cluster": c["cluster"], **ok[c["cluster"]]["output"]}, ensure_ascii=False) + "\n")
+            f.write(json.dumps({"cluster": c["cluster"], **labels[c["cluster"]]}, ensure_ascii=False) + "\n")
     rows = ledger.rows()
-    return {"clusters": len(clusters), "labelled_this_run": len(todo), "ledger_lines": len(rows),
+    return {"clusters": len(clusters), "labelled_this_run": todo, "ledger_lines": len(rows),
             "failed_attempts": sum(r["status"] == "failed" for r in rows),
-            "ledger_tokens": sum(r["tokens"] for r in ok.values())}  # over all runs, not just this one
+            "ledger_tokens": sum(r["tokens"] for r in ledger.ok_rows().values())}  # over all runs

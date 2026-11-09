@@ -121,19 +121,39 @@ export function flatten(obj: unknown, prefix = ""): Record<string, number> {
   return out
 }
 
-export function unit(path: string) {
-  if (path.startsWith("latency_ms")) return "ms"
-  if (path === "resources.cpu_s") return "s"
-  if (path === "resources.peak_rss_mb") return "MB"
-  if (/^answers\.(judged_queries|repeats|judge_calls)$/.test(path))
-    return "count"
-  if (path === "cost.est_usd") return "USD"
-  if (path.endsWith("tokens")) return "tokens"
-  if (path === "cost.audio_seconds") return "s"
-  if (path.startsWith("cost")) return "calls"
-  if (path.startsWith("answers.") && path !== "answers.normalized") return "0–4"
-  return "0–1"
+// The unit of every number in metrics.json (mlsrag/results.py, Metrics), by its flattened path.
+const UNITS: Record<string, string> = {
+  "retrieval.Recall@5": "0–1",
+  "retrieval.Recall@10": "0–1",
+  "retrieval.Recall@20": "0–1",
+  "retrieval.Recall@100": "0–1",
+  "retrieval.MRR@10": "0–1",
+  "retrieval.NDCG@10": "0–1",
+  "answers.correctness": "0–4",
+  "answers.grounding": "0–4",
+  "answers.completeness": "0–4",
+  "answers.normalized": "0–1",
+  "answers.judged_queries": "count",
+  "answers.repeats": "count",
+  "answers.judge_calls": "count",
+  "cost.elm_calls": "calls",
+  "cost.prompt_tokens": "tokens",
+  "cost.completion_tokens": "tokens",
+  "cost.audio_seconds": "s",
+  "cost.est_usd": "USD",
+  "latency_ms.asr": "ms",
+  "latency_ms.encode": "ms",
+  "latency_ms.retrieve": "ms",
+  "latency_ms.context": "ms",
+  "latency_ms.generate": "ms",
+  "latency_ms.end_to_end.mean": "ms",
+  "latency_ms.end_to_end.p50": "ms",
+  "latency_ms.end_to_end.p95": "ms",
+  "resources.cpu_s": "s",
+  "resources.peak_rss_mb": "MB",
 }
+
+export const unit = (path: string) => UNITS[path] ?? ""
 
 // Remote (ELM) calls: chat and transcribe. Embeddings are local and free, so they never count.
 // Remote-call spans served from the cache take about 1 ms and cost nothing.

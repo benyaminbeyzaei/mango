@@ -52,12 +52,21 @@ def ask(ctx, ledger, items, calls):
         ctx.confirm(message)
 
 
-def run_items(items, ctx, model, build_prompt, parse, max_tokens=None) -> dict:
+class ItemsFailed(RuntimeError):
+    """Some items are still not `ok` after run_items; re-running retries them."""
+
+
+def tokens_so_far(trace) -> dict:
+    return {k: sum(v[k] for v in trace.cost.values()) for k in ("prompt_tokens", "completion_tokens")}
+
+
+def run_items(items, ctx, model, build_prompt, parse, max_tokens=None, usage=False) -> dict:
     """One chat call per item not yet `ok` in ctx.out_dir/ledger.jsonl; returns {item_id: output}.
 
     `items`: {item_id: data}. `build_prompt(data, attempt)` makes the prompt (attempt > 0 on a
     retry, so the gateway does not return the cached bad reply); `parse(reply)` raises on a bad one.
-    A failure is recorded and the item retried on the next run.
+    A failure is recorded and the item retried on the next run; if any item is not `ok` at the end,
+    ItemsFailed. With `usage`, each output also gets {"usage": {prompt_tokens, completion_tokens}}.
     """
     import hashlib
     import time
@@ -74,25 +83,24 @@ def run_items(items, ctx, model, build_prompt, parse, max_tokens=None) -> dict:
     for n, item_id in enumerate(todo, start=1):
         prompt = build_prompt(items[item_id], attempts.get(item_id, 0))
         input_hash = hashlib.sha256(prompt.encode()).hexdigest()[:16]
-        before = sum(v["prompt_tokens"] + v["completion_tokens"] for v in ctx.trace.cost.values())
+        before = tokens_so_far(ctx.trace)
         start = time.perf_counter()
         try:
             reply = ctx.gateway.chat(model, [{"role": "user", "content": prompt}], temperature=0.0,
                                      max_tokens=max_tokens)
-            output = parse(reply)
+            output, status, error = parse(reply), "ok", None
         except Exception as err:  # recorded and retried on the next run
-            tokens = sum(v["prompt_tokens"] + v["completion_tokens"] for v in ctx.trace.cost.values()) - before
-            ms = (time.perf_counter() - start) * 1000.0
-            ledger.append(item_id, input_hash, "failed", tokens=tokens, latency_ms=ms,
-                          error=f"{type(err).__name__}: {err}")
-            ctx.log(f"[{n}/{len(todo)}] {item_id} FAILED: {err}")
-            continue
-        tokens = sum(v["prompt_tokens"] + v["completion_tokens"] for v in ctx.trace.cost.values()) - before
+            output, status, error = None, "failed", f"{type(err).__name__}: {err}"
         ms = (time.perf_counter() - start) * 1000.0
-        ledger.append(item_id, input_hash, "ok", output=output, tokens=tokens, latency_ms=ms)
-        ctx.log(f"[{n}/{len(todo)}] {item_id} ok")
+        after = tokens_so_far(ctx.trace)
+        spent = {k: after[k] - before[k] for k in after}
+        if usage and status == "ok":
+            output = {**output, "usage": spent}
+        ledger.append(item_id, input_hash, status, output=output, tokens=sum(spent.values()),
+                      latency_ms=ms, error=error)
+        ctx.log(f"[{n}/{len(todo)}] {item_id} {error or 'ok'}")
     ok = ledger.ok_rows()
     failed = [i for i in items if i not in ok]
     if failed:
-        raise RuntimeError(f"{len(failed)} items failed; re-run to retry them")
+        raise ItemsFailed(f"{len(failed)} items failed; re-run to retry them")
     return {i: ok[i]["output"] for i in items}

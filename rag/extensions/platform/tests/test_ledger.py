@@ -19,7 +19,7 @@ class FlakyGateway:
         self.fail_on = fail_on
         self.prompts = []
 
-    def chat(self, model, messages, temperature=0.0):
+    def chat(self, model, messages, temperature=0.0, max_tokens=None):
         prompt = messages[0]["content"]
         self.prompts.append(prompt)
         if self.fail_on in prompt:
@@ -81,7 +81,7 @@ class CachingBadGateway:
     def __init__(self):
         self.prompts = []
 
-    def chat(self, model, messages, temperature=0.0):
+    def chat(self, model, messages, temperature=0.0, max_tokens=None):
         prompt = messages[0]["content"]
         self.prompts.append(prompt)
         return '{"topic": "T", "summary": "S."}' if "Retry" in prompt else "not json"

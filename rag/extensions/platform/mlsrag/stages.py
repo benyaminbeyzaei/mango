@@ -162,21 +162,21 @@ class GatewayGenerator:
         return self.gateway.chat(self.model, messages, temperature=COURSE_TEMPERATURE)
 
 
-def stage_output(pipeline_name, config, stage_name) -> Path:
-    """The output folder of one preprocessing stage for the pipeline config in `params.index`.
-    (Not `built_index`: toc and raptor share the topics folder, so its hint would name the wrong pipeline.)"""
+def stage_dir(pipeline_name, config, stage) -> Path:
+    """The output folder of one preprocessing stage for the pipeline config in `params.index`,
+    or an error saying how to build it."""
     from .preprocess import PIPELINES, load_pipeline_config
 
     if config.corpus_index != "enc_a":
         raise ValueError("the preprocessing indexes are built from enc_a vectors")
     pipeline = PIPELINES[pipeline_name]()
     rows = {r["stage"]: r for r in pipeline.status(load_pipeline_config(checkout_path(config.params["index"])))}
-    if rows[stage_name]["status"] != "ok":
+    if rows[stage]["status"] != "ok":
         raise FileNotFoundError(
-            f"{stage_name} for {config.params['index']} is not built; run "
+            f"{stage} for {config.params['index']} is not built; run "
             f"`mlsrag preprocess run --pipeline {pipeline_name} --config {config.params['index']}`"
         )
-    return pipeline.stage_dir(stage_name, rows[stage_name]["hash"])
+    return pipeline.stage_dir(stage, rows[stage]["hash"])
 
 
 def enc_a() -> tuple:
@@ -189,20 +189,9 @@ def enc_a() -> tuple:
 
 def topic_retriever(config):
     """`params.index`: the topics pipeline config (YAML) whose topic_index output to load."""
-    from .preprocess import load_pipeline_config, topics_pipeline
     from .retrievers.topic import TopicRetriever, load_index
 
-    if config.corpus_index != "enc_a":
-        raise ValueError("the topic index is built from enc_a vectors")
-    pipeline = topics_pipeline()
-    pipeline_config = load_pipeline_config(checkout_path(config.params["index"]))
-    rows = pipeline.status(pipeline_config)
-    if rows[-1]["status"] != "ok":
-        raise FileNotFoundError(
-            f"topic index for {config.params['index']} is not built; run "
-            f"`mlsrag preprocess run --pipeline topics --config {config.params['index']}`"
-        )
-    index = load_index(pipeline.stage_dir("topic_index", rows[-1]["hash"]) / "index.json")
+    index = load_index(stage_dir("topics", config, "topic_index") / "index.json")
     return TopicRetriever(index, *enc_a(), m=config.params.get("m", 4))
 
 
@@ -214,7 +203,7 @@ def toc_retriever(config, gateway):
     from .retrievers.toc import TocRetriever, load_toc
 
     p = config.params
-    toc = load_toc(stage_output("toc", config, "toc_index") / "toc.json")
+    toc = load_toc(stage_dir("toc", config, "toc_index") / "toc.json")
     return TocRetriever(toc, *enc_a(), sections=p.get("sections", 2), m=p.get("m", 4),
                         route=p.get("route", "centroid"), gateway=gateway,
                         model=p.get("route_model", TOC_ROUTE_MODEL))
@@ -227,7 +216,7 @@ def raptor_retriever(config):
     p = config.params
     if p.get("summary_as_evidence", False) and config.context_builder != "with-summaries":
         raise ValueError("summary_as_evidence: true needs context_builder: with-summaries")
-    vectors, rows = load_summaries(stage_output("raptor", config, "summary_index"))
+    vectors, rows = load_summaries(stage_dir("raptor", config, "summary_index"))
     return SummaryRetriever(vectors, rows, *enc_a(), summary_as_evidence=p.get("summary_as_evidence", False),
                             expand_top=p.get("expand_top", 3))
 
@@ -236,41 +225,24 @@ def summary_context(config, data):
     """SimpleContext that can also show `summary:<cluster>` evidence from the raptor index."""
     from .retrievers.raptor import SummaryData, load_summaries
 
-    _, rows = load_summaries(stage_output("raptor", config, "summary_index"))
+    _, rows = load_summaries(stage_dir("raptor", config, "summary_index"))
     return SimpleContext(SummaryData(data, rows))
-
-
-def built_index(pipeline, config_path, file_name) -> Path:
-    """The last stage's `file_name` for a pipeline config, or an error saying how to build it."""
-    from .preprocess import load_pipeline_config
-
-    rows = pipeline.status(load_pipeline_config(checkout_path(config_path)))
-    if rows[-1]["status"] != "ok":
-        raise FileNotFoundError(f"{pipeline.name} index for {config_path} is not built; run "
-                                f"`mlsrag preprocess run --pipeline {pipeline.name} --config {config_path}`")
-    return pipeline.stage_dir(rows[-1]["stage"], rows[-1]["hash"]) / file_name
 
 
 def lazy_graph_retriever(config):
     """`params.index`: the lazy-graph pipeline config; `params.rerank_dense` (default true)."""
-    from .preprocess import lazy_graph_pipeline
     from .retrievers.graph import LazyGraphRetriever, load_index
 
-    if config.corpus_index != "enc_a":
-        raise ValueError("the graph retrievers order candidates with enc_a vectors")
-    index = load_index(built_index(lazy_graph_pipeline(), config.params["index"], "index.json"))
+    index = load_index(stage_dir("lazy-graph", config, "lazy_index") / "index.json")
     return LazyGraphRetriever(index, *enc_a(), rerank_dense=config.params.get("rerank_dense", True))
 
 
 def kg_retriever(config, gateway):
     """`params.index`: the kg pipeline config; `params.question_entities`: spacy | llm
     (`params.question_model`, default the generator model)."""
-    from .preprocess import kg_pipeline
     from .retrievers.graph import KGRetriever, load_index
 
-    if config.corpus_index != "enc_a":
-        raise ValueError("the graph retrievers order candidates with enc_a vectors")
-    index = load_index(built_index(kg_pipeline(), config.params["index"], "index.json"))
+    index = load_index(stage_dir("kg", config, "kg_index") / "index.json")
     return KGRetriever(index, *enc_a(), question_entities=config.params.get("question_entities", "spacy"),
                        model=config.params.get("question_model", config.generator_model), gateway=gateway)
 

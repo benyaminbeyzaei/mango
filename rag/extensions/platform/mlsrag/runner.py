@@ -46,10 +46,7 @@ def run(config, subset, generate=True, results_dir=None, allow_full=False, fresh
     try:
         check_subset(subset, allow_full)
     except ValueError as err:  # say what the refused run would have cost
-        e = evaluate.estimate(config, subset)
-        if not generate:
-            e["elm_calls"] -= e["calls"]["generation"]
-            e["calls"]["generation"] = 0
+        e = evaluate.estimate(config, subset, generate=generate)
         raise ValueError(f"{err}\n{evaluate.format_estimate(e)}") from None
     data = CourseData(paths.data_dir)
     manifest = {row["query_id"]: row for row in data.load_audio_manifest()}

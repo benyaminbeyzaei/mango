@@ -183,7 +183,8 @@ def test_admin_disabled_without_token(client):
 
 def test_admin_runs(stage, tmp_path, monkeypatch):
     monkeypatch.setenv("ADMIN_TOKEN", "s3cret")
-    monkeypatch.setattr(evaluate, "estimate", lambda config, subset: {"calls": {"generation": 20}, "elm_calls": 20})
+    monkeypatch.setattr(evaluate, "estimate", lambda config, subset, generate=True: {"calls": {"generation": 20 * generate},
+                                                                   "elm_calls": 20 * generate})
     calls = []
 
     def fake_run(config, subset, generate, results_dir, allow_full, fresh):
