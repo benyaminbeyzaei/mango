@@ -210,14 +210,17 @@ def toc_retriever(config, gateway):
 
 
 def summary_index_dir(config):
-    """raptor-lite reads the `raptor` summary_index, raptor-tree the `raptor-tree` tree_index."""
+    """raptor-lite reads the `raptor` summary_index, raptor-tree the `raptor-tree` tree_index,
+    raptor-full the `raptor-full` raptor_build."""
     if config.retriever == "raptor-tree":
         return stage_dir("raptor-tree", config, "tree_index")
+    if config.retriever == "raptor-full":
+        return stage_dir("raptor-full", config, "raptor_build")
     return stage_dir("raptor", config, "summary_index")
 
 
 def raptor_retriever(config):
-    """raptor-lite | raptor-tree. `params`: index (pipeline config), summary_as_evidence (false), expand_top (3)."""
+    """raptor-lite | raptor-tree | raptor-full. `params`: index (pipeline config), summary_as_evidence (false), expand_top (3)."""
     from .retrievers.raptor import SummaryRetriever, load_summaries
 
     p = config.params
@@ -229,7 +232,7 @@ def raptor_retriever(config):
 
 
 def summary_context(config, data):
-    """SimpleContext that can also show `summary:<id>` evidence from the raptor-lite or raptor-tree index."""
+    """SimpleContext that can also show `summary:<id>` evidence from a raptor-lite, -tree or -full index."""
     from .retrievers.raptor import SummaryData, load_summaries
 
     _, rows = load_summaries(summary_index_dir(config))
@@ -267,6 +270,7 @@ RETRIEVERS = {
     "toc": lambda config, gateway, data: toc_retriever(config, gateway),
     "raptor-lite": lambda config, gateway, data: raptor_retriever(config),
     "raptor-tree": lambda config, gateway, data: raptor_retriever(config),
+    "raptor-full": lambda config, gateway, data: raptor_retriever(config),
     "bm25": lambda config, gateway, data: bm25_retriever(data),
     "grep": lambda config, gateway, data: grep_index(data),  # only for the grep flows, which call scan()
 }

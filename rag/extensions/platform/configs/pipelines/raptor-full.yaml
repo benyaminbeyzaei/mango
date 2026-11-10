@@ -1,0 +1,7 @@
+# Faithful RAPTOR (plan 031): mlsrag preprocess run --pipeline raptor-full --config <this file>.
+# The clustering and summary settings are the reference implementation's, fixed in
+# mlsrag/preprocess/raptor_full.py (sources in docs/pipelines.md); here only what we chose.
+select: {mode: all}
+# gpt-4o-mini (paid) instead of the paper's gpt-3.5-turbo; the stage stops before a layer's calls if an
+# upper bound of the total cost is over max_usd (list prices per million tokens below)
+raptor_build: {model: gpt-4o-mini, encoder: gte-small, max_usd: 20, usd_per_m_input: 0.15, usd_per_m_output: 0.60}

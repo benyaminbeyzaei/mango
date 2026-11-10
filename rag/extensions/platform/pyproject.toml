@@ -21,6 +21,8 @@ dependencies = [
   "uvicorn[standard]",
   "python-multipart",
   "bm25s",
+  "umap-learn",
+  "tiktoken",
 ]
 
 [project.optional-dependencies]
