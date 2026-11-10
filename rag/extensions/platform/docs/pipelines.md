@@ -1,4 +1,4 @@
-# Preprocessing pipelines (topics, toc, raptor, raptor-tree)
+# Preprocessing pipelines (topics, toc, raptor, raptor-tree, raptor-full)
 
 Part of the [mlsrag README](../README.md).
 
@@ -111,3 +111,53 @@ Built on 2026-11-09 at concurrency 1: labels and sections 272 calls, 171 k promp
 tokens (26 k of them reasoning), 19 min, US$0.13, no name clash so no rename call; RAPTOR-tree 439 calls,
 4.68 M prompt and 144 k completion tokens (55 k reasoning), 44 min, US$1.46 (list prices $0.25 / $2.00
 per M tokens; `results.py` prices only whisper, so run metrics show these builds as $0).
+
+## Faithful RAPTOR (`raptor-full`, plan 031)
+
+```bash
+mlsrag preprocess run --pipeline raptor-full --config rag/extensions/platform/configs/pipelines/raptor-full.yaml
+```
+
+**RAPTOR-full** (`retriever: raptor-full`, same `params` as RAPTOR-lite). Pipeline `raptor-full`
+(its own folder, `rag/.cache/preprocess/raptor-full/`): `select` → `raptor_build`
+(`preprocess/raptor_full.py`), a port of the reference implementation
+(`github.com/parthsarthi03/raptor`, MIT, commit `7da1d48`) onto our stage and ledger code.
+Layer 0 is the selected records. Each layer: UMAP to 10 dimensions (cosine, `n_neighbors =
+int(sqrt(n - 1))`), a Gaussian mixture with the number of components chosen by BIC over 1..49
+(`random_state` 224 for the BIC loop, 0 for the final fit), soft membership (a node joins every
+cluster with probability > 0.1); inside each global cluster of more than 11 nodes the same again
+with UMAP `n_neighbors = 10` (local clusters); a cluster of 2+ nodes over 3,500 cl100k_base tokens
+is clustered again. Every cluster is summarised with the paper's prompt (Table 11: system "You
+are a Summarizing Text Portal", user "Write a summary of the following, including as many key
+details as possible: {context}:"; the children's texts each on one line followed by a blank line;
+`max_tokens` 100, temperature 1 as the reference leaves it), the summaries are embedded with
+gte-small (`role=passage`) and become the next layer's nodes, until 11 or fewer nodes are left or
+5 layers are built. Each layer's clusters are saved before its calls (`layer<n>_clusters.json`),
+so a stopped build resumes from the ledger without re-clustering; before a layer's calls the
+stage stops if an upper bound of the total cost (ledger tokens at the output price, plus this
+layer's input tokens and 100 output tokens per call at list prices in the config) is over
+`max_usd` (20). Rows `L<layer>.<j>` in `summaries.jsonl` carry `children` (node ids) and
+`members` (every leaf record under the node, through all layers), so an expanded hit at any
+layer reaches records. Search is the collapsed tree, as for RAPTOR-tree; counters
+`raptor.level<n>_hits` per layer. Configs `raptor-full-expand.yaml`, `raptor-full-evidence.yaml`.
+
+Build (2026-11-09, 4.1 h, 33 min of it layer-1 clustering): 24,000 records → 4,547 → 567 → 107 →
+18 → 4 summary nodes (5 layers, mean 6.1 / 8.5 / 5.3 / 5.9 / 4.5 children, no node left out of
+every cluster), 5,243 gpt-4o-mini calls, 5.28 M input + 0.52 M output tokens, $1.11 at list prices,
+0 failures. 95 % of summaries stop at the 100-token cap mid-sentence (gpt-4o-mini writes longer
+than gpt-3.5-turbo; the paper reports 131 tokens on average, so its runs must have used a larger
+cap than the code's default), and an upper-layer summary often describes only its first children.
+Summary hits per query in the ranked lists, layers 1 / 2 / 3 / 4 / 5: practice-all expand 20.54 / 2.07 /
+0.41 / 0.06 / 0.01, evidence 27.11 / 2.83 / 0.53 / 0.07 / 0.01; dev-all expand 20.95 / 2.30 / 0.42 /
+0.03 / 0, evidence 28.96 / 3.15 / 0.58 / 0.05 / 0 (counters `raptor.level<n>_hits`).
+
+Deviations from the reference, on purpose: (1) leaves are the 24,000 records, not 100-token
+chunks (qrels are per record; 56.8 % of records exceed 100 tokens); (2) enc_a / gte-small vectors
+instead of OpenAI ada-002, so queries, records and summaries share one space; (3) `gpt-4o-mini`
+instead of `gpt-3.5-turbo` (not offered as a chat model on ELM); (4) UMAP gets `random_state` 224
+for repeatable clusters (which makes UMAP single-threaded); (5) nodes are tracked by row index
+instead of by vector equality (same result except for identical vectors; the corpus has one
+duplicate pair); (6) a too-large cluster of 11 nodes or fewer, or one equal to its whole input,
+is kept instead of clustered again (the reference would crash in UMAP or recurse forever);
+(7) an API error is retried, not stored as the summary. Where the paper and the code differ,
+only the system message does: we use the paper's (the code has "You are a helpful assistant.").

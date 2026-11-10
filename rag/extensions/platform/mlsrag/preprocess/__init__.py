@@ -1,12 +1,13 @@
 """Preprocessing pipelines. `topics`: select -> cluster -> label -> topic_index.
 `toc` and `raptor` share the `topics` stages and folder, so they reuse them:
 `toc`: select -> cluster -> label -> section -> toc_index; `raptor`: select -> cluster -> summarise -> summary_index.
-`raptor-tree`: select -> cluster -> label -> section -> soft_members -> summarise_full -> section_summarise -> tree_index."""
+`raptor-tree`: select -> cluster -> label -> section -> soft_members -> summarise_full -> section_summarise -> tree_index.
+`raptor-full` (plan 031, own folder): select -> raptor_build."""
 from pathlib import Path
 
 import yaml
 
-from . import cluster, label, section, select, summarise, summary_index, toc_index, topic_index, tree
+from . import cluster, label, raptor_full, section, select, summarise, summary_index, toc_index, topic_index, tree
 from .pipeline import Pipeline, Stage
 
 
@@ -50,8 +51,15 @@ def raptor_tree_pipeline(root=None) -> Pipeline:
     ], root=root)
 
 
+def raptor_full_pipeline(root=None) -> Pipeline:
+    return Pipeline("raptor-full", [
+        Stage("select", select.run),
+        Stage("raptor_build", raptor_full.build_run, inputs=["select"]),
+    ], root=root)
+
+
 PIPELINES = {"topics": topics_pipeline, "toc": toc_pipeline, "raptor": raptor_pipeline,
-             "raptor-tree": raptor_tree_pipeline}
+             "raptor-tree": raptor_tree_pipeline, "raptor-full": raptor_full_pipeline}
 
 
 def load_pipeline_config(path) -> dict:

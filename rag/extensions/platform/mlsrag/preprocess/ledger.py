@@ -60,13 +60,15 @@ def tokens_so_far(trace) -> dict:
     return {k: sum(v[k] for v in trace.cost.values()) for k in ("prompt_tokens", "completion_tokens")}
 
 
-def run_items(items, ctx, model, build_prompt, parse, max_tokens=None) -> dict:
+def run_items(items, ctx, model, build_prompt, parse, max_tokens=None, system=None, temperature=0.0,
+              retry_tag=False) -> dict:
     """One chat call per item not yet `ok` in ctx.out_dir/ledger.jsonl; returns {item_id: output}.
 
     `items`: {item_id: data}. `build_prompt(data, attempt)` makes the prompt (attempt > 0 on a
     retry, so the gateway does not return the cached bad reply); `parse(reply)` raises on a bad one.
     A failure is recorded and the item retried on the next run; if any item is not `ok` at the end,
-    ItemsFailed.
+    ItemsFailed. `system`, if given, goes before the prompt as a system message. With `retry_tag`, a
+    retry keeps the prompt and passes tag=retry<attempt> instead, so the gateway cache key still changes.
     """
     import hashlib
     import time
@@ -86,8 +88,9 @@ def run_items(items, ctx, model, build_prompt, parse, max_tokens=None) -> dict:
         before = tokens_so_far(ctx.trace)
         start = time.perf_counter()
         try:
-            reply = ctx.gateway.chat(model, [{"role": "user", "content": prompt}], temperature=0.0,
-                                     max_tokens=max_tokens)
+            messages = ([{"role": "system", "content": system}] if system else []) + [{"role": "user", "content": prompt}]
+            tag = {"tag": f"retry{attempts.get(item_id, 0)}"} if retry_tag and attempts.get(item_id) else {}
+            reply = ctx.gateway.chat(model, messages, temperature=temperature, max_tokens=max_tokens, **tag)
             output, status, error = parse(reply), "ok", None
         except Exception as err:  # recorded and retried on the next run
             output, status, error = None, "failed", f"{type(err).__name__}: {err}"

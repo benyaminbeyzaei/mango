@@ -54,6 +54,11 @@
   `v2`: nearest records, distinct names) and of the RAPTOR-tree summaries, next to the Llama builds;
   smoke rows for the four TOC routes and both RAPTOR-tree modes, full-split rows for RAPTOR-tree;
   US$1.59 for 711 build calls.
+- 031: `raptor-full`, a faithful RAPTOR (reference code ported: UMAP + GMM/BIC soft clustering,
+  global/local, 3,500-token re-clustering, 5 layers, the paper's prompt, `max_tokens` 100) on the
+  24,000 records with gpt-4o-mini: 5,243 summaries (4,547 / 567 / 107 / 18 / 4), $1.11, 4.1 h build;
+  matrix A rows on smoke and both full splits (below the baseline; README). Each copied value cites
+  its reference file:line in `preprocess/raptor_full.py`; deviations in `docs/pipelines.md`.
 
 ## Open items
 

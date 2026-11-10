@@ -561,6 +561,34 @@
           0.5236338503418148
         ]
       }
+    },
+    {
+      "run": "20261110-0014-raptor-full-expand-practice-smoke20",
+      "config": "raptor-full-expand",
+      "Recall@5": 0.375,
+      "Recall@10": 0.4583333333333333,
+      "Recall@20": 0.5249999999999999,
+      "Recall@100": 0.7958333333333333,
+      "MRR@10": 0.4666666666666666,
+      "NDCG@10": 0.37876128972773626,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 112.43156470300164,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.2833333333333333,
+          0.6333333333333333
+        ],
+        "NDCG@10": [
+          0.23174850094256627,
+          0.5169426978795268
+        ]
+      }
     }
   ]
 }

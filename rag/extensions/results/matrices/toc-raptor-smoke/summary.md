@@ -18,3 +18,5 @@
 | 20261109-1956-toc-llm-flat-m4-gpt5labels-practice-smoke20 | toc-llm-flat-m4-gpt5labels | 0.263 | 0.300 [0.150, 0.450] | 0.329 | 0.396 | 0.333 | 0.250 [0.130, 0.373] | - | - | - | - | 6543.1 | 1.000 | 13126.5 | True |
 | 20261109-1958-raptor-tree-gpt5-expand-practice-smoke20 | raptor-tree-gpt5-expand | 0.404 | 0.475 [0.316, 0.642] | 0.550 | 0.779 | 0.479 | 0.387 [0.244, 0.531] | - | - | - | - | 1036.4 | 0.000 | 0.000 | True |
 | 20261109-1958-raptor-tree-gpt5-evidence-practice-smoke20 | raptor-tree-gpt5-evidence | 0.404 | 0.475 [0.316, 0.642] | 0.550 | 0.779 | 0.479 | 0.385 [0.244, 0.524] | - | - | - | - | 945.0 | 0.000 | 0.000 | True |
+| 20261110-0014-raptor-full-expand-practice-smoke20 | raptor-full-expand | 0.375 | 0.458 [0.283, 0.633] | 0.525 | 0.796 | 0.467 | 0.379 [0.232, 0.517] | - | - | - | - | 112.4 | 0.000 | 0.000 | True |
+| 20261110-0014-raptor-full-evidence-practice-smoke20 | raptor-full-evidence | 0.346 | 0.467 [0.300, 0.642] | 0.500 | 0.779 | 0.415 | 0.347 [0.204, 0.482] | - | - | - | - | 112.5 | 0.000 | 0.000 | True |
