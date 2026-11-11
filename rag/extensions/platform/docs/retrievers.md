@@ -165,6 +165,19 @@ patterns per round are in `artifacts.patterns`. Tokens come from the gateway's `
 only new calls (a rerun from the cache costs 0). The prompts are fixed (`VERSION = "grep_v1"`,
 passed to the gateway as `tag` so it enters the cache key); do not tune them on the dev split.
 
+## Cross-encoder rerank (plan 032)
+
+Configs `configs/rerank-<minilm|bge>-p<20|50|100>.yaml` and `configs/rerank-best.yaml` (the setting chosen on
+practice-all). `retriever: rerank` wraps another retriever (`params.base`, default `exact`): it asks it for the
+top `params.pool` records, scores each (transcript, record text) pair with a local
+`sentence_transformers.CrossEncoder` (`params.model`, pinned `params.revision`) on CPU, and returns the pool in
+the new order followed by the rest of the base ranking unchanged, so Recall@100 equals the base retriever's.
+The call goes through `gateway.rerank` (timed, cached on model + revision + query + text hashes, skipped
+cache read with `--fresh`). Pairs longer than 512 tokens are truncated; the trace counts them
+(`rerank.truncated` of `rerank.pool`). The `rerank` span sits inside `retrieve`; `latency_ms.rerank` reports it
+separately (`latency_ms.retrieve` includes it). Models are downloaded once to `rag/.cache/hf/`
+(ms-marco-MiniLM-L-6-v2: 88 MB, bge-reranker-base: 1.1 GB).
+
 ## Adding a retriever or a flow
 
 A new retriever is a class with `search(query_vec, k)` (with `uses_question = True` it also gets

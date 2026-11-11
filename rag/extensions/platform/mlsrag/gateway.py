@@ -2,7 +2,8 @@
 
 Each call gets a span on the current trace, its cost (from the API usage), a line in
 rag/.cache/gateway.log.jsonl and a disk cache entry, so an identical call is free next time.
-With fresh=True, chat and embed skip the cache read (but still write), so latency and cost are real.
+With fresh=True, chat, embed and rerank skip the cache read, so latency and cost are real; an existing
+cache file is never rewritten (the cache is shared between checkouts), so a fresh call only adds new ones.
 transcribe has its own fresh argument, so `run --fresh` keeps whisper cached.
 """
 import hashlib
@@ -29,6 +30,8 @@ RETRIES = 3
 _remote_slots = threading.Semaphore(4)  # at most 4 concurrent ELM requests per process
 _log_lock = threading.Lock()
 _encoders = {}  # name -> loaded SentenceTransformer, shared by all gateways
+_rerankers = {}  # (model, revision) -> loaded CrossEncoder
+RERANK_MAX_LENGTH = 512  # tokens per (query, record) pair; longer pairs are truncated by the tokenizer
 
 
 def _should_retry(err):
@@ -50,6 +53,8 @@ def cache_get(cache_dir, key):
 
 def cache_put(cache_dir, key, result):
     path = Path(cache_dir) / f"{key}.json"
+    if path.exists():  # keep the first result: the cache is shared, files are only ever added
+        return
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
     tmp.write_text(json.dumps(result), encoding="utf-8")
@@ -170,6 +175,41 @@ class ModelGateway:
                 cache_put(self.cache_dir, key, result)
         self._record("embed", encoder_name, key, span, result, cached, retries, sizes, remote=False)
         return np.asarray(result["vectors"], dtype=np.float32)
+
+    def reranker(self, model, revision=None):
+        """Load a local sentence-transformers CrossEncoder once per process (CPU)."""
+        if (model, revision) not in _rerankers:
+            from sentence_transformers import CrossEncoder
+
+            _rerankers[model, revision] = CrossEncoder(
+                model, revision=revision, max_length=RERANK_MAX_LENGTH, device="cpu",
+                cache_folder=str(paths.cache_dir / "hf"),
+            )
+        return _rerankers[model, revision]
+
+    def rerank(self, model, query, texts, revision=None) -> tuple[list[float], int]:
+        """(one relevance score per text, how many (query, text) pairs were longer than RERANK_MAX_LENGTH
+        tokens and so truncated). The cache key holds the model, revision, query and the texts' hashes."""
+
+        def call():
+            encoder = self.reranker(model, revision)
+            lengths = [len(encoder.tokenizer(query, t)["input_ids"]) for t in texts]
+            scores = encoder.predict([(query, t) for t in texts], show_progress_bar=False) if texts else []
+            return {"scores": [float(s) for s in scores],
+                    "truncated": sum(n > RERANK_MAX_LENGTH for n in lengths)}
+
+        sizes = {"n_texts": len(texts)}
+        hashes = [hashlib.sha256(t.encode()).hexdigest() for t in texts]
+        key = cache_key("rerank", model, {"revision": revision, "query": query, "texts": hashes})
+        with self._trace().span("gateway.rerank", model=model, **sizes) as span:
+            result = None if self.fresh else cache_get(self.cache_dir, key)
+            retries = 0
+            cached = result is not None
+            if not cached:
+                result, retries = with_retries(call, self._failure_log("rerank", model, key, sizes))
+                cache_put(self.cache_dir, key, result)
+        self._record("rerank", model, key, span, result, cached, retries, sizes, remote=False)
+        return result["scores"], result["truncated"]
 
     def transcribe(self, audio_path, model="whisper-1", fresh=False) -> str:
         audio_path = Path(audio_path)

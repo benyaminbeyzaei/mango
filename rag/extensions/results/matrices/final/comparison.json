@@ -1,0 +1,1143 @@
+{
+  "rows": [
+    "baseline",
+    "rerank-best",
+    "raptor-tree-gpt5-evidence"
+  ],
+  "build_cost": {
+    "baseline": "none",
+    "rerank-best": "one-time download of the local cross-encoder (ms-marco-MiniLM-L-6-v2: 88 MB on disk, bge-reranker-base: 1.1 GB); no API calls",
+    "raptor-tree-gpt5-evidence": "gpt-5-mini summaries of the two-level tree: US$1.46, 439 calls (plan 030)"
+  },
+  "splits": {
+    "practice-all": {
+      "baseline": {
+        "run": "20261111-0105-baseline-practice-all",
+        "n": 350,
+        "Recall@5": {
+          "mean": 0.4283372500515358,
+          "ci95": [
+            0.38725684910327773,
+            0.46769106885178313
+          ]
+        },
+        "Recall@10": {
+          "mean": 0.4847571634714492,
+          "ci95": [
+            0.4433419140383426,
+            0.5263950525664811
+          ]
+        },
+        "Recall@100": {
+          "mean": 0.7680191713048855,
+          "ci95": [
+            0.7321035250463822,
+            0.8002026437847866
+          ]
+        },
+        "MRR@10": {
+          "mean": 0.4927108843537415,
+          "ci95": [
+            0.44625929705215417,
+            0.536564909297052
+          ]
+        },
+        "NDCG@10": {
+          "mean": 0.4247973501905161,
+          "ci95": [
+            0.38527960380079346,
+            0.4620978716880195
+          ]
+        },
+        "latency_ms": {
+          "asr": {
+            "mean": 0.022687708593106697,
+            "median": 0.022365013137459755
+          },
+          "encode": {
+            "mean": 136.90387170978025,
+            "median": 100.67994246492162
+          },
+          "dense_retrieve": {
+            "mean": 6.190548404452524,
+            "median": 6.0954314831178635
+          },
+          "rerank": null,
+          "generate": null,
+          "end_to_end": {
+            "mean": 143.2793334202974,
+            "median": 108.72721098712645
+          }
+        },
+        "per_question": {
+          "llm_calls": 0.0,
+          "prompt_tokens": 0.0,
+          "completion_tokens": 0.0
+        }
+      },
+      "rerank-best": {
+        "run": "20261111-0105-rerank-best-practice-all",
+        "n": 350,
+        "Recall@5": {
+          "mean": 0.4178315811172954,
+          "ci95": [
+            0.3774891001855287,
+            0.4607862657184086
+          ]
+        },
+        "Recall@10": {
+          "mean": 0.5090791589363017,
+          "ci95": [
+            0.4661399041434755,
+            0.5485586116264688
+          ]
+        },
+        "Recall@100": {
+          "mean": 0.7680191713048855,
+          "ci95": [
+            0.7321035250463822,
+            0.8002026437847866
+          ]
+        },
+        "MRR@10": {
+          "mean": 0.46994897959183674,
+          "ci95": [
+            0.4235667517006803,
+            0.5126314625850339
+          ]
+        },
+        "NDCG@10": {
+          "mean": 0.4178253481889833,
+          "ci95": [
+            0.3800595287610892,
+            0.4541333252927449
+          ]
+        },
+        "latency_ms": {
+          "asr": {
+            "mean": 0.02588424166398389,
+            "median": 0.025455490685999393
+          },
+          "encode": {
+            "mean": 29.379254575386376,
+            "median": 23.723008489469066
+          },
+          "dense_retrieve": {
+            "mean": 5.9662207460496575,
+            "median": 5.8344869466964155
+          },
+          "rerank": {
+            "mean": 1250.0420355520744,
+            "median": 1362.8167514689267
+          },
+          "generate": null,
+          "end_to_end": {
+            "mean": 1285.5541090018648,
+            "median": 1395.9245739970356
+          }
+        },
+        "per_question": {
+          "llm_calls": 0.0,
+          "prompt_tokens": 0.0,
+          "completion_tokens": 0.0
+        }
+      },
+      "raptor-tree-gpt5-evidence": {
+        "run": "20261111-0113-raptor-tree-gpt5-evidence-practice-all",
+        "n": 350,
+        "Recall@5": {
+          "mean": 0.4283372500515358,
+          "ci95": [
+            0.38725684910327773,
+            0.46769106885178313
+          ]
+        },
+        "Recall@10": {
+          "mean": 0.4847571634714492,
+          "ci95": [
+            0.4433419140383426,
+            0.5263950525664811
+          ]
+        },
+        "Recall@100": {
+          "mean": 0.7680191713048855,
+          "ci95": [
+            0.7321035250463822,
+            0.8002026437847866
+          ]
+        },
+        "MRR@10": {
+          "mean": 0.4924410430839003,
+          "ci95": [
+            0.44575731292517007,
+            0.5361315192743764
+          ]
+        },
+        "NDCG@10": {
+          "mean": 0.4246295049759287,
+          "ci95": [
+            0.38524796880006584,
+            0.46181797057034424
+          ]
+        },
+        "latency_ms": {
+          "asr": {
+            "mean": 0.023116761918312738,
+            "median": 0.02302048960700631
+          },
+          "encode": {
+            "mean": 199.39417799552237,
+            "median": 101.78807252668776
+          },
+          "dense_retrieve": {
+            "mean": 7.330844777170569,
+            "median": 6.597327010240406
+          },
+          "rerank": null,
+          "generate": null,
+          "end_to_end": {
+            "mean": 207.05536151654087,
+            "median": 111.55617650365457
+          }
+        },
+        "per_question": {
+          "llm_calls": 0.0,
+          "prompt_tokens": 0.0,
+          "completion_tokens": 0.0
+        }
+      }
+    },
+    "dev-all": {
+      "baseline": {
+        "run": "20261111-0115-baseline-dev-all",
+        "n": 125,
+        "Recall@5": {
+          "mean": 0.38235457875457873,
+          "ci95": [
+            0.3154964835164836,
+            0.45733380952380953
+          ]
+        },
+        "Recall@10": {
+          "mean": 0.478785347985348,
+          "ci95": [
+            0.4092163003663004,
+            0.5582015384615384
+          ]
+        },
+        "Recall@100": {
+          "mean": 0.7274739926739927,
+          "ci95": [
+            0.6683363736263735,
+            0.7861190476190476
+          ]
+        },
+        "MRR@10": {
+          "mean": 0.46063174603174606,
+          "ci95": [
+            0.38355,
+            0.5404785714285713
+          ]
+        },
+        "NDCG@10": {
+          "mean": 0.4016262102970457,
+          "ci95": [
+            0.337978894106094,
+            0.4704018093136944
+          ]
+        },
+        "correctness": {
+          "mean": 2.568,
+          "ci95": [
+            2.2958,
+            2.8322
+          ]
+        },
+        "grounding": {
+          "mean": 2.792,
+          "ci95": [
+            2.52,
+            3.048
+          ]
+        },
+        "completeness": {
+          "mean": 2.88,
+          "ci95": [
+            2.624,
+            3.144
+          ]
+        },
+        "answer_norm": {
+          "mean": 0.6866666666666668,
+          "ci95": [
+            0.622,
+            0.7513333333333333
+          ]
+        },
+        "latency_ms": {
+          "asr": {
+            "mean": 0.03862921753898263,
+            "median": 0.03773800563067198
+          },
+          "encode": {
+            "mean": 43.35248358687386,
+            "median": 38.11506001511589
+          },
+          "dense_retrieve": {
+            "mean": 4.427197421900928,
+            "median": 4.081517981830984
+          },
+          "rerank": null,
+          "generate": {
+            "mean": 87000.62977897657,
+            "median": 73815.27256098343
+          },
+          "end_to_end": {
+            "mean": 87048.58869040849,
+            "median": 73858.15973300487
+          }
+        },
+        "per_question": {
+          "llm_calls": 1.0,
+          "prompt_tokens": 1148.936,
+          "completion_tokens": 2855.984
+        },
+        "judge_calls_per_question": 1.0
+      },
+      "rerank-best": {
+        "run": "20261111-0419-rerank-best-dev-all",
+        "n": 125,
+        "Recall@5": {
+          "mean": 0.3807604395604396,
+          "ci95": [
+            0.3139142857142857,
+            0.45292897435897433
+          ]
+        },
+        "Recall@10": {
+          "mean": 0.49549010989010994,
+          "ci95": [
+            0.42588545787545795,
+            0.5688140293040294
+          ]
+        },
+        "Recall@100": {
+          "mean": 0.7274739926739927,
+          "ci95": [
+            0.6683363736263735,
+            0.7861190476190476
+          ]
+        },
+        "MRR@10": {
+          "mean": 0.4423365079365079,
+          "ci95": [
+            0.3677798412698412,
+            0.5230973809523809
+          ]
+        },
+        "NDCG@10": {
+          "mean": 0.39346930059526875,
+          "ci95": [
+            0.3325138853079841,
+            0.46018677449210205
+          ]
+        },
+        "correctness": {
+          "mean": 2.432,
+          "ci95": [
+            2.144,
+            2.7122
+          ]
+        },
+        "grounding": {
+          "mean": 2.64,
+          "ci95": [
+            2.352,
+            2.9202
+          ]
+        },
+        "completeness": {
+          "mean": 2.68,
+          "ci95": [
+            2.4,
+            2.952
+          ]
+        },
+        "answer_norm": {
+          "mean": 0.646,
+          "ci95": [
+            0.5766666666666667,
+            0.7140166666666666
+          ]
+        },
+        "latency_ms": {
+          "asr": {
+            "mean": 0.039926928002387285,
+            "median": 0.03916799323633313
+          },
+          "encode": {
+            "mean": 40.327406791970134,
+            "median": 38.00196200609207
+          },
+          "dense_retrieve": {
+            "mean": 5.49570751003921,
+            "median": 4.9960229662247
+          },
+          "rerank": {
+            "mean": 882.5951174702495,
+            "median": 913.9822449651547
+          },
+          "generate": {
+            "mean": 84354.04065748026,
+            "median": 73502.11360998219
+          },
+          "end_to_end": {
+            "mean": 85282.6618125043,
+            "median": 74235.69849901833
+          }
+        },
+        "per_question": {
+          "llm_calls": 1.0,
+          "prompt_tokens": 1290.728,
+          "completion_tokens": 3019.24
+        },
+        "judge_calls_per_question": 1.0
+      },
+      "raptor-tree-gpt5-evidence": {
+        "run": "20261111-0719-raptor-tree-gpt5-evidence-dev-all",
+        "n": 125,
+        "Recall@5": {
+          "mean": 0.38235457875457873,
+          "ci95": [
+            0.3154964835164836,
+            0.45733380952380953
+          ]
+        },
+        "Recall@10": {
+          "mean": 0.476785347985348,
+          "ci95": [
+            0.4085192673992674,
+            0.5555986813186812
+          ]
+        },
+        "Recall@100": {
+          "mean": 0.7274739926739927,
+          "ci95": [
+            0.6683363736263735,
+            0.7861190476190476
+          ]
+        },
+        "MRR@10": {
+          "mean": 0.4604095238095238,
+          "ci95": [
+            0.38330722222222224,
+            0.5404757936507936
+          ]
+        },
+        "NDCG@10": {
+          "mean": 0.40049249106830626,
+          "ci95": [
+            0.33603326026269814,
+            0.46968711533250734
+          ]
+        },
+        "correctness": {
+          "mean": 2.568,
+          "ci95": [
+            2.28,
+            2.84
+          ]
+        },
+        "grounding": {
+          "mean": 2.824,
+          "ci95": [
+            2.5598,
+            3.096
+          ]
+        },
+        "completeness": {
+          "mean": 2.888,
+          "ci95": [
+            2.632,
+            3.144
+          ]
+        },
+        "answer_norm": {
+          "mean": 0.69,
+          "ci95": [
+            0.6253333333333334,
+            0.7553333333333334
+          ]
+        },
+        "latency_ms": {
+          "asr": {
+            "mean": 0.03979833656921983,
+            "median": 0.03789295442402363
+          },
+          "encode": {
+            "mean": 52.970142904203385,
+            "median": 38.02725800778717
+          },
+          "dense_retrieve": {
+            "mean": 5.92568675102666,
+            "median": 5.34988398430869
+          },
+          "rerank": null,
+          "generate": {
+            "mean": 90033.15125874152,
+            "median": 79929.6479379991
+          },
+          "end_to_end": {
+            "mean": 90092.23088005511,
+            "median": 79970.13263497502
+          }
+        },
+        "per_question": {
+          "llm_calls": 1.0,
+          "prompt_tokens": 1156.08,
+          "completion_tokens": 2929.784
+        },
+        "judge_calls_per_question": 1.0
+      },
+      "paired_vs_baseline": {
+        "rerank-best": {
+          "questions": 125,
+          "context_differs": 125,
+          "all": {
+            "correctness": {
+              "mean": -0.136,
+              "ci95": [
+                -0.384,
+                0.088
+              ]
+            },
+            "grounding": {
+              "mean": -0.152,
+              "ci95": [
+                -0.368,
+                0.05619999999999982
+              ]
+            },
+            "completeness": {
+              "mean": -0.2,
+              "ci95": [
+                -0.416,
+                0.016
+              ]
+            },
+            "answer_norm": {
+              "mean": -0.04066666666666667,
+              "ci95": [
+                -0.09466666666666669,
+                0.011333333333333332
+              ]
+            }
+          },
+          "differing": {
+            "correctness": {
+              "mean": -0.136,
+              "ci95": [
+                -0.384,
+                0.088
+              ]
+            },
+            "grounding": {
+              "mean": -0.152,
+              "ci95": [
+                -0.368,
+                0.05619999999999982
+              ]
+            },
+            "completeness": {
+              "mean": -0.2,
+              "ci95": [
+                -0.416,
+                0.016
+              ]
+            },
+            "answer_norm": {
+              "mean": -0.04066666666666667,
+              "ci95": [
+                -0.09466666666666669,
+                0.011333333333333332
+              ]
+            }
+          }
+        },
+        "raptor-tree-gpt5-evidence": {
+          "questions": 125,
+          "context_differs": 10,
+          "all": {
+            "correctness": {
+              "mean": 0.0,
+              "ci95": [
+                -0.20819999999999997,
+                0.208
+              ]
+            },
+            "grounding": {
+              "mean": 0.032,
+              "ci95": [
+                -0.14419999999999997,
+                0.2081999999999998
+              ]
+            },
+            "completeness": {
+              "mean": 0.008,
+              "ci95": [
+                -0.2,
+                0.24
+              ]
+            },
+            "answer_norm": {
+              "mean": 0.0033333333333333314,
+              "ci95": [
+                -0.044666666666666674,
+                0.050683333333333316
+              ]
+            }
+          },
+          "differing": {
+            "correctness": {
+              "mean": 0.4,
+              "ci95": [
+                -0.2,
+                1.3
+              ]
+            },
+            "grounding": {
+              "mean": 0.5,
+              "ci95": [
+                -0.2,
+                1.4024999999999976
+              ]
+            },
+            "completeness": {
+              "mean": 0.5,
+              "ci95": [
+                -0.4,
+                1.6
+              ]
+            },
+            "answer_norm": {
+              "mean": 0.11666666666666667,
+              "ci95": [
+                -0.06666666666666667,
+                0.35041666666666627
+              ]
+            }
+          }
+        }
+      },
+      "summary_evidence": {
+        "any": 10,
+        "topic": 10,
+        "section": 0
+      }
+    }
+  },
+  "reranker_selection": {
+    "rule": "highest NDCG@10 on practice-all; within 0.005 of the best, the lowest mean latency",
+    "chosen": "rerank-minilm-p20",
+    "settings": [
+      {
+        "config": "baseline",
+        "run": "20261110-1934-baseline-practice-all",
+        "n": 350,
+        "Recall@5": {
+          "mean": 0.4283372500515358,
+          "ci95": [
+            0.38725684910327773,
+            0.46769106885178313
+          ]
+        },
+        "Recall@10": {
+          "mean": 0.4847571634714492,
+          "ci95": [
+            0.4433419140383426,
+            0.5263950525664811
+          ]
+        },
+        "Recall@100": {
+          "mean": 0.7680191713048855,
+          "ci95": [
+            0.7321035250463822,
+            0.8002026437847866
+          ]
+        },
+        "MRR@10": {
+          "mean": 0.4927108843537415,
+          "ci95": [
+            0.44625929705215417,
+            0.536564909297052
+          ]
+        },
+        "NDCG@10": {
+          "mean": 0.4247973501905161,
+          "ci95": [
+            0.38527960380079346,
+            0.4620978716880195
+          ]
+        },
+        "latency_ms": {
+          "asr": {
+            "mean": 0.022733654394479736,
+            "median": 0.02233352279290557
+          },
+          "encode": {
+            "mean": 109.3078686079077,
+            "median": 105.42896302649751
+          },
+          "dense_retrieve": {
+            "mean": 4.78197886957787,
+            "median": 4.543883522273973
+          },
+          "rerank": null,
+          "generate": null,
+          "end_to_end": {
+            "mean": 114.24570904795213,
+            "median": 110.10934648220427
+          }
+        },
+        "per_question": {
+          "llm_calls": 0.0,
+          "prompt_tokens": 0.0,
+          "completion_tokens": 0.0
+        },
+        "relevant_pushed_out": 0,
+        "questions_losing": 0,
+        "relevant_pulled_in": 0,
+        "questions_gaining": 0,
+        "pairs_truncated": "0/0"
+      },
+      {
+        "config": "rerank-minilm-p20",
+        "run": "20261110-1935-rerank-minilm-p20-practice-all",
+        "n": 350,
+        "Recall@5": {
+          "mean": 0.4178315811172954,
+          "ci95": [
+            0.3774891001855287,
+            0.4607862657184086
+          ]
+        },
+        "Recall@10": {
+          "mean": 0.5090791589363017,
+          "ci95": [
+            0.4661399041434755,
+            0.5485586116264688
+          ]
+        },
+        "Recall@100": {
+          "mean": 0.7680191713048855,
+          "ci95": [
+            0.7321035250463822,
+            0.8002026437847866
+          ]
+        },
+        "MRR@10": {
+          "mean": 0.46994897959183674,
+          "ci95": [
+            0.4235667517006803,
+            0.5126314625850339
+          ]
+        },
+        "NDCG@10": {
+          "mean": 0.4178253481889833,
+          "ci95": [
+            0.3800595287610892,
+            0.4541333252927449
+          ]
+        },
+        "latency_ms": {
+          "asr": {
+            "mean": 0.019084085277946933,
+            "median": 0.0189170241355896
+          },
+          "encode": {
+            "mean": 43.16534882211791,
+            "median": 28.547309018904343
+          },
+          "dense_retrieve": {
+            "mean": 5.137213131279817,
+            "median": 4.827528988244012
+          },
+          "rerank": {
+            "mean": 1595.632178723546,
+            "median": 1629.264893999789
+          },
+          "generate": null,
+          "end_to_end": {
+            "mean": 1644.0727977639265,
+            "median": 1664.7221919847652
+          }
+        },
+        "per_question": {
+          "llm_calls": 0.0,
+          "prompt_tokens": 0.0,
+          "completion_tokens": 0.0
+        },
+        "relevant_pushed_out": 61,
+        "questions_losing": 55,
+        "relevant_pulled_in": 50,
+        "questions_gaining": 44,
+        "pairs_truncated": "694/7000"
+      },
+      {
+        "config": "rerank-minilm-p50",
+        "run": "20261110-1944-rerank-minilm-p50-practice-all",
+        "n": 350,
+        "Recall@5": {
+          "mean": 0.40000845186559475,
+          "ci95": [
+            0.3587605854462997,
+            0.4413261956297671
+          ]
+        },
+        "Recall@10": {
+          "mean": 0.49446011131725415,
+          "ci95": [
+            0.4539667748917749,
+            0.5342971706864563
+          ]
+        },
+        "Recall@100": {
+          "mean": 0.7680191713048855,
+          "ci95": [
+            0.7321035250463822,
+            0.8002026437847866
+          ]
+        },
+        "MRR@10": {
+          "mean": 0.4568412698412698,
+          "ci95": [
+            0.41121825396825396,
+            0.4992719387755102
+          ]
+        },
+        "NDCG@10": {
+          "mean": 0.40417247475604656,
+          "ci95": [
+            0.36765807366350595,
+            0.43873519704834474
+          ]
+        },
+        "latency_ms": {
+          "asr": {
+            "mean": 0.018597786215000918,
+            "median": 0.018087506759911776
+          },
+          "encode": {
+            "mean": 44.542539248276235,
+            "median": 27.080678497441113
+          },
+          "dense_retrieve": {
+            "mean": 4.458306187298149,
+            "median": 4.361219005659223
+          },
+          "rerank": {
+            "mean": 2998.740614443086,
+            "median": 2949.8781060392503
+          },
+          "generate": null,
+          "end_to_end": {
+            "mean": 3047.879899737891,
+            "median": 2983.7247984833084
+          }
+        },
+        "per_question": {
+          "llm_calls": 0.0,
+          "prompt_tokens": 0.0,
+          "completion_tokens": 0.0
+        },
+        "relevant_pushed_out": 75,
+        "questions_losing": 66,
+        "relevant_pulled_in": 48,
+        "questions_gaining": 46,
+        "pairs_truncated": "1708/17500"
+      },
+      {
+        "config": "rerank-minilm-p100",
+        "run": "20261110-2002-rerank-minilm-p100-practice-all",
+        "n": 350,
+        "Recall@5": {
+          "mean": 0.39136219336219336,
+          "ci95": [
+            0.35016654298082867,
+            0.4333983972376829
+          ]
+        },
+        "Recall@10": {
+          "mean": 0.4858886827458256,
+          "ci95": [
+            0.44273106060606066,
+            0.5259875850340135
+          ]
+        },
+        "Recall@100": {
+          "mean": 0.7680191713048855,
+          "ci95": [
+            0.7321035250463822,
+            0.8002026437847866
+          ]
+        },
+        "MRR@10": {
+          "mean": 0.4554365079365079,
+          "ci95": [
+            0.41106952947845804,
+            0.4977227040816327
+          ]
+        },
+        "NDCG@10": {
+          "mean": 0.4005657549123526,
+          "ci95": [
+            0.36296107126256644,
+            0.4361947275568526
+          ]
+        },
+        "latency_ms": {
+          "asr": {
+            "mean": 0.018963015671553358,
+            "median": 0.018683000234887004
+          },
+          "encode": {
+            "mean": 27.918357011097083,
+            "median": 26.835125492652878
+          },
+          "dense_retrieve": {
+            "mean": 3.663244802238686,
+            "median": 2.97753099584952
+          },
+          "rerank": {
+            "mean": 4465.97818701844,
+            "median": 4439.617332507623
+          },
+          "generate": null,
+          "end_to_end": {
+            "mean": 4497.6920971713425,
+            "median": 4468.679915502435
+          }
+        },
+        "per_question": {
+          "llm_calls": 0.0,
+          "prompt_tokens": 0.0,
+          "completion_tokens": 0.0
+        },
+        "relevant_pushed_out": 81,
+        "questions_losing": 72,
+        "relevant_pulled_in": 46,
+        "questions_gaining": 44,
+        "pairs_truncated": "3281/35000"
+      },
+      {
+        "config": "rerank-bge-p20",
+        "run": "20261110-2028-rerank-bge-p20-practice-all",
+        "n": 350,
+        "Recall@5": {
+          "mean": 0.37484065141207995,
+          "ci95": [
+            0.3362792723149866,
+            0.41326691403834265
+          ]
+        },
+        "Recall@10": {
+          "mean": 0.4847355184498041,
+          "ci95": [
+            0.44157458771387337,
+            0.5253837868480724
+          ]
+        },
+        "Recall@100": {
+          "mean": 0.7680191713048855,
+          "ci95": [
+            0.7321035250463822,
+            0.8002026437847866
+          ]
+        },
+        "MRR@10": {
+          "mean": 0.414266439909297,
+          "ci95": [
+            0.3733981292517007,
+            0.45443772675736965
+          ]
+        },
+        "NDCG@10": {
+          "mean": 0.37600235943148036,
+          "ci95": [
+            0.3401897118517062,
+            0.411059098026588
+          ]
+        },
+        "latency_ms": {
+          "asr": {
+            "mean": 0.019918537332809398,
+            "median": 0.01950500882230699
+          },
+          "encode": {
+            "mean": 36.35453842347488,
+            "median": 28.662267024628818
+          },
+          "dense_retrieve": {
+            "mean": 4.911378632532433,
+            "median": 4.651483497582376
+          },
+          "rerank": {
+            "mean": 9658.098049603868,
+            "median": 9933.01602799329
+          },
+          "generate": null,
+          "end_to_end": {
+            "mean": 9699.5069751511,
+            "median": 9969.807496003341
+          }
+        },
+        "per_question": {
+          "llm_calls": 0.0,
+          "prompt_tokens": 0.0,
+          "completion_tokens": 0.0
+        },
+        "relevant_pushed_out": 83,
+        "questions_losing": 73,
+        "relevant_pulled_in": 47,
+        "questions_gaining": 43,
+        "pairs_truncated": "837/7000"
+      },
+      {
+        "config": "rerank-bge-p50",
+        "run": "20261110-2125-rerank-bge-p50-practice-all",
+        "n": 350,
+        "Recall@5": {
+          "mean": 0.34436672850958566,
+          "ci95": [
+            0.3050872139764997,
+            0.3838103586889301
+          ]
+        },
+        "Recall@10": {
+          "mean": 0.43620593692022264,
+          "ci95": [
+            0.39605264378478666,
+            0.478237863327149
+          ]
+        },
+        "Recall@100": {
+          "mean": 0.7680191713048855,
+          "ci95": [
+            0.7321035250463822,
+            0.8002026437847866
+          ]
+        },
+        "MRR@10": {
+          "mean": 0.38484353741496596,
+          "ci95": [
+            0.3423427154195011,
+            0.4273359410430839
+          ]
+        },
+        "NDCG@10": {
+          "mean": 0.3407915095451918,
+          "ci95": [
+            0.30554475880848875,
+            0.37558813290983983
+          ]
+        },
+        "latency_ms": {
+          "asr": {
+            "mean": 0.019949587294831872,
+            "median": 0.01825799699872732
+          },
+          "encode": {
+            "mean": 31.084533285216562,
+            "median": 30.32885550055653
+          },
+          "dense_retrieve": {
+            "mean": 3.7212142752416963,
+            "median": 2.7596899890340865
+          },
+          "rerank": {
+            "mean": 18323.228802440986,
+            "median": 18359.456976497313
+          },
+          "generate": null,
+          "end_to_end": {
+            "mean": 18358.17141867908,
+            "median": 18397.02414700878
+          }
+        },
+        "per_question": {
+          "llm_calls": 0.0,
+          "prompt_tokens": 0.0,
+          "completion_tokens": 0.0
+        },
+        "relevant_pushed_out": 106,
+        "questions_losing": 90,
+        "relevant_pulled_in": 46,
+        "questions_gaining": 42,
+        "pairs_truncated": "2037/17500"
+      }
+    ]
+  },
+  "explanations": [
+    {
+      "observation": "Reranking lowers Recall@5, MRR@10 and NDCG@10 on practice-all for every setting (best: MiniLM pool 20, NDCG@10 0.418 vs baseline 0.425; MRR@10 0.470 vs 0.493) and on dev-all (NDCG@10 0.393 vs 0.402, MRR@10 0.442 vs 0.461), while Recall@10 rises slightly (practice 0.509 vs 0.485, dev 0.495 vs 0.479).",
+      "likely_cause": "The MS MARCO-trained cross-encoder prefers records that repeat the transcript's words or give a general on-topic answer, while the qrels label the answers from the original forum thread. It moves labelled records down within the top 10 (hurting rank-sensitive metrics) and brings some up from ranks 11-20 (helping Recall@10). Many promoted records look relevant but are unlabelled, so part of the loss may be in the labels and not real.",
+      "evidence": "MiniLM p20 on practice-all: 61 relevant records pushed out of the top 5 (55 questions) vs 50 pulled in (44 questions); NDCG@10 worse in 97 questions, better in 78, unchanged in 175. In 10 inspected cases the promoted records were: plausibly relevant but unlabelled in 4 (e.g. 'initial stock price at market opening': overnight price gaps promoted over an IPO-pricing answer; the transcript is ambiguous), another relevant record in 1, and on-topic but generic or surface-word matches missing the specific point in 5 (e.g. 'tax for MLPs in a Roth IRA': a generic Roth IRA answer without MLPs; 'flights to an overseas seminar': a foreign-income answer). No near-duplicates: median enc_a cosine between promoted and demoted records is 0.85, the same as a relevant record and any other top-20 record (0.85); only 6.6 % of pairs are above 0.9.",
+      "confidence": "medium: the counts are measured; the claim that the model favours word overlap and that the labels miss relevant records comes from reading 10 cases, not from a measurement"
+    },
+    {
+      "observation": "Larger pools and bge-reranker-base do worse: NDCG@10 on practice-all is 0.418 / 0.404 / 0.401 for MiniLM with pools 20 / 50 / 100, and 0.376 / 0.341 for bge with pools 20 / 50.",
+      "likely_cause": "Each extra candidate is one more record that can outrank a labelled one. Pushed-out records grow with the pool while pulled-in records stay flat, so a deeper pool adds distractors but few new hits. Why bge-reranker-base is worse than the smaller MiniLM is a guess: its training data or score calibration may fit this forum-answer corpus less well.",
+      "evidence": "Relevant records pushed out of / pulled into the top 5: MiniLM p20 61/50, p50 75/48, p100 81/46; bge p20 83/47, p50 106/46. NDCG@10 worse / better per question: MiniLM p100 111/77, bge p50 143/65.",
+      "confidence": "high for the pool trend (measured); low for why bge is worse (not tested)"
+    },
+    {
+      "observation": "Truncation at 512 tokens is not the main cause.",
+      "likely_cause": "Only about one pair in ten is truncated. Demoted relevant records are longer and truncated a little more often, so truncation may explain a small part of the loss.",
+      "evidence": "Pairs truncated: MiniLM p20 694/7000 (9.9 %), p100 9.4 %, bge p50 11.6 %; among the demoted relevant records 14.8 % (of 61), 12.3 % (of 81), 15.1 % (of 106). Median words: demoted relevant 170 (MiniLM p20), promoted non-relevant 149, all pool records 131.",
+      "confidence": "medium"
+    },
+    {
+      "observation": "No clear effect of query style (spoken transcripts).",
+      "likely_cause": "Not testable directly: the course data has no written version of the questions, only audio and its transcripts. By transcript length and phrasing there is no consistent pattern, so this check cannot show whether spoken phrasing hurts the reranker.",
+      "evidence": "Mean NDCG@10 change (MiniLM p20 minus baseline) by transcript length: 0-5 words +0.105 (n=6), 6-9 -0.014 (n=84), 10-14 -0.015 (n=176), 15+ +0.008 (n=84); transcripts ending in '?' -0.005 (n=301) vs not -0.019 (n=49). Questions that lost a relevant record have the same median transcript length (12 words) as the others.",
+      "confidence": "low"
+    },
+    {
+      "observation": "Answers with identical context still get different scores: the generator and judge together add noise as large as the effects being compared.",
+      "likely_cause": "Qwen at temperature 0.1 writes a different answer each run, and the judge (Mistral-Small-4, grounding checked against the gold documents, not the prompt) often scores near-identical answers 0/0/0 or 4/4/4. Scores are close to all-or-nothing.",
+      "evidence": "On the 115 dev questions where RAPTOR's context equals the baseline's, answer_norm changed in 58 (mean |difference| 0.144, sd 0.259, mean -0.007); correctness changed in 44, grounding in 38, completeness in 42. In each row 13-19 % of answers score all 0 and 42-46 % all 4 (baseline 17 / 53, rerank 24 / 57, RAPTOR 16 / 57 of 125).",
+      "confidence": "high"
+    },
+    {
+      "observation": "Reranking does not improve answers on dev-all: answer_norm 0.646 vs 0.687, paired difference -0.041 [-0.095, 0.011]; correctness -0.136 [-0.384, 0.088]. The interval includes 0. The context differs from the baseline's in all 125 questions (122 with a different set of five records, 3 reordered only).",
+      "likely_cause": "Mostly generation and judge noise around a small negative effect. A partial guess: reranked contexts contain more non-gold text (prompts are 12 % longer), the answer uses it, and the judge marks those claims unsupported because it compares with the gold documents.",
+      "evidence": "Mean answer_norm change by relevant records in the context: lost a relevant record -0.107 (n=14), gained one +0.062 (n=16), same count -0.048 (n=95). Prompt tokens 1,291 vs 1,149; completion tokens 3,019 vs 2,856; all-0 answers 24 vs 17. Examples: q_3b315cdea7a19bd1 ('why discuss high-dividend stocks', 3 relevant records in context became 1) went from 4/4/4 to 0/0/0, although both answers open with the same 'income and cash flow' point; q_b1e20f08cf71cb73 ('when do index funds lose reliability', no relevant record in either context) went from 4/4/4 to 0/0/0, which is judge noise; q_93443d5a05cd57c0 ('what does buying a share mean', gained a relevant record) went from 0/0/0 to 4/4/4 with a shorter answer about ownership and electronic records that matches the gold documents.",
+      "confidence": "medium that there is no measurable gain; low for the mechanism"
+    },
+    {
+      "observation": "Summaries as evidence (RAPTOR-tree, gpt-5-mini) leave retrieval and answers unchanged: dev answer_norm 0.690 vs 0.687, paired difference +0.003 [-0.045, 0.051]; on the 10 questions whose context differs, +0.117 [-0.067, 0.350].",
+      "likely_cause": "A summary reaches the top 5 in only 10 of 125 dev questions, and there it replaces the fifth-ranked record, never a relevant one. The summaries are broad topic overviews that list names and subjects, so they add little the records do not already give. The changes on those 10 questions look like judge noise rather than an effect of the summary.",
+      "evidence": "10 questions with a summary in the context, all topic level (t*), none section level; positions 0-4; no relevant baseline record was dropped. 7 of the 10 have identical scores. q_d96b734b2bc02b5a (UK personal finance software, summary t160 lists budgeting apps): 0/0/0 to 4/4/4, yet both answers name Lovemoney and Yodlee from a record (Document 5), and the judge's two explanations contradict each other about the gold evidence. q_de7f874a20167a15 (short-term trading resources, summary t233 lists books and courses): 0/0/0 to 1/2/3; the RAPTOR answer says the evidence lacks short-term-specific resources. q_e75812046abc116d (small IRA withdrawals, summary t78 lists IRA rules): 1/1/2 to 0/0/0; the judge says the gold evidence does not mention IRA withdrawals.",
+      "confidence": "medium"
+    },
+    {
+      "observation": "Cost: reranking adds about 1.25 s per question on CPU (10 cores, nice 19); generation dominates end-to-end time; summaries add no query-time cost.",
+      "likely_cause": "The cross-encoder runs 20 (query, record) pairs of up to 512 tokens on CPU, about 200 times the 6 ms dense search. Each Qwen answer spends about 2.9k completion tokens (mostly reasoning).",
+      "evidence": "practice-all R1 (rows one at a time, 10 cores): rerank 1,250 ms mean, dense search 6 ms, end-to-end 1,286 vs 143 ms (baseline) and 207 ms (RAPTOR). dev-all R2: generation 84-90 s mean per question, so the rerank's 0.9 s is about 1 % of end-to-end. One-time costs: RAPTOR-tree summaries US$1.46 and 439 calls (plan 030); reranker download 88 MB (MiniLM) or 1.1 GB (bge).",
+      "confidence": "high"
+    },
+    {
+      "observation": "On practice-all R1 the baseline's encode stage averaged 137 ms against 29 ms for the rerank row, with the same encoder.",
+      "likely_cause": "A guess: the laptop was in use for other work at the same time and the baseline row ran first (warm-up). On dev-all the three rows encode in 40-53 ms. It does not affect the conclusions; read the latency numbers as roughly \u00b10.1 s.",
+      "evidence": "Encode medians 101 / 24 / 102 ms on practice-all; means 43 / 40 / 53 ms on dev-all.",
+      "confidence": "low"
+    }
+  ],
+  "cpu_limit": {
+    "reranker_selection": "6 cores (taskset -c 0-5), nice 19, OMP/MKL threads 6",
+    "final_runs": "10 cores (taskset -c 0-9), nice 19, OMP/MKL threads 10; the three rows of each split under the same limit, one row at a time",
+    "dev_all_generation": "sequential, one ELM request at a time; Qwen answer timeout 420 s",
+    "clean_retrieval_latency": "practice-all R1"
+  },
+  "notes": "intervals: 95 % bootstrap over questions, 1,000 resamples, seed 0; latency in ms per question"
+}

@@ -16,6 +16,9 @@ COURSE_SYSTEM_PROMPT = (
     "Do not invent facts that are unsupported by the evidence."
 )
 COURSE_TEMPERATURE = 0.1
+# Seconds per answer call (the client default is 180). Qwen answers with ~5k reasoning tokens took 359-510 s on
+# 2026-11-10 and were cut off and retried from scratch; the timeout is not part of the request or the cache key.
+GENERATE_TIMEOUT = 420
 
 
 def checkout_path(path) -> Path:
@@ -159,7 +162,7 @@ class GatewayGenerator:
             {"role": "system", "content": COURSE_SYSTEM_PROMPT},
             {"role": "user", "content": prompt},
         ]
-        return self.gateway.chat(self.model, messages, temperature=COURSE_TEMPERATURE)
+        return self.gateway.chat(self.model, messages, temperature=COURSE_TEMPERATURE, timeout=GENERATE_TIMEOUT)
 
 
 def stage_dir(pipeline_name, config, stage) -> Path:
@@ -273,7 +276,20 @@ RETRIEVERS = {
     "raptor-full": lambda config, gateway, data: raptor_retriever(config),
     "bm25": lambda config, gateway, data: bm25_retriever(data),
     "grep": lambda config, gateway, data: grep_index(data),  # only for the grep flows, which call scan()
+    "rerank": lambda config, gateway, data: rerank_retriever(config, gateway, data),
 }
+
+
+def rerank_retriever(config, gateway, data):
+    """`params`: base (a retriever name, exact), pool (50), model (Hugging Face id), revision (commit)."""
+    from .retrievers.rerank import RerankRetriever
+
+    p = config.params
+    if p.get("base", "exact") in ("rerank", "grep"):
+        raise ValueError("rerank wraps a retriever that returns a ranking, e.g. base: exact")
+    base = RETRIEVERS[p.get("base", "exact")](config, gateway, data)
+    gateway.reranker(p["model"], p.get("revision"))  # load now so the first query's timing is not the model load
+    return RerankRetriever(base, data, gateway, p["model"], pool=p.get("pool", 50), revision=p.get("revision"))
 def budgeted_context(config, data):
     from .context import BudgetedContext
 

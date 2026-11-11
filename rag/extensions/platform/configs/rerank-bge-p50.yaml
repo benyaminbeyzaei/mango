@@ -1,0 +1,13 @@
+# RunConfig (plan 032): flat dense top 50, re-scored by the local cross-encoder BAAI/bge-reranker-base on CPU, top 5 into the prompt.
+name: rerank-bge-p50
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+retriever: rerank
+k: 5
+params:
+  base: exact
+  pool: 50
+  model: BAAI/bge-reranker-base
+  revision: 2cfc18c9415c912f9d8155881c133215df768a70

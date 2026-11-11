@@ -103,7 +103,7 @@ def test_log_line_has_no_key(gateway, monkeypatch):
     assert line["op"] == "chat" and line["model"] == "m" and line["cached"] is False
 
 
-def test_fresh_skips_cache_reads_but_writes(gateway, monkeypatch):
+def test_fresh_skips_cache_reads_and_never_rewrites_a_cache_file(gateway, monkeypatch):
     calls = install(gateway, monkeypatch, [fake_response("a"), fake_response("b")])
     gateway.fresh = True
     msgs = [{"role": "user", "content": "q"}]
@@ -112,9 +112,9 @@ def test_fresh_skips_cache_reads_but_writes(gateway, monkeypatch):
     assert len(calls) == 2
     assert [s.attrs["cached"] for s in gateway.trace.spans] == [False, False]
     assert gateway.trace.cost["m"]["calls"] == 2
-    assert len(list(gateway.cache_dir.glob("*.json"))) == 1  # written (and overwritten)
+    assert len(list(gateway.cache_dir.glob("*.json"))) == 1  # written once, then kept
     gateway.fresh = False
-    assert gateway.chat("m", msgs) == "b"  # a normal gateway reads what fresh wrote
+    assert gateway.chat("m", msgs) == "a"  # a normal gateway reads the first result
     assert len(calls) == 2
 
 
@@ -152,7 +152,7 @@ def test_fresh_transcribe_skips_the_cache_read(gateway, monkeypatch, tmp_path):
     assert gateway.transcribe(audio, fresh=True) == "t2"
     assert gateway.transcribe(audio, fresh=True) == "t3"
     assert len(calls) == 3
-    assert gateway.transcribe(audio) == "t3"  # fresh still writes the cache
+    assert gateway.transcribe(audio) == "t1"  # fresh never rewrites an existing cache file
 
 
 def test_timeout_applies_to_one_call_only(gateway, monkeypatch):

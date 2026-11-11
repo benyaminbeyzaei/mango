@@ -22,8 +22,8 @@ class FakeGateway:
     def encoder(self, name):
         return None
 
-    def chat(self, model, messages, temperature=0.0, max_tokens=None):
-        self.chats.append((model, messages, temperature))
+    def chat(self, model, messages, temperature=0.0, max_tokens=None, timeout=None):
+        self.chats.append((model, messages, temperature, timeout))
         return "answer"
 
 
@@ -41,9 +41,10 @@ def test_cached_asr_looks_up_by_audio_stem(tmp_path):
 def test_generator_uses_course_prompt_and_temperature():
     g = FakeGateway()
     assert GatewayGenerator(g, "m").generate("p") == "answer"
-    model, messages, temperature = g.chats[0]
+    model, messages, temperature, timeout = g.chats[0]
     assert messages[0] == {"role": "system", "content": COURSE_SYSTEM_PROMPT}
     assert temperature == 0.1
+    assert timeout == 420
 
 
 @needs_data
