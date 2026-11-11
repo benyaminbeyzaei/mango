@@ -13,6 +13,10 @@
   `encoders-smoke` (encoder policies), `toc-raptor-smoke`. Plan 029 added four full-split matrix
   summaries for the no-LLM methods (`a-free-practice-all`, `a-free-dev-all`, `c-practice-all`,
   `c-dev-all`, with 95 % bootstrap intervals); their run folders are local only, not committed.
+  Plan 032 added `rerank-smoke`, `rerank-practice-all`, `final-smoke`, `final-practice-all`, `final-dev-all`
+  and `final/comparison.json`; the 10 smoke runs are committed whole, the full-split runs as `metrics.json`,
+  `config.json`, `per_query.jsonl` (plus judge scores for dev-all), never prompts or answers, so
+  `python -m mlsrag.final` rebuilds `comparison.json` from a clean clone.
 
 ## What each plan produced
 
@@ -59,6 +63,12 @@
   24,000 records with gpt-4o-mini: 5,243 summaries (4,547 / 567 / 107 / 18 / 4), $1.11, 4.1 h build;
   matrix A rows on smoke and both full splits (below the baseline; README). Each copied value cites
   its reference file:line in `preprocess/raptor_full.py`; deviations in `docs/pipelines.md`.
+- 032: the final three-way comparison. `rerank` retriever (dense top N re-scored by a local cross-encoder,
+  `gateway.rerank`), chosen on practice-all among five settings (`rerank-best` = MiniLM-L-6, pool 20);
+  baseline, rerank-best and raptor-tree-gpt5-evidence on practice-all (retrieval) and dev-all (375 Qwen
+  answers, judged). Neither change improves answers (README). `results/matrices/final/comparison.json`
+  holds every number plus `explanations.json`; `python -m mlsrag.final` rebuilds it. The gateway now never
+  rewrites an existing cache file (`--fresh` only adds files).
 
 ## Open items
 

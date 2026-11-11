@@ -23,13 +23,14 @@ rag/extensions/platform/
 │   ├── stages.py       the five stage interfaces, RETRIEVERS, CONTEXT_BUILDERS, build_stages
 │   ├── context.py      budgeted and dedupe context builders
 │   ├── flows/          standard, grep-static, grep-agentic, grep-feedback: one query
-│   ├── retrievers/     bm25, grep, topic, toc, raptor (raptor-lite, raptor-tree, raptor-full)
+│   ├── retrievers/     bm25, grep, topic, toc, raptor (raptor-lite, raptor-tree, raptor-full), rerank
 │   ├── prompts/        grep_v1
 │   ├── preprocess/     pipelines of hashed, resumable stages (topics, toc, raptor, raptor-tree, raptor-full)
 │   ├── runner.py       run a config over a subset → a results folder
 │   ├── results.py      metrics.json schema, load_run, list_runs, compare
 │   ├── evaluate.py     judging through the course evaluator, call estimates
 │   ├── matrix.py       many configs on one subset, one summary table
+│   ├── final.py        plan 032: reranker choice and results/matrices/final/comparison.json
 │   ├── maps.py, asr_compare.py, subsets.py   encoder maps, ASR comparison, subset files
 │   ├── api/            FastAPI app (`mlsrag serve`) and its pydantic models
 │   └── cli.py          the `mlsrag` command
@@ -43,7 +44,7 @@ rag/extensions/platform/
 **RunConfig** (`config.py`). One experiment's settings, a pydantic model: `name`; `asr` (cached |
 whisper1 | course) and `asr_cache`; `query_encoder` (gte-small | bge-small); `corpus_index` (enc_a |
 enc_b) and `mismatch_policy` (error | as-is | re-encode | translate); `retriever` (exact | topic |
-toc | raptor-lite | raptor-tree | raptor-full | bm25 | grep); `k` (5); `context_builder` (simple | budgeted |
+toc | raptor-lite | raptor-tree | raptor-full | bm25 | grep | rerank); `k` (5); `context_builder` (simple | budgeted |
 dedupe | with-summaries); `generator_model`; `judge_model`; `flow` (standard | grep-static |
 grep-agentic | grep-feedback); `params` (free dict for the retriever's options). A YAML file works like a preset name.
 
@@ -227,6 +228,27 @@ on dev. Against the 20-question smoke runs: baseline best in matrix A, topics im
 below topics, bm25 far below all held; the smoke encoder ranking (lstsq best, prefix worst
 re-encode) did not: on both full splits prefix is best and lstsq is level with as-is. Full tables,
 NDCG@10 and latency are in the summaries.
+
+**Final three-way comparison (plan 032).** Three rows, everything else fixed (whisper-1 transcripts,
+gte-small on enc_a, k=5, Qwen3.5-397B at 0.1 with the course prompt, Mistral-Small-4 judge): `baseline`;
+`rerank-best` (dense top 20 re-scored by `cross-encoder/ms-marco-MiniLM-L-6-v2` on CPU, chosen on
+practice-all from five settings: highest NDCG@10, then the fastest within 0.005); and
+`raptor-tree-gpt5-evidence` (records and gpt-5-mini summaries searched together, a summary hit goes into the
+prompt). Matrices `matrix-final-{smoke,practice-all,dev-all}.yaml`; every number, the paired differences and
+evidence-backed explanations are in `results/matrices/final/comparison.json` (`python -m mlsrag.final`).
+Intervals are 95 % bootstraps over questions.
+
+| Row | practice-all NDCG@10 | dev-all NDCG@10 | dev-all answer_norm | paired vs baseline (dev) | rerank ms/q |
+|---|---|---|---|---|---|
+| baseline | 0.425 [0.385, 0.462] | 0.402 [0.338, 0.470] | 0.687 [0.622, 0.751] | - | - |
+| rerank-best | 0.418 [0.380, 0.454] | 0.393 [0.333, 0.460] | 0.646 [0.577, 0.714] | -0.041 [-0.095, 0.011] | 1,250 |
+| raptor-tree-gpt5-evidence | 0.425 [0.385, 0.462] | 0.400 [0.336, 0.470] | 0.690 [0.625, 0.755] | +0.003 [-0.045, 0.051] | - |
+
+Reranking lowers the rank-sensitive metrics (it raises Recall@10 slightly), and larger pools or
+bge-reranker-base lower them further. Summaries reach the prompt in only 10 of 125 dev questions. Neither
+change measurably improves answers: with identical context, generation plus judging alone changed
+answer_norm in 58 of 115 questions. Latency was measured on 6 cores (selection) or 10 cores (final runs) at
+nice 19 while the laptop was in use, with generation sequential (about 85-90 s per answer, which dominates).
 
 ## Run with Docker
 

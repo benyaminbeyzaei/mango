@@ -1,0 +1,56 @@
+[
+  {
+    "observation": "Reranking lowers Recall@5, MRR@10 and NDCG@10 on practice-all for every setting (best: MiniLM pool 20, NDCG@10 0.418 vs baseline 0.425; MRR@10 0.470 vs 0.493) and on dev-all (NDCG@10 0.393 vs 0.402, MRR@10 0.442 vs 0.461), while Recall@10 rises slightly (practice 0.509 vs 0.485, dev 0.495 vs 0.479).",
+    "likely_cause": "The MS MARCO-trained cross-encoder prefers records that repeat the transcript's words or give a general on-topic answer, while the qrels label the answers from the original forum thread. It moves labelled records down within the top 10 (hurting rank-sensitive metrics) and brings some up from ranks 11-20 (helping Recall@10). Many promoted records look relevant but are unlabelled, so part of the loss may be in the labels and not real.",
+    "evidence": "MiniLM p20 on practice-all: 61 relevant records pushed out of the top 5 (55 questions) vs 50 pulled in (44 questions); NDCG@10 worse in 97 questions, better in 78, unchanged in 175. In 10 inspected cases the promoted records were: plausibly relevant but unlabelled in 4 (e.g. 'initial stock price at market opening': overnight price gaps promoted over an IPO-pricing answer; the transcript is ambiguous), another relevant record in 1, and on-topic but generic or surface-word matches missing the specific point in 5 (e.g. 'tax for MLPs in a Roth IRA': a generic Roth IRA answer without MLPs; 'flights to an overseas seminar': a foreign-income answer). No near-duplicates: median enc_a cosine between promoted and demoted records is 0.85, the same as a relevant record and any other top-20 record (0.85); only 6.6 % of pairs are above 0.9.",
+    "confidence": "medium: the counts are measured; the claim that the model favours word overlap and that the labels miss relevant records comes from reading 10 cases, not from a measurement"
+  },
+  {
+    "observation": "Larger pools and bge-reranker-base do worse: NDCG@10 on practice-all is 0.418 / 0.404 / 0.401 for MiniLM with pools 20 / 50 / 100, and 0.376 / 0.341 for bge with pools 20 / 50.",
+    "likely_cause": "Each extra candidate is one more record that can outrank a labelled one. Pushed-out records grow with the pool while pulled-in records stay flat, so a deeper pool adds distractors but few new hits. Why bge-reranker-base is worse than the smaller MiniLM is a guess: its training data or score calibration may fit this forum-answer corpus less well.",
+    "evidence": "Relevant records pushed out of / pulled into the top 5: MiniLM p20 61/50, p50 75/48, p100 81/46; bge p20 83/47, p50 106/46. NDCG@10 worse / better per question: MiniLM p100 111/77, bge p50 143/65.",
+    "confidence": "high for the pool trend (measured); low for why bge is worse (not tested)"
+  },
+  {
+    "observation": "Truncation at 512 tokens is not the main cause.",
+    "likely_cause": "Only about one pair in ten is truncated. Demoted relevant records are longer and truncated a little more often, so truncation may explain a small part of the loss.",
+    "evidence": "Pairs truncated: MiniLM p20 694/7000 (9.9 %), p100 9.4 %, bge p50 11.6 %; among the demoted relevant records 14.8 % (of 61), 12.3 % (of 81), 15.1 % (of 106). Median words: demoted relevant 170 (MiniLM p20), promoted non-relevant 149, all pool records 131.",
+    "confidence": "medium"
+  },
+  {
+    "observation": "No clear effect of query style (spoken transcripts).",
+    "likely_cause": "Not testable directly: the course data has no written version of the questions, only audio and its transcripts. By transcript length and phrasing there is no consistent pattern, so this check cannot show whether spoken phrasing hurts the reranker.",
+    "evidence": "Mean NDCG@10 change (MiniLM p20 minus baseline) by transcript length: 0-5 words +0.105 (n=6), 6-9 -0.014 (n=84), 10-14 -0.015 (n=176), 15+ +0.008 (n=84); transcripts ending in '?' -0.005 (n=301) vs not -0.019 (n=49). Questions that lost a relevant record have the same median transcript length (12 words) as the others.",
+    "confidence": "low"
+  },
+  {
+    "observation": "Answers with identical context still get different scores: the generator and judge together add noise as large as the effects being compared.",
+    "likely_cause": "Qwen at temperature 0.1 writes a different answer each run, and the judge (Mistral-Small-4, grounding checked against the gold documents, not the prompt) often scores near-identical answers 0/0/0 or 4/4/4. Scores are close to all-or-nothing.",
+    "evidence": "On the 115 dev questions where RAPTOR's context equals the baseline's, answer_norm changed in 58 (mean |difference| 0.144, sd 0.259, mean -0.007); correctness changed in 44, grounding in 38, completeness in 42. In each row 13-19 % of answers score all 0 and 42-46 % all 4 (baseline 17 / 53, rerank 24 / 57, RAPTOR 16 / 57 of 125).",
+    "confidence": "high"
+  },
+  {
+    "observation": "Reranking does not improve answers on dev-all: answer_norm 0.646 vs 0.687, paired difference -0.041 [-0.095, 0.011]; correctness -0.136 [-0.384, 0.088]. The interval includes 0. The context differs from the baseline's in all 125 questions (122 with a different set of five records, 3 reordered only).",
+    "likely_cause": "Mostly generation and judge noise around a small negative effect. A partial guess: reranked contexts contain more non-gold text (prompts are 12 % longer), the answer uses it, and the judge marks those claims unsupported because it compares with the gold documents.",
+    "evidence": "Mean answer_norm change by relevant records in the context: lost a relevant record -0.107 (n=14), gained one +0.062 (n=16), same count -0.048 (n=95). Prompt tokens 1,291 vs 1,149; completion tokens 3,019 vs 2,856; all-0 answers 24 vs 17. Examples: q_3b315cdea7a19bd1 ('why discuss high-dividend stocks', 3 relevant records in context became 1) went from 4/4/4 to 0/0/0, although both answers open with the same 'income and cash flow' point; q_b1e20f08cf71cb73 ('when do index funds lose reliability', no relevant record in either context) went from 4/4/4 to 0/0/0, which is judge noise; q_93443d5a05cd57c0 ('what does buying a share mean', gained a relevant record) went from 0/0/0 to 4/4/4 with a shorter answer about ownership and electronic records that matches the gold documents.",
+    "confidence": "medium that there is no measurable gain; low for the mechanism"
+  },
+  {
+    "observation": "Summaries as evidence (RAPTOR-tree, gpt-5-mini) leave retrieval and answers unchanged: dev answer_norm 0.690 vs 0.687, paired difference +0.003 [-0.045, 0.051]; on the 10 questions whose context differs, +0.117 [-0.067, 0.350].",
+    "likely_cause": "A summary reaches the top 5 in only 10 of 125 dev questions, and there it replaces the fifth-ranked record, never a relevant one. The summaries are broad topic overviews that list names and subjects, so they add little the records do not already give. The changes on those 10 questions look like judge noise rather than an effect of the summary.",
+    "evidence": "10 questions with a summary in the context, all topic level (t*), none section level; positions 0-4; no relevant baseline record was dropped. 7 of the 10 have identical scores. q_d96b734b2bc02b5a (UK personal finance software, summary t160 lists budgeting apps): 0/0/0 to 4/4/4, yet both answers name Lovemoney and Yodlee from a record (Document 5), and the judge's two explanations contradict each other about the gold evidence. q_de7f874a20167a15 (short-term trading resources, summary t233 lists books and courses): 0/0/0 to 1/2/3; the RAPTOR answer says the evidence lacks short-term-specific resources. q_e75812046abc116d (small IRA withdrawals, summary t78 lists IRA rules): 1/1/2 to 0/0/0; the judge says the gold evidence does not mention IRA withdrawals.",
+    "confidence": "medium"
+  },
+  {
+    "observation": "Cost: reranking adds about 1.25 s per question on CPU (10 cores, nice 19); generation dominates end-to-end time; summaries add no query-time cost.",
+    "likely_cause": "The cross-encoder runs 20 (query, record) pairs of up to 512 tokens on CPU, about 200 times the 6 ms dense search. Each Qwen answer spends about 2.9k completion tokens (mostly reasoning).",
+    "evidence": "practice-all R1 (rows one at a time, 10 cores): rerank 1,250 ms mean, dense search 6 ms, end-to-end 1,286 vs 143 ms (baseline) and 207 ms (RAPTOR). dev-all R2: generation 84-90 s mean per question, so the rerank's 0.9 s is about 1 % of end-to-end. One-time costs: RAPTOR-tree summaries US$1.46 and 439 calls (plan 030); reranker download 88 MB (MiniLM) or 1.1 GB (bge).",
+    "confidence": "high"
+  },
+  {
+    "observation": "On practice-all R1 the baseline's encode stage averaged 137 ms against 29 ms for the rerank row, with the same encoder.",
+    "likely_cause": "A guess: the laptop was in use for other work at the same time and the baseline row ran first (warm-up). On dev-all the three rows encode in 40-53 ms. It does not affect the conclusions; read the latency numbers as roughly ±0.1 s.",
+    "evidence": "Encode medians 101 / 24 / 102 ms on practice-all; means 43 / 40 / 53 ms on dev-all.",
+    "confidence": "low"
+  }
+]

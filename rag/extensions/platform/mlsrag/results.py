@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, field_validator
 from .course import paths
 
 METRIC_KEYS = ["Recall@5", "Recall@10", "Recall@20", "Recall@100", "MRR@10", "NDCG@10"]
-STAGES = ["asr", "encode", "retrieve", "context", "generate"]
+STAGES = ["asr", "encode", "retrieve", "rerank", "context", "generate"]  # rerank runs inside retrieve
 WHISPER_USD_PER_MINUTE = 0.006  # whisper-1 list price; the free ELM chat models count as $0
 
 
@@ -44,7 +44,8 @@ class Percentiles(Strict):
 class Latency(Strict):  # mean ms per query; None when the stage did not run
     asr: float | None
     encode: float | None
-    retrieve: float | None
+    retrieve: float | None  # includes rerank
+    rerank: float | None = None  # missing in runs before plan 032
     context: float | None
     generate: float | None
     end_to_end: Percentiles
