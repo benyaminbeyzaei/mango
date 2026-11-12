@@ -42,7 +42,13 @@ __global__ void rmsnorm_kernel(const float* x, const float* weight, float* y, in
 
   // ======================== BLANK 2.5 =========================
   // RMSNorm of this row: y = x / sqrt(mean(x^2) + eps) * weight.
-  // YOUR CODE HERE
+  float sq = 0.0f;
+  for (int c = threadIdx.x; c < cols; c += blockDim.x) {
+    float xv = xr[c];
+    sq = sq + xv * xv;
+  }
+  const float rrms = rsqrtf(block_reduce_sum(sq) / cols + eps);  // This is the way to calculate 1 / sqrt(mean(x^2) + eps), I think this should work fine
+  for (int c = threadIdx.x; c < cols; c += blockDim.x) yr[c] = xr[c] * rrms * weight[c];
   // ============================================================
 }
 
@@ -58,12 +64,18 @@ __global__ void softmax_kernel(const float* x, float* y, int cols) {
   // ======================== BLANK 2.6 =========================
   // Pass 1: set row_max and row_sum (the sum of exp(x - row_max) over the row),
   // reading x only once, with MaxSum.
-  // YOUR CODE HERE
+  MaxSum ms = {-INFINITY, 0.0f};
+  for (int c = threadIdx.x; c < cols; c += blockDim.x) ms = maxsum_merge(ms, MaxSum{xr[c], 1.0f});
+  // what I'm doing here is to find the block max, then rescale every thread's l to that max and add them up.
+  row_max = block_reduce_max(ms.m);
+  float my_l = (ms.m == -INFINITY) ? 0.0f : ms.l * expf(ms.m - row_max);
+  row_sum = block_reduce_sum(my_l);
   // ============================================================
 
   // ======================== BLANK 2.7 =========================
   // Pass 2: y = exp(x - row_max) / row_sum.
-  // YOUR CODE HERE
+  const float inv_sum = 1.0f / row_sum;
+  for (int c = threadIdx.x; c < cols; c += blockDim.x) yr[c] = expf(xr[c] - row_max) * inv_sum;
   // ============================================================
 }
 
