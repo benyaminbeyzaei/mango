@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useLiveQuery } from "dexie-react-hooks"
 import {
   MessagesSquareIcon,
@@ -35,7 +35,13 @@ import { db, type Message } from "@/lib/db"
 import { getConfirmTranscript, getDefaultPreset } from "@/lib/settings"
 import { useRecorder } from "@/lib/use-recorder"
 
-export const Route = createFileRoute("/interactive")({ component: Interactive })
+// ?ask=<text> (from the Questions page) asks that text once, as if typed here.
+export const Route = createFileRoute("/interactive")({
+  validateSearch: (s: Record<string, unknown>): { ask?: string } => ({
+    ask: typeof s.ask === "string" && s.ask.trim() ? s.ask : undefined,
+  }),
+  component: Interactive,
+})
 
 function Interactive() {
   const configs = useConfigs()
@@ -139,6 +145,15 @@ function Interactive() {
       setWaitingSince(null)
     }
   }
+
+  const { ask } = Route.useSearch()
+  const navigate = useNavigate({ from: Route.fullPath })
+  useEffect(() => {
+    if (!ask || !config) return
+    navigate({ search: {}, replace: true }) // so a reload does not ask again
+    send({ text: ask.trim() })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once per ?ask, when a config is ready
+  }, [ask, config === null])
 
   const recorder = useRecorder((audio) => send({ audio }))
   const busy = waitingSince !== null || !config

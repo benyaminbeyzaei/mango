@@ -157,6 +157,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Questions */
+        get: operations["questions_api_questions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/questions/{query_id}/audio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Question Audio */
+        get: operations["question_audio_api_questions__query_id__audio_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/runs": {
         parameters: {
             query?: never;
@@ -327,6 +361,35 @@ export interface components {
             trace: {
                 [key: string]: unknown;
             };
+        };
+        /** Question */
+        Question: {
+            /** Query Id */
+            query_id: string;
+            /**
+             * Split
+             * @enum {string}
+             */
+            split: "dev" | "practice";
+            /** Duration Seconds */
+            duration_seconds: number;
+            /**
+             * Whisper1
+             * @description null when not in rag/.cache/transcripts/whisper1-<split>.jsonl
+             */
+            whisper1: string | null;
+            /**
+             * Course
+             * @description null when not in rag/.cache/transcripts/course-<split>.jsonl
+             */
+            course: string | null;
+        };
+        /** QuestionsPage */
+        QuestionsPage: {
+            /** Total */
+            total: number;
+            /** Items */
+            items: components["schemas"]["Question"][];
         };
         /** RecordResponse */
         RecordResponse: {
@@ -770,6 +833,68 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["RecordResponse"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    questions_api_questions_get: {
+        parameters: {
+            query?: {
+                split?: "dev" | "practice";
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuestionsPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    question_audio_api_questions__query_id__audio_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                query_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
