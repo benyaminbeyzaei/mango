@@ -8,7 +8,7 @@ import uuid
 from collections import OrderedDict
 from dataclasses import replace
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 import numpy as np
 import openai
@@ -25,11 +25,11 @@ from ..gateway import ModelGateway
 from ..maps import map_path
 from ..matrix import CONFIGS_DIR, config_hash
 from ..results import list_runs, load_run
-from ..stages import CONTEXT_BUILDERS, RETRIEVERS, Translate, WhisperASR, build_stages
+from ..stages import CONTEXT_BUILDERS, RETRIEVERS, Translate, WhisperASR, build_stages, load_transcripts
 from ..subsets import check_subset, load_subset
 from ..trace import Trace
 from .models import (ConfigEntry, HealthResponse, Hit, JobStatus, ModelsResponse, NamedItem, QueriesPage, QueryRequest,
-                     QueryResponse, RecordResponse, ResultsResponse, RunDetail, RunSummary,
+                     QueryResponse, Question, QuestionsPage, RecordResponse, ResultsResponse, RunDetail, RunSummary,
                      StartRunRequest, TextInput)
 
 ELM_MODELS = [
@@ -97,11 +97,13 @@ def run_dir(root, run_id) -> Path:
     return path
 
 
-def create_app(web_dir=None, results_dir=None) -> FastAPI:
+def create_app(web_dir=None, results_dir=None, data_dir=None, cache_dir=None) -> FastAPI:
     app = FastAPI(title="mlsrag", version="0.1.0",
                   description="Query the RAG pipeline with a chosen config and read the committed results.")
     api = APIRouter(prefix="/api")
     results_root = Path(results_dir or paths.results_dir)
+    data_root = Path(data_dir or paths.data_dir)
+    transcripts_dir = Path(cache_dir or paths.cache_dir) / "transcripts"
     admin_token = os.environ.get("ADMIN_TOKEN")
     gateway = ModelGateway()
     stages_cache = OrderedDict()  # config hash -> Stages, oldest first
@@ -113,6 +115,13 @@ def create_app(web_dir=None, results_dir=None) -> FastAPI:
         if "data" not in data:
             data["data"] = CourseData(paths.data_dir)
         return data["data"]
+
+    def manifest():
+        """query id -> manifest entry, in manifest order."""
+        if "manifest" not in data:
+            lines = (data_root / "student_audio_manifest.jsonl").read_text(encoding="utf-8").splitlines()
+            data["manifest"] = {e["query_id"]: e for e in map(json.loads, filter(str.strip, lines))}
+        return data["manifest"]
 
     def stages_for(config):
         key = config_hash(config)
@@ -244,6 +253,25 @@ def create_app(web_dir=None, results_dir=None) -> FastAPI:
         if record_id not in records:
             raise HTTPException(404, f"no record {record_id!r}")
         return RecordResponse(record_id=record_id, text=records[record_id])
+
+    @api.get("/questions", response_model=QuestionsPage)
+    def questions(split: Literal["dev", "practice"] = "dev", offset: int = 0, limit: int = 20):
+        if offset < 0 or not 1 <= limit <= 100:
+            raise HTTPException(400, "offset >= 0 and 1 <= limit <= 100")
+        entries = [e for e in manifest().values() if e["split"] == split]
+        whisper1 = load_transcripts(transcripts_dir / f"whisper1-{split}.jsonl")
+        course = load_transcripts(transcripts_dir / f"course-{split}.jsonl")
+        items = [Question(query_id=e["query_id"], split=split, duration_seconds=e["duration_seconds"],
+                          whisper1=whisper1.get(e["query_id"]), course=course.get(e["query_id"]))
+                 for e in entries[offset: offset + limit]]
+        return QuestionsPage(total=len(entries), items=items)
+
+    @api.get("/questions/{query_id}/audio", response_class=FileResponse)
+    def question_audio(query_id: str):
+        entry = manifest().get(query_id)  # the path comes from the manifest, never from the URL
+        if entry is None:
+            raise HTTPException(404, f"no question {query_id!r}")
+        return FileResponse(data_root / entry["audio_file"], media_type="audio/wav")
 
     @api.post("/runs", response_model=JobStatus, dependencies=[Depends(require_admin)])
     def start_run(body: StartRunRequest):

@@ -223,3 +223,48 @@ def test_web_dir_serves_the_client_with_spa_fallback(stage, tmp_path):
 
 def test_openapi_json_is_current():
     assert json.loads(OPENAPI_PATH.read_text(encoding="utf-8")) == json.loads(openapi_json(app_module.create_app()))
+
+
+@pytest.fixture
+def questions_client(stage, tmp_path):
+    data, cache = tmp_path / "data", tmp_path / "cache"
+    (data / "audio" / "dev").mkdir(parents=True)
+    (cache / "transcripts").mkdir(parents=True)
+    rows = [{"query_id": f"q{i}", "split": "dev" if i < 3 else "practice", "duration_seconds": 1.5,
+             "audio_file": f"audio/dev/q{i}.wav"} for i in range(4)]
+    (data / "student_audio_manifest.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    (data / "audio" / "dev" / "q0.wav").write_bytes(b"RIFF q0")
+    (cache / "transcripts" / "whisper1-dev.jsonl").write_text(
+        "".join(json.dumps({"query_id": f"q{i}", "transcript": f"w{i}"}) + "\n" for i in range(3)))
+    return TestClient(app_module.create_app(results_dir=tmp_path, data_dir=data, cache_dir=cache)), cache
+
+
+def test_questions_order_paging_and_missing_course(questions_client):
+    client, _ = questions_client
+    page = client.get("/api/questions", params={"split": "dev", "offset": 1, "limit": 1}).json()
+    assert page == {"total": 3, "items": [{"query_id": "q1", "split": "dev", "duration_seconds": 1.5,
+                                           "whisper1": "w1", "course": None}]}
+    assert [q["query_id"] for q in client.get("/api/questions").json()["items"]] == ["q0", "q1", "q2"]
+    practice = client.get("/api/questions", params={"split": "practice"}).json()
+    assert practice["items"][0]["whisper1"] is None
+
+
+def test_questions_partial_course_file(questions_client):
+    client, cache = questions_client
+    (cache / "transcripts" / "course-dev.jsonl").write_text(json.dumps({"query_id": "q2", "transcript": "c2"}) + "\n")
+    items = client.get("/api/questions").json()["items"]
+    assert [q["course"] for q in items] == [None, None, "c2"]
+
+
+def test_questions_bad_split(questions_client):
+    client, _ = questions_client
+    assert client.get("/api/questions", params={"split": "test"}).status_code == 422
+
+
+def test_question_audio(questions_client):
+    client, _ = questions_client
+    r = client.get("/api/questions/q0/audio")
+    assert r.status_code == 200 and r.content == b"RIFF q0" and r.headers["content-type"] == "audio/wav"
+    assert client.get("/api/questions/nope/audio").status_code == 404
+    assert client.get("/api/questions/..%2Fx/audio").status_code == 404
+    assert client.get("/api/questions/../x/audio").status_code == 404

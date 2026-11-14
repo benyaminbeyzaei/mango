@@ -16,6 +16,7 @@ const SECTIONS = [
   { to: "/docs", label: "Docs" },
   { to: "/models", label: "Models" },
   { to: "/results", label: "Results" },
+  { to: "/questions", label: "Questions" },
   { to: "/interactive", label: "Interactive" },
   { to: "/guide", label: "Guide" },
 ] as const

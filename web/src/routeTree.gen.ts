@@ -14,6 +14,7 @@ import { Route as DocsRouteImport } from './routes/docs'
 import { Route as GuideRouteImport } from './routes/guide'
 import { Route as InteractiveRouteImport } from './routes/interactive'
 import { Route as ModelsRouteImport } from './routes/models'
+import { Route as QuestionsRouteImport } from './routes/questions'
 import { Route as ResultsIndexRouteImport } from './routes/results.index'
 import { Route as ResultsCompareRouteImport } from './routes/results.compare'
 import { Route as ResultsRunIdIndexRouteImport } from './routes/results.$runId.index'
@@ -44,6 +45,11 @@ const ModelsRoute = ModelsRouteImport.update({
   path: '/models',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuestionsRoute = QuestionsRouteImport.update({
+  id: '/questions',
+  path: '/questions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResultsIndexRoute = ResultsIndexRouteImport.update({
   id: '/results/',
   path: '/results/',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/guide': typeof GuideRoute
   '/interactive': typeof InteractiveRoute
   '/models': typeof ModelsRoute
+  '/questions': typeof QuestionsRoute
   '/results/compare': typeof ResultsCompareRoute
   '/results/': typeof ResultsIndexRoute
   '/results/$runId/$queryId': typeof ResultsRunIdQueryIdRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/guide': typeof GuideRoute
   '/interactive': typeof InteractiveRoute
   '/models': typeof ModelsRoute
+  '/questions': typeof QuestionsRoute
   '/results/compare': typeof ResultsCompareRoute
   '/results': typeof ResultsIndexRoute
   '/results/$runId/$queryId': typeof ResultsRunIdQueryIdRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/guide': typeof GuideRoute
   '/interactive': typeof InteractiveRoute
   '/models': typeof ModelsRoute
+  '/questions': typeof QuestionsRoute
   '/results/compare': typeof ResultsCompareRoute
   '/results/': typeof ResultsIndexRoute
   '/results/$runId/$queryId': typeof ResultsRunIdQueryIdRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/guide'
     | '/interactive'
     | '/models'
+    | '/questions'
     | '/results/compare'
     | '/results/'
     | '/results/$runId/$queryId'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/guide'
     | '/interactive'
     | '/models'
+    | '/questions'
     | '/results/compare'
     | '/results'
     | '/results/$runId/$queryId'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/guide'
     | '/interactive'
     | '/models'
+    | '/questions'
     | '/results/compare'
     | '/results/'
     | '/results/$runId/$queryId'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   GuideRoute: typeof GuideRoute
   InteractiveRoute: typeof InteractiveRoute
   ModelsRoute: typeof ModelsRoute
+  QuestionsRoute: typeof QuestionsRoute
   ResultsCompareRoute: typeof ResultsCompareRoute
   ResultsIndexRoute: typeof ResultsIndexRoute
   ResultsRunIdQueryIdRoute: typeof ResultsRunIdQueryIdRoute
@@ -184,6 +197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ModelsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/questions': {
+      id: '/questions'
+      path: '/questions'
+      fullPath: '/questions'
+      preLoaderRoute: typeof QuestionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/results/': {
       id: '/results/'
       path: '/results'
@@ -221,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   GuideRoute: GuideRoute,
   InteractiveRoute: InteractiveRoute,
   ModelsRoute: ModelsRoute,
+  QuestionsRoute: QuestionsRoute,
   ResultsCompareRoute: ResultsCompareRoute,
   ResultsIndexRoute: ResultsIndexRoute,
   ResultsRunIdQueryIdRoute: ResultsRunIdQueryIdRoute,

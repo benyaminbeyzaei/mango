@@ -90,6 +90,19 @@ class QueriesPage(BaseModel):
     items: list[dict]
 
 
+class Question(BaseModel):
+    query_id: str
+    split: Literal["dev", "practice"]
+    duration_seconds: float
+    whisper1: str | None = Field(description="null when not in rag/.cache/transcripts/whisper1-<split>.jsonl")
+    course: str | None = Field(description="null when not in rag/.cache/transcripts/course-<split>.jsonl")
+
+
+class QuestionsPage(BaseModel):
+    total: int
+    items: list[Question]
+
+
 class RecordResponse(BaseModel):
     record_id: str
     text: str

@@ -295,6 +295,102 @@
         }
       }
     },
+    "/api/questions": {
+      "get": {
+        "summary": "Questions",
+        "operationId": "questions_api_questions_get",
+        "parameters": [
+          {
+            "name": "split",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "dev",
+                "practice"
+              ],
+              "type": "string",
+              "default": "dev",
+              "title": "Split"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Offset"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionsPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/questions/{query_id}/audio": {
+      "get": {
+        "summary": "Question Audio",
+        "operationId": "question_audio_api_questions__query_id__audio_get",
+        "parameters": [
+          {
+            "name": "query_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Query Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/runs": {
       "post": {
         "summary": "Start Run",
@@ -763,6 +859,80 @@
           "trace"
         ],
         "title": "QueryResponse"
+      },
+      "Question": {
+        "properties": {
+          "query_id": {
+            "type": "string",
+            "title": "Query Id"
+          },
+          "split": {
+            "type": "string",
+            "enum": [
+              "dev",
+              "practice"
+            ],
+            "title": "Split"
+          },
+          "duration_seconds": {
+            "type": "number",
+            "title": "Duration Seconds"
+          },
+          "whisper1": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Whisper1",
+            "description": "null when not in rag/.cache/transcripts/whisper1-<split>.jsonl"
+          },
+          "course": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course",
+            "description": "null when not in rag/.cache/transcripts/course-<split>.jsonl"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query_id",
+          "split",
+          "duration_seconds",
+          "whisper1",
+          "course"
+        ],
+        "title": "Question"
+      },
+      "QuestionsPage": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Question"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "items"
+        ],
+        "title": "QuestionsPage"
       },
       "RecordResponse": {
         "properties": {
