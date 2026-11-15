@@ -1,0 +1,14 @@
+# Same as 20261111-0115-baseline-dev-all/config.json; only name and asr_cache changed (course ASR on our kernels).
+name: baseline-courseasr
+asr: cached
+asr_cache: rag/.cache/transcripts/course-dev.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+mismatch_policy: error
+retriever: exact
+k: 5
+context_builder: simple
+generator_model: Qwen/Qwen3.5-397B-A17B-FP8
+judge_model: mistralai/Mistral-Small-4-119B-2603
+flow: standard
+params: {}
