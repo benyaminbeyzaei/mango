@@ -16,7 +16,7 @@ __device__ __forceinline__ float warp_reduce_sum(float v) {
   for (int offset = WARP_SIZE / 2; offset > 0; offset /= 2) {
     // ======================== BLANK 2.1 =========================
     // One step of the butterfly sum (see the guide).
-    v = v + __shfl_xor_sync(FULL_MASK, v, offset); //I might be wrong here
+    v = v + __shfl_xor_sync(FULL_MASK, v, offset);
     // ============================================================
   }
   return v;
