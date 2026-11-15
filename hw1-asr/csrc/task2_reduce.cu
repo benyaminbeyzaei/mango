@@ -47,7 +47,7 @@ __global__ void rmsnorm_kernel(const float* x, const float* weight, float* y, in
     float xv = xr[c];
     sq = sq + xv * xv;
   }
-  const float rrms = rsqrtf(block_reduce_sum(sq) / cols + eps);  // This is the way to calculate 1 / sqrt(mean(x^2) + eps), I think this should work fine
+  const float rrms = rsqrtf(block_reduce_sum(sq) / cols + eps);  // 1 / sqrt(mean(x^2) + eps)
   for (int c = threadIdx.x; c < cols; c += blockDim.x) yr[c] = xr[c] * rrms * weight[c];
   // ============================================================
 }
