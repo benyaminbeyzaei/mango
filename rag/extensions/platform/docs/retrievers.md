@@ -178,6 +178,60 @@ cache read with `--fresh`). Pairs longer than 512 tokens are truncated; the trac
 separately (`latency_ms.retrieve` includes it). Models are downloaded once to `rag/.cache/hf/`
 (ms-marco-MiniLM-L-6-v2: 88 MB, bge-reranker-base: 1.1 GB).
 
+## Fine-tuned reranker (plan 035)
+
+Plan 032's MiniLM reranker (MS MARCO) lowered NDCG@10 and MRR@10. The likely cause was its idea of relevance
+(web passages that repeat the query) against this benchmark's labels (the answers in the original forum thread).
+`mlsrag/finetune.py` fine-tunes the same model on the practice split's public labels; dev is never read.
+
+- **Pairs** (`prepare`, laptop): per practice question, the whisper-1 transcript as the query; every labelled
+  relevant record (label 1, 793 in all) and the non-relevant records in its dense top 20 (label 0, the hard
+  negatives the reranker must push down). Dense ranking: gte-small on enc_a, as the baseline. The file
+  `jobs/finetune-data.json` (not in git) holds the transcripts, rankings, labels and the 5,182 record texts.
+- **Training** (`train`, GPU): a plain PyTorch loop over the CrossEncoder's model: binary cross-entropy on its
+  single logit, AdamW (weight decay 0.01), linear warm-up over the first 10 % of steps then linear decay,
+  batch 16, pairs truncated at 512 tokens as at test time, seed 0.
+- **Settings** (`cv`, GPU): 5-fold cross-validation on practice (folds fixed by seed 0, 70 questions held out
+  each). Learning rates 2e-5 and 5e-5, evaluated after epochs 1, 2 and 3 on the held-out fold by reranking the
+  dense top 20 and computing the course metrics; the dense baseline and the untuned model are scored on the
+  same folds. Rule: the highest mean NDCG@10 over the 5 folds. Output: `results/finetune/cv.json`.
+- **Final model**: trained on all 350 practice questions with the chosen setting, saved to
+  `rag/.cache/models/rerank-minilm-ft/` (not in git; `finetune.json` beside the weights records the recipe).
+  Config `configs/rerank-minilm-ft-p20.yaml` (`params.model` is that folder; the gateway loads a folder path
+  relative to the checkout root). Dev measurement: `configs/matrices/matrix-rerank-ft-dev-all.yaml`.
+
+Rebuild:
+
+```bash
+python -m mlsrag.finetune prepare jobs/finetune-data.json            # laptop, seconds
+.ai/bin/cluster.sh sync <run> && .ai/bin/cluster.sh submit <run> rag/extensions/platform/jobs/finetune.sbatch   # cv
+.ai/bin/cluster.sh submit <run> rag/extensions/platform/jobs/finetune.sbatch --export=ALL,MODE=train,LR=<lr>,EPOCHS=<n>
+# copy outputs/rerank-minilm-ft from the cluster run folder to rag/.cache/models/rerank-minilm-ft, then:
+mlsrag matrix --matrix rag/extensions/platform/configs/matrices/matrix-rerank-ft-dev-all.yaml --no-generate --fresh --allow-full --yes
+```
+
+No relevant record is shared between practice and dev (0 of 325 dev records), so the model cannot memorise dev
+answers, only the labelling style.
+
+Result (2026-11-16). Cross-validation on practice (job 3723683, one H200, 15 min; mean NDCG@10 over the 5
+held-out folds): dense baseline 0.425, untuned MiniLM 0.418, fine-tuned 0.389-0.407 for every setting; the rule
+chose lr 5e-5, 1 epoch (0.407). Final model: job 3723717 (H200, 74 s of training on 7,354 pairs). Dev-all,
+retrieval only (`results/matrices/rerank-ft-dev-all/`, `analysis.json`; CPU, 10 cores, nice 19):
+
+| Row | Recall@5 | Recall@10 | MRR@10 | NDCG@10 | NDCG@10 minus baseline [95 % CI] | Relevant out / in of top 5 |
+|---|---|---|---|---|---|---|
+| baseline | 0.382 | 0.479 | 0.461 | 0.402 | | |
+| MiniLM (MS MARCO) | 0.381 | 0.495 | 0.442 | 0.393 | -0.008 [-0.044, 0.025] | 18 / 19 |
+| MiniLM fine-tuned on practice | 0.361 | 0.491 | 0.422 | 0.371 | -0.031 [-0.072, 0.008] | 25 / 19 |
+
+Fine-tuning made the reranker worse, not better, so no answer run followed. Why: the model fits its own
+training questions (NDCG@10 0.466 on practice-all, against 0.425 dense and 0.418 untuned) but not new ones
+(0.407 held out, 0.371 on dev): it overfits. With 350 questions and no relevant record shared between questions
+or splits, it learns which particular records are labelled rather than a transferable notion of relevance.
+Label noise is not the obvious cause: no hard negative is a near-copy of a positive (0 of 6,561 above enc_a cosine
+0.95; 8 % above 0.9). Pool and labels are also partly misaligned: 42 % of the practice positives lie outside
+the dense top 20, so the reranker never sees them at test time.
+
 ## Adding a retriever or a flow
 
 A new retriever is a class with `search(query_vec, k)` (with `uses_question = True` it also gets
