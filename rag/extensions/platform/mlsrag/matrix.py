@@ -29,9 +29,12 @@ def config_hash(config) -> str:
 
 
 def find_run(config, subset, generate, fresh=False):
-    """The newest completed run with the same config, subset and generation mode (and fresh, if asked)."""
+    """The newest completed run with the same config, subset and generation mode (and fresh, if asked).
+    Slim runs (committed per_query.jsonl only, no queries.jsonl) cannot feed a matrix, so they are skipped."""
     want = config_hash(config)
     for run_dir in reversed(list_runs(paths.results_dir)):
+        if not (run_dir / "queries.jsonl").exists():
+            continue
         run = load_run(run_dir)
         if fresh and not run["metrics"]["run"].get("fresh", False):
             continue

@@ -1,0 +1,13 @@
+# RunConfig (plan 036): flat dense top 20, re-scored by the local cross-encoder mixedbread-ai/mxbai-rerank-base-v2 on CPU, top 5 into the prompt.
+name: rerank-mxbai-v2-p20
+asr: cached
+asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl
+query_encoder: gte-small
+corpus_index: enc_a
+retriever: rerank
+k: 5
+params:
+  base: exact
+  pool: 20
+  model: mixedbread-ai/mxbai-rerank-base-v2
+  revision: 3ea9d4dffa7d12a4f366be8e275c349de9fc9865

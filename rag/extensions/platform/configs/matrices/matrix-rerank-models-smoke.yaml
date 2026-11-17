@@ -1,0 +1,4 @@
+# Plan 036, step 1 (smoke): the two new rerankers on 20 practice questions. Retrieval only: --no-generate --fresh.
+name: rerank-models-smoke
+subset: practice-smoke20
+configs: [baseline, rerank-bge-m3-p20, rerank-mxbai-v2-p20]

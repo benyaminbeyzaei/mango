@@ -177,14 +177,17 @@ class ModelGateway:
         return np.asarray(result["vectors"], dtype=np.float32)
 
     def reranker(self, model, revision=None):
-        """Load a local sentence-transformers CrossEncoder once per process (CPU). `model` is a Hugging Face id
-        or a folder relative to the checkout root (a fine-tuned model, plan 035)."""
+        """Load a local sentence-transformers CrossEncoder once per process (on the GPU when there is one).
+        `model` is a Hugging Face id or a folder relative to the checkout root (a fine-tuned model, plan 035)."""
         if (model, revision) not in _rerankers:
+            import torch
             from sentence_transformers import CrossEncoder
 
             local = paths.rag_dir.parent / model
             _rerankers[model, revision] = CrossEncoder(
-                str(local) if local.is_dir() else model, revision=revision, max_length=RERANK_MAX_LENGTH, device="cpu",
+                str(local) if local.is_dir() else model, revision=revision, max_length=RERANK_MAX_LENGTH,
+                device="cuda" if torch.cuda.is_available() else "cpu",
+                model_kwargs={"dtype": torch.float32},  # mxbai ships bfloat16, which is very slow on CPU
                 cache_folder=str(paths.cache_dir / "hf"),
             )
         return _rerankers[model, revision]

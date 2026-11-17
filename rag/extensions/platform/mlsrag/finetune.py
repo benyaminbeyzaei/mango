@@ -211,9 +211,10 @@ if __name__ == "__main__":
     ap.add_argument("out", nargs="?", default="outputs", help="folder for cv.json and the trained model")
     ap.add_argument("--lr", type=float, default=2e-5)
     ap.add_argument("--epochs", type=int, default=2)
+    ap.add_argument("--matrix", default="rerank-ft-dev-all", help="analyse: the dev-all matrix to compare")
     a = ap.parse_args()
     if a.command == "analyse":
-        result = analyse()
+        result = analyse(a.matrix)
         out = paths.results_dir / "matrices" / result["matrix"] / "analysis.json"
         out.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         print(f"wrote {out}")
