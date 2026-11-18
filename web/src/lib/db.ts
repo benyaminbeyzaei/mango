@@ -33,6 +33,22 @@ db.version(1).stores({
   chats: "++id, created",
   messages: "++id, chatId",
 })
+// Version 2 keeps the whole question as the title (the page shortens it with "…").
+// Older chats were cut at 60 characters; give them back their full question.
+db.version(2)
+  .stores({ chats: "++id, created", messages: "++id, chatId" })
+  .upgrade(async (tx) => {
+    const chats = tx.table<Chat, number>("chats")
+    const messages = tx.table<Message, number>("messages")
+    for (const chat of await chats.toArray()) {
+      if (chat.title.length !== 60) continue
+      const texts = (
+        await messages.where("chatId").equals(chat.id).toArray()
+      ).map((m) => m.text || m.response?.transcript || "")
+      const full = texts.find((text) => text.startsWith(chat.title))
+      if (full) await chats.update(chat.id, { title: full })
+    }
+  })
 
 export async function deleteChat(id: number) {
   await db.transaction("rw", db.chats, db.messages, async () => {

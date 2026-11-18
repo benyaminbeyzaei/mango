@@ -4,15 +4,9 @@ import { useState, type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { fmt } from "@/lib/results"
 
-// The preset's chart colours (greyscale), ordered so neighbours contrast, plus the text colour for a sixth series.
-export const PALETTE = [
-  "var(--chart-2)",
-  "var(--chart-4)",
-  "var(--chart-1)",
-  "var(--chart-3)",
-  "var(--chart-5)",
-  "var(--foreground)",
-]
+// Six series colours (index.css), always in this order, so a run keeps its colour
+// across every chart on the page. Compare shows at most six runs.
+export const PALETTE = [1, 2, 3, 4, 5, 6].map((i) => `var(--chart-${i})`)
 
 export const AXIS = { fontSize: 11, fill: "var(--muted-foreground)" }
 export const TOOLTIP = {

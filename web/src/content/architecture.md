@@ -1,4 +1,4 @@
-# Architecture
+# Architecture of Mango
 
 ## The pipeline
 
@@ -12,7 +12,7 @@ Each query goes through five stages, the course's standard flow. The course give
 
 ## Where the platform sits
 
-The course code in `rag/src/` is used unchanged. `mlsrag` (in `rag/extensions/platform/`) wraps it: a run configuration picks one implementation per stage, every model call goes through one cached, logged and costed gateway, and every query leaves a trace of spans, counts and costs. A run over a question set writes `config.json`, `queries.jsonl` and `metrics.json` under `rag/extensions/results/`. The HTTP API (`mlsrag serve`, routes under `/api`) exposes those runs, the available models and single queries; this web client only talks to that API.
+The course code in `rag/src/` is used unchanged. `mlsrag` (in `rag/extensions/platform/`) wraps it: a run configuration picks one implementation per stage, every model call goes through one cached, logged and costed gateway, and every query leaves a trace of spans, counts and costs. A run over a question set writes `config.json`, `queries.jsonl` and `metrics.json` under `rag/extensions/results/`. The HTTP API (`mlsrag serve`, routes under `/api`) exposes those runs, the available models and single queries; Mango, this website, only talks to that API.
 
 ## The modes
 

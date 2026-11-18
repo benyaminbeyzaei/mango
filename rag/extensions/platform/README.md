@@ -11,7 +11,7 @@ each question, and sends every model call through one cached, logged and costed 
 ```bash
 uv pip install -e "rag/extensions/platform[dev]"     # from the checkout root, inside a venv
 pytest rag/extensions/platform                       # fast tests; -m slow needs the data and transcripts
-docker compose up                                    # API + web client at http://localhost:8000 (see below)
+docker compose up                                    # API + Mango, the website, at http://localhost:8000 (see below)
 ```
 
 ## Question sets
@@ -87,7 +87,7 @@ stage writes to a folder named by a hash of its inputs, config and code version,
 stages rerun; LLM stages keep a per-item ledger and resume after a stop. See [docs/pipelines.md](docs/pipelines.md).
 
 **Results** (`runner.py`, `results.py`). `mlsrag run` writes one folder per run (below); `matrix`,
-`compare`, the API and the web client only read those folders.
+`compare`, the API and Mango only read those folders.
 
 ## Commands (from the checkout root)
 
@@ -102,7 +102,7 @@ stages rerun; LLM stages keep a per-item ledger and resume after a stop. See [do
 | `mlsrag asr-compare --a FILE --b FILE --subset S` | word disagreement and retrieval of two transcript caches |
 | `mlsrag preprocess run\|status\|clean --pipeline P --config FILE` | offline stages ([pipelines](docs/pipelines.md)) |
 | `mlsrag fit-map --from enc_a --to enc_b --method lstsq --exclude-dev` | map between encoder spaces |
-| `mlsrag serve [--host --port --web-dir web/dist]` | HTTP API and web client |
+| `mlsrag serve [--host --port --web-dir web/dist]` | HTTP API and Mango, the website |
 | `mlsrag openapi` / `mlsrag make-subsets` | rewrite `openapi.json` / the question lists |
 
 ```bash
@@ -150,7 +150,7 @@ run         {run_id, config_name, subset, n_queries, started, finished, git_comm
 ## Run with Docker
 
 One image (`rag/extensions/platform/Dockerfile`, about 2.1 GB, CPU only) holds the API, the CLI and
-the built web client. The data, the model, `rag/.cache/`, the results and `rag/.env` stay on your
+the built Mango website. The data, the model, `rag/.cache/`, the results and `rag/.env` stay on your
 disk and are mounted (`compose.yaml`). From a fresh clone:
 
 ```bash

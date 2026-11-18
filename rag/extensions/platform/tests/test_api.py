@@ -219,6 +219,11 @@ def test_web_dir_serves_the_client_with_spa_fallback(stage, tmp_path):
     assert client.get("/runs/some/page").text == "<html>app</html>"
     assert client.get("/api/health").json()["status"] == "ok"
     assert client.get("/api/nope").status_code == 404
+    # /docs is a website page; the Swagger reference lives at /api-docs
+    assert client.get("/docs").text == "<html>app</html>"
+    docs = client.get("/api-docs")
+    assert docs.status_code == 200 and "Mango API" in docs.text and "/api-docs/openapi.json" in docs.text
+    assert client.get("/api-docs/openapi.json").json()["info"]["title"] == "Mango API"
 
 
 def test_openapi_json_is_current():

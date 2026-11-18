@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "mlsrag",
+    "title": "Mango API",
     "description": "Query the RAG pipeline with a chosen config and read the committed results.",
     "version": "0.1.0"
   },

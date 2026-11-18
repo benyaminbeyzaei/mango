@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router"
 
 import { useModels } from "@/api/queries"
 import type { components } from "@/api/schema"
+import { Line, Loading, TableSkeleton } from "@/components/page-skeletons"
 import { Badge } from "@/components/ui/badge"
 import {
   Table,
@@ -52,7 +53,16 @@ function Models() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="font-heading text-2xl font-medium">Models</h1>
-      {models.isPending && <p className="text-muted-foreground">Loading…</p>}
+      {models.isPending && (
+        <Loading label="Loading models">
+          {[4, 3, 6].map((rows, i) => (
+            <section key={i} className="flex flex-col gap-2">
+              <Line className="h-7 w-32" />
+              <TableSkeleton rows={rows} cols={2} />
+            </section>
+          ))}
+        </Loading>
+      )}
       {models.isError && (
         <p className="text-destructive">{models.error.message}</p>
       )}

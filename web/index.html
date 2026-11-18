@@ -3,8 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="data:," />
-    <title>mlsrag</title>
+    <meta name="description" content="Mango: explore and compare the RAG experiments." />
+    <meta name="theme-color" content="#e9a23b" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <title>Mango</title>
+    <script>
+      // Set the theme before the first paint, so dark mode does not flash white
+      // (the same rule as ThemeProvider: the saved choice, else the system's).
+      try {
+        var t = localStorage.getItem("theme")
+        if (t !== "dark" && t !== "light")
+          t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+        document.documentElement.classList.add(t)
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

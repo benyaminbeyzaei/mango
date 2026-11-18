@@ -15,6 +15,7 @@ import numpy as np
 import openai
 import yaml
 from fastapi import APIRouter, Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
+from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import FileResponse
 from pydantic import ValidationError
 
@@ -127,8 +128,16 @@ def words(text: str) -> list[str]:
 
 
 def create_app(web_dir=None, results_dir=None, data_dir=None, cache_dir=None) -> FastAPI:
-    app = FastAPI(title="mlsrag", version="0.1.0",
-                  description="Query the RAG pipeline with a chosen config and read the committed results.")
+    # The interactive API docs live at /api-docs, so /docs stays a page of the website.
+    app = FastAPI(title="Mango API", version="0.1.0",
+                  description="Query the RAG pipeline with a chosen config and read the committed results.",
+                  docs_url=None, redoc_url=None, openapi_url="/api-docs/openapi.json")
+
+    @app.get("/api-docs", include_in_schema=False)
+    def api_docs():
+        return get_swagger_ui_html(openapi_url=app.openapi_url, title="Mango API",
+                                   swagger_favicon_url="/favicon.ico")
+
     api = APIRouter(prefix="/api")
     results_root = Path(results_dir or paths.results_dir)
     data_root = Path(data_dir or paths.data_dir)

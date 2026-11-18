@@ -3,11 +3,12 @@
 Part of the [mlsrag README](../README.md).
 
 ```bash
-mlsrag serve --host 127.0.0.1 --port 8000 [--web-dir web/dist]   # API under /api, the client (if given) at /
+mlsrag serve --host 127.0.0.1 --port 8000 [--web-dir web/dist]   # API under /api, Mango (if given) at /
 mlsrag openapi                                                    # rewrite openapi.json (a test checks it is current)
 ```
 
-`openapi.json` (in `rag/extensions/platform/`) is the contract the web client is built against. Every query
+The interactive reference (Swagger) is at `/api-docs`; `/docs` is Mango's own Docs page. `openapi.json` (in
+`rag/extensions/platform/`) is the contract Mango, the website, is built against. Every query
 goes through the same `build_stages` and flow as `mlsrag run`, with one trace per request; stages are
 built once per config (at most 8 kept) and queries run one at a time. Typed text replaces the ASR
 stage's output, a given vector replaces the encoder's.
