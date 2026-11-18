@@ -31,8 +31,8 @@
       }
     },
     {
-      "run": "20261111-0105-rerank-best-practice",
-      "config": "rerank-best",
+      "run": "20261111-0105-rerank-minilm-p20-practice",
+      "config": "rerank-minilm-p20",
       "Recall@5": 0.4178315811172954,
       "Recall@10": 0.5090791589363017,
       "Recall@20": 0.5817357245928674,

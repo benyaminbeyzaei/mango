@@ -1,7 +1,7 @@
 {
-  "name": "rerank-best",
+  "name": "rerank-minilm-p20",
   "asr": "cached",
-  "asr_cache": "rag/.cache/transcripts/whisper1-dev.jsonl",
+  "asr_cache": "rag/.cache/transcripts/whisper1-practice.jsonl",
   "query_encoder": "gte-small",
   "corpus_index": "enc_a",
   "mismatch_policy": "error",

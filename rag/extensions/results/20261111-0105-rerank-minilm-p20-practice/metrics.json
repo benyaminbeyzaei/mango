@@ -33,8 +33,8 @@
     "peak_rss_mb": 1043.28515625
   },
   "run": {
-    "run_id": "20261111-0105-rerank-best-practice",
-    "config_name": "rerank-best",
+    "run_id": "20261111-0105-rerank-minilm-p20-practice",
+    "config_name": "rerank-minilm-p20",
     "subset": "practice",
     "started": "2026-11-11T01:05:59",
     "finished": "2026-11-11T01:13:29",

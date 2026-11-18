@@ -1,5 +1,5 @@
 {
-  "name": "rerank-best",
+  "name": "rerank-minilm-p20",
   "asr": "cached",
   "asr_cache": "rag/.cache/transcripts/whisper1-practice.jsonl",
   "query_encoder": "gte-small",
