@@ -1,4 +1,5 @@
 import ReactMarkdown, { type Components } from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 // Tailwind resets element styles, so each Markdown element gets its classes here.
 const components: Components = {
@@ -16,6 +17,16 @@ const components: Components = {
     />
   ),
   code: (p) => <code className="font-mono text-[0.9em]" {...p} />,
+  // Tables (GitHub-flavoured Markdown): scroll sideways on narrow screens.
+  table: (p) => (
+    <div className="overflow-x-auto rounded-lg border">
+      <table className="w-full text-xs" {...p} />
+    </div>
+  ),
+  thead: (p) => <thead className="bg-muted/50" {...p} />,
+  tr: (p) => <tr className="border-b last:border-0" {...p} />,
+  th: (p) => <th className="p-2 text-left align-top font-medium" {...p} />,
+  td: (p) => <td className="p-2 align-top" {...p} />,
   blockquote: (p) => (
     <blockquote className="border-l-2 pl-4 text-muted-foreground" {...p} />
   ),
@@ -24,7 +35,9 @@ const components: Components = {
 export function Markdown({ children }: { children: string }) {
   return (
     <div className="flex max-w-3xl min-w-0 flex-col gap-3 text-sm">
-      <ReactMarkdown components={components}>{children}</ReactMarkdown>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+        {children}
+      </ReactMarkdown>
     </div>
   )
 }

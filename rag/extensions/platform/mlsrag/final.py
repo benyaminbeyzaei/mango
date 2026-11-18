@@ -1,10 +1,10 @@
-"""Plan 032: the reranker choice and comparison.json for the final three-way comparison.
+"""The reranker choice and comparison.json for the final three-way comparison.
 
     python -m mlsrag.final
 
-reads the matrix summaries rerank-practice-all, final-practice-all and final-dev-all, writes a slim
+reads the matrix summaries rerank-practice, final-practice and final-test, writes a slim
 per_query.jsonl next to each run (ids, timings, tokens, retrieval metrics; no prompts or answers, so the
-dev-all tables can be recomputed from committed files) and matrices/final/comparison.json, which also carries the
+test tables can be recomputed from committed files) and matrices/final/comparison.json, which also carries the
 hand-written matrices/final/explanations.json (observation, likely cause, evidence, confidence).
 """
 import json
@@ -17,23 +17,23 @@ from .evaluate import read_jsonl
 from .results import METRIC_KEYS, bootstrap_ci
 
 MATRICES = paths.results_dir / "matrices"
-ROWS = ["baseline", "rerank-best", "raptor-tree-gpt5-evidence"]
+ROWS = ["baseline", "rerank-minilm-p20", "raptor-tree-gpt5-evidence"]
 RETRIEVAL = ["Recall@5", "Recall@10", "Recall@100", "MRR@10", "NDCG@10"]
 SCORES = ["correctness", "grounding", "completeness", "answer_norm"]
 STAGES = ["asr", "encode", "dense_retrieve", "rerank", "generate"]  # dense_retrieve = retrieve minus rerank
 BUILD_COST = {
     "baseline": "none",
-    "rerank-best": "one-time download of the local cross-encoder (ms-marco-MiniLM-L-6-v2: 88 MB on disk, "
+    "rerank-minilm-p20": "one-time download of the local cross-encoder (ms-marco-MiniLM-L-6-v2: 88 MB on disk, "
                    "bge-reranker-base: 1.1 GB); no API calls",
-    "raptor-tree-gpt5-evidence": "gpt-5-mini summaries of the two-level tree: US$1.46, 439 calls (plan 030)",
+    "raptor-tree-gpt5-evidence": "gpt-5-mini summaries of the two-level tree: US$1.46, 439 calls",
 }
 # How the runs were made (the laptop was in use for other work, so latencies are slower than an idle machine's).
 CPU_LIMIT = {
     "reranker_selection": "6 cores (taskset -c 0-5), nice 19, OMP/MKL threads 6",
     "final_runs": "10 cores (taskset -c 0-9), nice 19, OMP/MKL threads 10; the three rows of each split under the "
                   "same limit, one row at a time",
-    "dev_all_generation": "sequential, one ELM request at a time; Qwen answer timeout 420 s",
-    "clean_retrieval_latency": "practice-all R1",
+    "test_generation": "sequential, one ELM request at a time; Qwen answer timeout 420 s",
+    "clean_retrieval_latency": "practice R1",
 }
 NEAR_BEST = 0.005  # the reranker choice rule: within this much NDCG@10 of the best, take the fastest
 
@@ -150,28 +150,28 @@ def top5_moves(rows, base, qrels) -> dict:
 
 def selection() -> dict:
     qrels = CourseData(paths.data_dir).load_qrels("practice")
-    base = load_queries(matrix_runs("rerank-practice-all")["baseline"])
+    base = load_queries(matrix_runs("rerank-practice")["baseline"])
     settings = []
-    for config, run in matrix_runs("rerank-practice-all").items():
+    for config, run in matrix_runs("rerank-practice").items():
         rows = load_queries(run)
         pool = sum(r["rerank_pool"] for r in rows)
         settings.append({"config": config, "run": run, **describe(rows), **top5_moves(rows, base, qrels),
                          "pairs_truncated": f"{sum(r['rerank_truncated'] for r in rows)}/{pool}"})
     reranked = [s for s in settings if s["config"] != "baseline"]
-    return {"rule": f"highest NDCG@10 on practice-all; within {NEAR_BEST} of the best, the lowest mean latency",
+    return {"rule": f"highest NDCG@10 on practice; within {NEAR_BEST} of the best, the lowest mean latency",
             "chosen": choose_reranker(reranked), "settings": settings}
 
 
 def comparison() -> dict:
     splits = {}
-    for split in ["practice-all", "dev-all"]:
+    for split in ["practice", "test"]:
         rows = {c: load_queries(run) for c, run in matrix_runs(f"final-{split}").items()}
         splits[split] = {c: {"run": run, **describe(rows[c]), **judge_calls(run)}
                          for c, run in matrix_runs(f"final-{split}").items()}
-        if split == "dev-all":
+        if split == "test":
             splits[split]["paired_vs_baseline"] = {c: paired(rows[c], rows["baseline"]) for c in ROWS[1:]}
             splits[split]["summary_evidence"] = summary_levels(rows["raptor-tree-gpt5-evidence"])
-    explanations = MATRICES / "final" / "explanations.json"  # written by hand from the analysis in the plan
+    explanations = MATRICES / "final" / "explanations.json"  # written by hand
     return {"rows": ROWS, "build_cost": BUILD_COST, "splits": splits, "reranker_selection": selection(),
             "explanations": json.loads(explanations.read_text(encoding="utf-8")) if explanations.exists() else [],
             "cpu_limit": CPU_LIMIT,

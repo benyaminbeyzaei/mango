@@ -1,0 +1,44 @@
+{
+  "retrieval": {
+    "Recall@5": 0.35416666666666663,
+    "Recall@10": 0.39583333333333337,
+    "Recall@20": 0.5125,
+    "Recall@100": 0.7541666666666667,
+    "MRR@10": 0.4875,
+    "NDCG@10": 0.362484362319765
+  },
+  "answers": null,
+  "cost": {
+    "elm_calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.015293294563889503,
+    "encode": 89.04955320758745,
+    "retrieve": 4.812857342767529,
+    "context": 0.020027844584546983,
+    "generate": null,
+    "end_to_end": {
+      "mean": 93.9494305086555,
+      "p50": 95.03094700630754,
+      "p95": 110.09287107153797
+    }
+  },
+  "resources": {
+    "cpu_s": 25.60539422399998,
+    "peak_rss_mb": 787.5390625
+  },
+  "run": {
+    "run_id": "20261108-2214-enc-b-reencode-prefix-practice-20",
+    "config_name": "enc-b-reencode-prefix",
+    "subset": "practice-20",
+    "started": "2026-11-08T22:14:01",
+    "finished": "2026-11-08T22:14:03",
+    "git_commit": "6a0084d04b766d7dce3218b27f17fcd19bd47418",
+    "fresh": true,
+    "n_queries": 20
+  }
+}

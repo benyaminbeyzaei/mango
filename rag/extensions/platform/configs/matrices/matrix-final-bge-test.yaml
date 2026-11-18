@@ -1,0 +1,7 @@
+# End-to-end: bge-reranker-v2-m3 (pool 20) on test with generation and judge (125 answer + 125 judge calls,
+# free ELM models). Same controls as final-test, whose baseline row is the comparison; it is not rerun.
+# Run with --allow-full --fresh. Only summary.{md,json} and the slim per-run files are committed (no queries.jsonl).
+name: final-bge-test
+subset: test
+override: {asr_cache: rag/.cache/transcripts/whisper1-dev.jsonl}
+configs: [rerank-bge-m3-p20]

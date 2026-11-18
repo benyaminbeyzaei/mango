@@ -3,7 +3,7 @@ import { useQueries, useQuery } from "@tanstack/react-query"
 
 import { api } from "@/api/client"
 
-export type Metrics = {
+type Metrics = {
   retrieval: Record<string, number>
   answers: Record<string, number | string> | null
   cost: Record<string, number>
@@ -23,9 +23,11 @@ export type Span = {
   duration_ms: number
   attrs: Record<string, unknown>
 }
-// One line of queries.jsonl.
+// One line of queries.jsonl. Full-split runs commit only a slim per_query.jsonl; the API turns
+// its lines into this shape with `slim: true` (no transcript, prompt, answer or gateway spans).
 export type QueryTrace = {
   query_id: string
+  slim?: boolean
   spans: Span[]
   counters: Record<string, number>
   cost: Record<string, unknown>
@@ -84,14 +86,6 @@ export const useRuns = (runIds: string[]) =>
     queries: runIds.map((id) => ({
       queryKey: ["run", id],
       queryFn: () => fetchRun(id),
-    })),
-  })
-
-export const useRunsQueries = (runIds: string[]) =>
-  useQueries({
-    queries: runIds.map((id) => ({
-      queryKey: ["queries", id],
-      queryFn: () => fetchQueries(id),
     })),
   })
 
@@ -155,6 +149,35 @@ const UNITS: Record<string, string> = {
 
 export const unit = (path: string) => UNITS[path] ?? ""
 
+const NAMES: Record<string, string> = {
+  "answers.normalized": "answer score",
+  "cost.elm_calls": "ELM calls",
+  "cost.audio_seconds": "audio",
+  "cost.est_usd": "estimated cost",
+  "resources.cpu_s": "CPU time",
+  "resources.peak_rss_mb": "peak RSS",
+}
+
+// How a metric path is shown: "retrieval.NDCG@10" -> "NDCG@10", "answers.normalized" ->
+// "answer score (0–1)", "latency_ms.end_to_end.p50" -> "end-to-end p50 (ms)". Counts carry
+// no unit; retrieval metrics are 0–1 by definition.
+export function label(path: string) {
+  const name =
+    NAMES[path] ??
+    path
+      .split(".")
+      .slice(path.includes(".") ? 1 : 0)
+      .join(" ")
+      .replace("end_to_end", "end-to-end")
+      .replaceAll("_", " ")
+  const u = unit(path)
+  const showUnit =
+    u &&
+    !path.startsWith("retrieval.") &&
+    !["count", "calls", "tokens"].includes(u)
+  return showUnit ? `${name} (${u})` : name
+}
+
 // Remote (ELM) calls: chat and transcribe. Embeddings are local and free, so they never count.
 // Remote-call spans served from the cache take about 1 ms and cost nothing.
 export const isGatewaySpan = (s: Span) =>
@@ -168,6 +191,9 @@ export const isTimeOrCost = (path: string) =>
 
 export const MAX_COMPARE = 6
 
+export const SLIM_NOTE =
+  "This run kept only per-query metrics, stage timings and judge scores; its transcripts, prompts and answers were not committed."
+
 // A comma-separated run list from the URL without repeats, at most MAX_COMPARE runs.
 export const uniqueIds = (list: string) =>
   [...new Set(list.split(",").filter(Boolean))].slice(0, MAX_COMPARE).join(",")
@@ -175,6 +201,24 @@ export const uniqueIds = (list: string) =>
 export const runDate = (runId: string) =>
   runId.replace(/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2}).*/, "$1-$2-$3 $4:$5")
 
-// Short display of a stored number for cards; tables print stored values in full.
-export const fmt = (v: number | null | undefined) =>
-  v == null ? "–" : Number.isInteger(v) ? String(v) : v.toFixed(4)
+// How every number is shown, the same as in the docs: scores with three decimals
+// (0.402, 2.568), latencies 113 or 74,123 and counts 1,250. The stored value
+// stays in each cell's tooltip (`title`).
+//   integers           1,250
+//   |v| >= 100         74,123   (no decimals)
+//   10 <= |v| < 100    85.3     (one)
+//   0.001 <= |v| < 10  0.402    (three)
+//   0 < |v| < 0.001    0.00012  (two significant digits, so small costs do not read 0.000)
+export function fmt(v: number | string | null | undefined): string {
+  if (v == null) return "–"
+  if (typeof v === "string") return v
+  const a = Math.abs(v)
+  if (Number.isInteger(v)) return v.toLocaleString("en-GB")
+  if (a >= 100) return Math.round(v).toLocaleString("en-GB")
+  if (a >= 10) return v.toFixed(1)
+  if (a >= 0.001) return v.toFixed(3)
+  return v.toPrecision(2)
+}
+
+// The 20-question quick-check subset; the Results page hides its runs unless asked.
+export const isQuickCheck = (subset: string) => subset === "practice-20"

@@ -1,6 +1,6 @@
 """Label stage: one LLM call per cluster names its topic, through the gateway and a ledger.
 
-The config's `prompt` picks the prompt (default v1). v2 (plan 030) shows the records nearest the
+The config's `prompt` picks the prompt (default v1). v2 shows the records nearest the
 centroid, then renames every topic whose name another topic shares until all names are distinct."""
 import json
 import re
@@ -11,7 +11,7 @@ from .cluster import load_vectors
 from .ledger import Ledger, run_items
 
 PROMPT_VERSION = "v1"
-MAX_CLUSTERS = 512  # plan 002: never label more than this many clusters in one run
+MAX_CLUSTERS = 512  # never label more than this many clusters in one run
 PROMPT_V1 = (
     "Below are the most frequent words and a few example records from one cluster of a "
     "document collection.\n\nFrequent words: {words}\n\nExample records:\n{examples}\n\n"
@@ -96,9 +96,8 @@ def build_prompt(cluster, texts, attempt=0) -> str:
     shortest = sorted(cluster["members"], key=lambda r: (len(texts[r]), r))[:5]
     examples = "\n".join(f"- {texts[r][:300]}" for r in shortest)
     prompt = PROMPT_V1.format(words=", ".join(cluster["top_words"]), examples=examples)
-    if attempt:  # a retry: a different prompt, so the gateway does not return the cached bad reply
-        prompt += f"\n\n(Retry {attempt}: the previous reply was not usable. Reply with the JSON object only.)"
-    return prompt
+    # a retry needs a different prompt, so the gateway does not return the cached bad reply
+    return prompt + (RETRY.format(attempt=attempt) if attempt else "")
 
 
 def parse_label(reply) -> dict:
@@ -115,7 +114,7 @@ def parse_label(reply) -> dict:
 def run(inputs, config, ctx):
     clusters = json.loads((inputs["cluster"] / "clusters.json").read_text(encoding="utf-8"))
     if len(clusters) > MAX_CLUSTERS:
-        raise ValueError(f"{len(clusters)} clusters > {MAX_CLUSTERS}; this plan does not label that many")
+        raise ValueError(f"{len(clusters)} clusters > {MAX_CLUSTERS}; refusing to label that many")
     texts = {}
     for line in (inputs["select"] / "records.jsonl").open(encoding="utf-8"):
         r = json.loads(line)

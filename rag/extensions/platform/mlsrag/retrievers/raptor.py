@@ -1,7 +1,7 @@
 """SummaryRetriever (RAPTOR-lite, one level): exact search over the records and the cluster
 summaries together. A summary in the ranking is either replaced by its cluster's `expand_top`
 members most similar to the query (default), or kept as evidence itself (`summary:<cluster>`).
-RAPTOR-tree (plan 028) uses the same rule over two levels (ids t<cluster> and s<section>);
+RAPTOR-tree uses the same rule over two levels (ids t<cluster> and s<section>);
 hits are also counted per level."""
 import json
 from collections import Counter

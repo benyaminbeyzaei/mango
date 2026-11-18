@@ -1,0 +1,8 @@
+# Flat, one-level topics, two-level TOC, RAPTOR-lite, RAPTOR-tree and RAPTOR-full on practice-20 (retrieval only).
+name: toc-raptor-practice-20
+subset: practice-20
+configs: [baseline, topics-k256-m4, toc-centroid-m4, toc-llm-m4, toc-llm-topics-m4, toc-llm-flat-m4,
+          raptor-lite-expand, raptor-tree-expand, raptor-lite-evidence, raptor-tree-evidence,
+          toc-centroid-m4-gpt5labels, toc-llm-m4-gpt5labels, toc-llm-topics-m4-gpt5labels, toc-llm-flat-m4-gpt5labels,
+          raptor-tree-gpt5-expand, raptor-tree-gpt5-evidence,
+          raptor-full-expand, raptor-full-evidence]

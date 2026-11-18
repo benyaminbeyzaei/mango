@@ -1,7 +1,6 @@
-import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
-import { api } from "@/api/client"
+import { useModels } from "@/api/queries"
 import type { components } from "@/api/schema"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -48,14 +47,7 @@ function stages(
 }
 
 function Models() {
-  const models = useQuery({
-    queryKey: ["models"],
-    queryFn: async () => {
-      const { data, error } = await api.GET("/api/models")
-      if (error) throw new Error("could not load /api/models")
-      return data
-    },
-  })
+  const models = useModels()
 
   return (
     <div className="flex flex-col gap-6">

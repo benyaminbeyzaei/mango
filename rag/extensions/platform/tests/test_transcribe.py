@@ -39,7 +39,7 @@ def test_new_lines_carry_seconds_and_audio_s(tmp_path, monkeypatch):
     out = tmp_path / "cache.jsonl"
     out.write_text(json.dumps({"query_id": "q1", "transcript": "old line"}) + "\n")  # no timings
 
-    r = runner.transcribe("whisper1", "practice-smoke20", out, fresh=True)
+    r = runner.transcribe("whisper1", "practice-20", out, fresh=True)
     assert (r["skipped"], r["transcribed"], made) == (1, 1, [True])
     rows = [json.loads(line) for line in out.read_text().splitlines()]
     assert "seconds" not in rows[0]
@@ -70,7 +70,7 @@ def test_course_model_load_is_timed_once_and_kept_out_of_query_seconds(tmp_path,
 
     monkeypatch.setattr(runner, "CourseASR", FakeCourseASR)
     out = tmp_path / "course.jsonl"
-    runner.transcribe("course", "practice-smoke20", out)
+    runner.transcribe("course", "practice-20", out)
     assert prepared == [1]
     assert json.loads((tmp_path / "course.jsonl.meta.json").read_text())["load_seconds"] == 30.0
     assert [json.loads(line)["seconds"] for line in out.read_text().splitlines()] == [2.0, 2.0]

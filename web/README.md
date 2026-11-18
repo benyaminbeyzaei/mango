@@ -33,9 +33,9 @@ pnpm --dir web gen:api          # ../rag/extensions/platform/openapi.json -> src
 
 ## Questions
 
-`/questions` lists the benchmark's spoken questions (dev or practice, 20 per page) with an audio player, the
+`/questions` lists the benchmark's spoken questions (test or practice, 20 per page) with an audio player, the
 whisper-1 transcript and our own ASR's transcript side by side, read by `GET /api/questions` from
-`rag/.cache/transcripts/whisper1-<split>.jsonl` and `rag/.cache/transcripts/course-<split>.jsonl` ("not
+`rag/.cache/transcripts/whisper1-<split>.jsonl` and `rag/.cache/transcripts/course-<split>.jsonl` (the course's split names: `dev` holds the test questions) ("not
 transcribed yet" when a file or id is missing). Rows whose transcripts differ (ignoring case and outer spaces)
 are marked, and words only one transcript has are highlighted. Each transcript's button opens Interactive and
 asks that text once, as if typed there (`/interactive?ask=…`; the parameter is removed after sending).
@@ -69,7 +69,7 @@ shown is the stored `metrics.json` or `queries.jsonl` value; tables print it in 
 
 | Route | What it shows | URL state |
 |---|---|---|
-| `/results` | runs (config, subset, queries, date, Recall@10, MRR@10, NDCG@10, ELM calls) and matrices | `q` search, `sel` ticked runs |
+| `/results` | runs (config, question set, questions, date, Recall@10, MRR@10, NDCG@10, ELM calls) and matrices | `q` search, `sel` ticked runs |
 | `/results/compare?runs=a,b,c` | config fields that differ, then four charts: one metric family by run, latency by stage, a metric against cost (mean ELM calls per query or mean latency), a retrieval metric per query | `runs` (up to 6), `metric`, `x` (`calls` or `latency`) |
 | `/results/<run_id>` | every metric of the run, the per-query table (sort by any column, filter by query id) | `sort`, `desc`, `filter` |
 | `/results/<run_id>/<query_id>` | the answer, retrieval metrics, judge scores if stored, then the full detail: transcript, top-k records (text from `/api/records/{id}`), prompt, span timeline, counters, cost | none |

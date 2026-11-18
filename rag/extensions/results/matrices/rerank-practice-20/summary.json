@@ -1,0 +1,202 @@
+{
+  "name": "rerank-practice-20",
+  "subset": "practice-20",
+  "rows": [
+    {
+      "run": "20261110-1906-baseline-practice-20",
+      "config": "baseline",
+      "Recall@5": 0.4041666666666667,
+      "Recall@10": 0.475,
+      "Recall@20": 0.5499999999999999,
+      "Recall@100": 0.7791666666666666,
+      "MRR@10": 0.4791666666666667,
+      "NDCG@10": 0.385690829443961,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 103.960715548601,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.31645833333333334,
+          0.6418749999999999
+        ],
+        "NDCG@10": [
+          0.2439770897086578,
+          0.5245184620228015
+        ]
+      }
+    },
+    {
+      "run": "20261110-1907-rerank-minilm-p20-practice-20",
+      "config": "rerank-minilm-p20",
+      "Recall@5": 0.24583333333333335,
+      "Recall@10": 0.4833333333333333,
+      "Recall@20": 0.5499999999999999,
+      "Recall@100": 0.7791666666666666,
+      "MRR@10": 0.3358333333333333,
+      "NDCG@10": 0.31293954880480973,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 1086.522323396639,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.3166666666666666,
+          0.65
+        ],
+        "NDCG@10": [
+          0.1881923982564074,
+          0.4363146711788101
+        ]
+      }
+    },
+    {
+      "run": "20261110-1907-rerank-minilm-p50-practice-20",
+      "config": "rerank-minilm-p50",
+      "Recall@5": 0.22083333333333335,
+      "Recall@10": 0.4125,
+      "Recall@20": 0.575,
+      "Recall@100": 0.7791666666666666,
+      "MRR@10": 0.32172619047619044,
+      "NDCG@10": 0.2800030552581008,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 2788.5206121427473,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.26666666666666666,
+          0.5625
+        ],
+        "NDCG@10": [
+          0.16310722731892882,
+          0.4047111594784108
+        ]
+      }
+    },
+    {
+      "run": "20261110-1908-rerank-minilm-p100-practice-20",
+      "config": "rerank-minilm-p100",
+      "Recall@5": 0.22083333333333335,
+      "Recall@10": 0.36249999999999993,
+      "Recall@20": 0.5208333333333333,
+      "Recall@100": 0.7791666666666666,
+      "MRR@10": 0.31492063492063493,
+      "NDCG@10": 0.2584468522721931,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 4602.394279898726,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.21666666666666665,
+          0.5126041666666665
+        ],
+        "NDCG@10": [
+          0.14806711917330762,
+          0.3782525188471695
+        ]
+      }
+    },
+    {
+      "run": "20261110-1909-rerank-bge-p20-practice-20",
+      "config": "rerank-bge-p20",
+      "Recall@5": 0.3375,
+      "Recall@10": 0.4375,
+      "Recall@20": 0.5499999999999999,
+      "Recall@100": 0.7791666666666666,
+      "MRR@10": 0.35047619047619044,
+      "NDCG@10": 0.3205628669654043,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 9803.530278499238,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.26666666666666666,
+          0.6
+        ],
+        "NDCG@10": [
+          0.1848003518675279,
+          0.45409994358323924
+        ]
+      }
+    },
+    {
+      "run": "20261110-1913-rerank-bge-p50-practice-20",
+      "config": "rerank-bge-p50",
+      "Recall@5": 0.31666666666666665,
+      "Recall@10": 0.3416666666666667,
+      "Recall@20": 0.4833333333333334,
+      "Recall@100": 0.7791666666666666,
+      "MRR@10": 0.30999999999999994,
+      "NDCG@10": 0.2681101526859618,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 18179.528915754054,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.1625,
+          0.5126041666666665
+        ],
+        "NDCG@10": [
+          0.12664100621829322,
+          0.4055862750021315
+        ]
+      }
+    },
+    {
+      "run": "20261110-1919-rerank-bge-p100-practice-20",
+      "config": "rerank-bge-p100",
+      "Recall@5": 0.29166666666666663,
+      "Recall@10": 0.325,
+      "Recall@20": 0.4916666666666667,
+      "Recall@100": 0.7791666666666666,
+      "MRR@10": 0.28124999999999994,
+      "NDCG@10": 0.24771710453752044,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 43149.9114392529,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.15822916666666667,
+          0.49177083333333327
+        ],
+        "NDCG@10": [
+          0.11923255001952547,
+          0.3809597973049012
+        ]
+      }
+    }
+  ]
+}

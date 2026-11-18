@@ -1,4 +1,4 @@
-"""Every entry point refuses practice-all / dev-all without the explicit flag (plan 015)."""
+"""Every entry point refuses practice / test without the explicit flag."""
 from types import SimpleNamespace
 
 import pytest
@@ -20,8 +20,8 @@ def no_network(monkeypatch):
 @needs_data  # the estimate in the message reads the audio manifest
 def test_cli_run_refuses_full_split_and_writes_nothing(tmp_path, monkeypatch, no_network):
     monkeypatch.setattr(runner, "paths", SimpleNamespace(results_dir=tmp_path, data_dir=tmp_path))
-    with pytest.raises(ValueError, match="practice-all is a full split") as err:
-        cli.main(["run", "--config", "baseline", "--subset", "practice-all", "--no-generate"])
+    with pytest.raises(ValueError, match="practice is a full split") as err:
+        cli.main(["run", "--config", "baseline", "--subset", "practice", "--no-generate"])
     assert "generation calls: 0" in str(err.value)
     assert list(tmp_path.iterdir()) == []
 
@@ -29,17 +29,17 @@ def test_cli_run_refuses_full_split_and_writes_nothing(tmp_path, monkeypatch, no
 @needs_data
 def test_refused_run_reports_the_estimate(no_network):
     config = resolve_config("grep-agentic")
-    want = evaluate.estimate(config, "practice-all")
+    want = evaluate.estimate(config, "practice")
     assert want["calls"]["flow"] == 4 * 350
     with pytest.raises(ValueError) as err:
-        runner.run(config, "practice-all")
+        runner.run(config, "practice")
     assert f"total ELM calls:  {want['elm_calls']}" in str(err.value)
 
 
 def test_cli_transcribe_refuses_full_split(tmp_path, no_network):
     out = tmp_path / "x.jsonl"
-    with pytest.raises(ValueError, match="dev-all is a full split"):
-        cli.main(["transcribe", "--asr", "whisper1", "--subset", "dev-all", "--out", str(out)])
+    with pytest.raises(ValueError, match="test is a full split"):
+        cli.main(["transcribe", "--asr", "whisper1", "--subset", "test", "--out", str(out)])
     assert not out.exists()
 
 

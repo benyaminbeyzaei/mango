@@ -1,0 +1,174 @@
+{
+  "name": "rerank-practice",
+  "subset": "practice",
+  "rows": [
+    {
+      "run": "20261110-1934-baseline-practice",
+      "config": "baseline",
+      "Recall@5": 0.4283372500515358,
+      "Recall@10": 0.4847571634714492,
+      "Recall@20": 0.5817357245928674,
+      "Recall@100": 0.7680191713048855,
+      "MRR@10": 0.4927108843537415,
+      "NDCG@10": 0.4247973501905161,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 114.24570904795213,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4433419140383426,
+          0.5263950525664811
+        ],
+        "NDCG@10": [
+          0.38527960380079346,
+          0.4620978716880195
+        ]
+      }
+    },
+    {
+      "run": "20261110-1935-rerank-minilm-p20-practice",
+      "config": "rerank-minilm-p20",
+      "Recall@5": 0.4178315811172954,
+      "Recall@10": 0.5090791589363017,
+      "Recall@20": 0.5817357245928674,
+      "Recall@100": 0.7680191713048855,
+      "MRR@10": 0.46994897959183674,
+      "NDCG@10": 0.4178253481889833,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 1644.0727977639265,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4661399041434755,
+          0.5485586116264688
+        ],
+        "NDCG@10": [
+          0.3800595287610892,
+          0.4541333252927449
+        ]
+      }
+    },
+    {
+      "run": "20261110-1944-rerank-minilm-p50-practice",
+      "config": "rerank-minilm-p50",
+      "Recall@5": 0.40000845186559475,
+      "Recall@10": 0.49446011131725415,
+      "Recall@20": 0.5717957122242836,
+      "Recall@100": 0.7680191713048855,
+      "MRR@10": 0.4568412698412698,
+      "NDCG@10": 0.40417247475604656,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 3047.879899737891,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4539667748917749,
+          0.5342971706864563
+        ],
+        "NDCG@10": [
+          0.36765807366350595,
+          0.43873519704834474
+        ]
+      }
+    },
+    {
+      "run": "20261110-2002-rerank-minilm-p100-practice",
+      "config": "rerank-minilm-p100",
+      "Recall@5": 0.39136219336219336,
+      "Recall@10": 0.4858886827458256,
+      "Recall@20": 0.5618977530406102,
+      "Recall@100": 0.7680191713048855,
+      "MRR@10": 0.4554365079365079,
+      "NDCG@10": 0.4005657549123526,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 4497.6920971713425,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.44273106060606066,
+          0.5259875850340135
+        ],
+        "NDCG@10": [
+          0.36296107126256644,
+          0.4361947275568526
+        ]
+      }
+    },
+    {
+      "run": "20261110-2028-rerank-bge-p20-practice",
+      "config": "rerank-bge-p20",
+      "Recall@5": 0.37484065141207995,
+      "Recall@10": 0.4847355184498041,
+      "Recall@20": 0.5817357245928674,
+      "Recall@100": 0.7680191713048855,
+      "MRR@10": 0.414266439909297,
+      "NDCG@10": 0.37600235943148036,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 9699.5069751511,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.44157458771387337,
+          0.5253837868480724
+        ],
+        "NDCG@10": [
+          0.3401897118517062,
+          0.411059098026588
+        ]
+      }
+    },
+    {
+      "run": "20261110-2125-rerank-bge-p50-practice",
+      "config": "rerank-bge-p50",
+      "Recall@5": 0.34436672850958566,
+      "Recall@10": 0.43620593692022264,
+      "Recall@20": 0.5443807462378891,
+      "Recall@100": 0.7680191713048855,
+      "MRR@10": 0.38484353741496596,
+      "NDCG@10": 0.3407915095451918,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 18358.17141867908,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.39605264378478666,
+          0.478237863327149
+        ],
+        "NDCG@10": [
+          0.30554475880848875,
+          0.37558813290983983
+        ]
+      }
+    }
+  ]
+}

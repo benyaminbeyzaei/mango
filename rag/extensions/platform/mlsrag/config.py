@@ -38,6 +38,13 @@ class RunConfig(BaseModel):
             )
         return self
 
+    @model_validator(mode="after")
+    def check_summaries_have_a_tree(self):
+        if self.context_builder == "with-summaries" and not self.retriever.startswith("raptor-"):
+            raise ValueError("context_builder with-summaries shows RAPTOR summaries, so it needs retriever "
+                             "raptor-lite, raptor-tree or raptor-full (e.g. the raptor-tree-gpt5-evidence preset)")
+        return self
+
 
 def baseline() -> RunConfig:
     return RunConfig(

@@ -1,0 +1,44 @@
+{
+  "retrieval": {
+    "Recall@5": 0.4041666666666667,
+    "Recall@10": 0.475,
+    "Recall@20": 0.5499999999999999,
+    "Recall@100": 0.7791666666666666,
+    "MRR@10": 0.4791666666666667,
+    "NDCG@10": 0.3873824164458908
+  },
+  "answers": null,
+  "cost": {
+    "elm_calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.0355305994162336,
+    "encode": 1016.5596761973575,
+    "retrieve": 18.7033251975663,
+    "context": 0.047631855704821646,
+    "generate": null,
+    "end_to_end": {
+      "mean": 1036.3506216497626,
+      "p50": 1003.9043565047905,
+      "p95": 1248.3518742519666
+    }
+  },
+  "resources": {
+    "cpu_s": 141.01826708499976,
+    "peak_rss_mb": 640.94921875
+  },
+  "run": {
+    "run_id": "20261109-1958-raptor-tree-gpt5-expand-practice-20",
+    "config_name": "raptor-tree-gpt5-expand",
+    "subset": "practice-20",
+    "started": "2026-11-09T19:58:25",
+    "finished": "2026-11-09T19:58:45",
+    "git_commit": "75417bfdc579aef017aa4e4bde644bb86f1b05d8",
+    "fresh": true,
+    "n_queries": 20
+  }
+}

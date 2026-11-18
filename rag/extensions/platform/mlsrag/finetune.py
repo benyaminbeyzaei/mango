@@ -1,23 +1,22 @@
-"""Plan 035: fine-tune the MiniLM cross-encoder on the practice relevance labels.
+"""Fine-tune the MiniLM cross-encoder on the practice relevance labels.
 
     python -m mlsrag.finetune prepare data.json          # laptop: practice questions, dense rankings, labels, texts
     python -m mlsrag.finetune cv data.json out/          # GPU: 5-fold cross-validation -> out/cv.json
     python -m mlsrag.finetune train data.json out/ --lr 2e-5 --epochs 2   # GPU: all practice -> out/rerank-minilm-ft/
-    python -m mlsrag.finetune analyse                    # after the dev-all matrix: paired intervals vs the baseline
+    python -m mlsrag.finetune analyse                    # after the test matrix: paired intervals vs the baseline
 
 Training pairs for a question: every labelled relevant record (label 1) and the non-relevant records in its
 dense top 20 (label 0: the distractors the reranker has to push down). The query is the whisper-1 transcript,
-as at test time. Loss: binary cross-entropy on the model's single logit. Dev is never read here.
+as at test time. Loss: binary cross-entropy on the model's single logit. The test split is never read here.
 """
 import argparse
 import json
 import random
 import time
+from pathlib import Path
 
 import numpy as np
 import torch
-
-from pathlib import Path
 
 from .course import CourseData, paths
 from .gateway import RERANK_MAX_LENGTH, ModelGateway
@@ -25,8 +24,8 @@ from .runner import retrieval_metrics
 from .stages import ExactRetriever, load_transcripts
 
 BASE_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
-BASE_REVISION = "233902d25c440f23af6f7d6e94d2946bac0bee0a"  # the revision plan 032 used
-POOL = 20  # dense candidates re-scored, as in rerank-best
+BASE_REVISION = "233902d25c440f23af6f7d6e94d2946bac0bee0a"  # the revision rerank-minilm-p20 uses
+POOL = 20  # dense candidates re-scored, as in rerank-minilm-p20
 DEPTH = 100  # dense ranking kept for Recall@100
 BATCH = 16
 SEED = 0
@@ -185,9 +184,9 @@ def train_all(prepared, out_dir, lr, epochs):
 DEV_KEYS = ["Recall@5", "Recall@10", "MRR@10", "NDCG@10"]
 
 
-def analyse(matrix="rerank-ft-dev-all") -> dict:
-    """Each reranker minus the baseline per dev question (mean, 95 % bootstrap interval), and relevant records
-    moved into / out of the top 5 (plan 032's top5_moves)."""
+def analyse(matrix="rerank-ft-test") -> dict:
+    """Each reranker minus the baseline per test question (mean, 95 % bootstrap interval), and relevant records
+    moved into / out of the top 5 (final.top5_moves)."""
     from .final import load_queries, matrix_runs, mean_ci, top5_moves
 
     qrels = CourseData(paths.data_dir).load_qrels("dev")
@@ -211,7 +210,7 @@ if __name__ == "__main__":
     ap.add_argument("out", nargs="?", default="outputs", help="folder for cv.json and the trained model")
     ap.add_argument("--lr", type=float, default=2e-5)
     ap.add_argument("--epochs", type=int, default=2)
-    ap.add_argument("--matrix", default="rerank-ft-dev-all", help="analyse: the dev-all matrix to compare")
+    ap.add_argument("--matrix", default="rerank-ft-test", help="analyse: the test matrix to compare")
     a = ap.parse_args()
     if a.command == "analyse":
         result = analyse(a.matrix)

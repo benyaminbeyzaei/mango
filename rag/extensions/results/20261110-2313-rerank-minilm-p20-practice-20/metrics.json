@@ -1,0 +1,54 @@
+{
+  "retrieval": {
+    "Recall@5": 0.24583333333333335,
+    "Recall@10": 0.4833333333333333,
+    "Recall@20": 0.5499999999999999,
+    "Recall@100": 0.7791666666666666,
+    "MRR@10": 0.3358333333333333,
+    "NDCG@10": 0.31293954880480973
+  },
+  "answers": {
+    "correctness": 2.7,
+    "grounding": 3.0,
+    "completeness": 3.05,
+    "normalized": 0.7291666666666667,
+    "judged_queries": 20,
+    "judge_model": "mistralai/Mistral-Small-4-119B-2603",
+    "repeats": 1,
+    "judge_calls": 20
+  },
+  "cost": {
+    "elm_calls": 20,
+    "prompt_tokens": 21712,
+    "completion_tokens": 59307,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.04254099912941456,
+    "encode": 43.45471470733173,
+    "retrieve": 1302.5950357958209,
+    "rerank": 1298.7678128061816,
+    "context": 0.03002764715347439,
+    "generate": 180044.4101623085,
+    "end_to_end": {
+      "mean": 181390.66660044773,
+      "p50": 119857.89704899071,
+      "p95": 489355.0310554886
+    }
+  },
+  "resources": {
+    "cpu_s": 150.36168656200002,
+    "peak_rss_mb": 966.078125
+  },
+  "run": {
+    "run_id": "20261110-2313-rerank-minilm-p20-practice-20",
+    "config_name": "rerank-minilm-p20",
+    "subset": "practice-20",
+    "started": "2026-11-10T23:13:20",
+    "finished": "2026-11-11T00:13:48",
+    "git_commit": "38e3d0848ba6aae1209d9139e6f7ec9dca926d5e",
+    "fresh": true,
+    "n_queries": 20
+  }
+}

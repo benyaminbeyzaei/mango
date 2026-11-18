@@ -1,0 +1,53 @@
+{
+  "retrieval": {
+    "Recall@5": 0.4041666666666667,
+    "Recall@10": 0.475,
+    "Recall@20": 0.5499999999999999,
+    "Recall@100": 0.7791666666666666,
+    "MRR@10": 0.4791666666666667,
+    "NDCG@10": 0.385690829443961
+  },
+  "answers": {
+    "correctness": 2.2,
+    "grounding": 2.3,
+    "completeness": 2.45,
+    "normalized": 0.5791666666666667,
+    "judged_queries": 20,
+    "judge_model": "mistralai/Mistral-Small-4-119B-2603",
+    "repeats": 1,
+    "judge_calls": 20
+  },
+  "cost": {
+    "elm_calls": 20,
+    "prompt_tokens": 20194,
+    "completion_tokens": 62518,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.035604400909505785,
+    "encode": 40.7218932028627,
+    "retrieve": 5.180785397533327,
+    "context": 0.04955885233357549,
+    "generate": 52185.09257354599,
+    "end_to_end": {
+      "mean": 52231.20709579962,
+      "p50": 48565.30270000803,
+      "p95": 95041.36210744618
+    }
+  },
+  "resources": {
+    "cpu_s": 30.964987206000004,
+    "peak_rss_mb": 591.00390625
+  },
+  "run": {
+    "run_id": "20261108-1858-baseline-practice-20",
+    "config_name": "baseline",
+    "subset": "practice-20",
+    "started": "2026-11-08T18:58:56",
+    "finished": "2026-11-08T19:16:21",
+    "git_commit": "984a736beabb070759b85781fd6c9fed065bfa1a",
+    "fresh": true,
+    "n_queries": 20
+  }
+}

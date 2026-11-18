@@ -1,7 +1,0 @@
-# Plan 032, final comparison R2: the three rows on dev-all (125) with generation and judge (375 Qwen + 375 Mistral calls).
-# Same controls as the smoke gate; the dev transcripts replace the practice ones. Nothing is chosen on dev.
-# Run with --allow-full --fresh --force. Only summary.{md,json} and the slim per-run files are committed (no queries.jsonl).
-name: final-dev-all
-subset: dev-all
-override: {asr_cache: rag/.cache/transcripts/whisper1-dev.jsonl}
-configs: [baseline, rerank-best, raptor-tree-gpt5-evidence]

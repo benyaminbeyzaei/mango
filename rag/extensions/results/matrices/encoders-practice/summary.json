@@ -1,0 +1,174 @@
+{
+  "name": "encoders-practice",
+  "subset": "practice",
+  "rows": [
+    {
+      "run": "20261109-1811-baseline-practice",
+      "config": "baseline",
+      "Recall@5": 0.4283372500515358,
+      "Recall@10": 0.4847571634714492,
+      "Recall@20": 0.5817357245928674,
+      "Recall@100": 0.7680191713048855,
+      "MRR@10": 0.4927108843537415,
+      "NDCG@10": 0.4247973501905161,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 108.43859061199639,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4433419140383426,
+          0.5263950525664811
+        ],
+        "NDCG@10": [
+          0.38527960380079346,
+          0.4620978716880195
+        ]
+      }
+    },
+    {
+      "run": "20261109-1815-enc-b-asis-practice",
+      "config": "enc-b-asis",
+      "Recall@5": 0.36312059369202226,
+      "Recall@10": 0.4646777983920841,
+      "Recall@20": 0.5544238301381158,
+      "Recall@100": 0.711025974025974,
+      "MRR@10": 0.40103968253968253,
+      "NDCG@10": 0.3605539011273838,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 113.27779442986606,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4220444650587508,
+          0.5084341527520099
+        ],
+        "NDCG@10": [
+          0.32408541534005364,
+          0.39889827635643915
+        ]
+      }
+    },
+    {
+      "run": "20261109-1816-enc-b-reencode-practice",
+      "config": "enc-b-reencode",
+      "Recall@5": 0.42836446093588953,
+      "Recall@10": 0.5046211090496805,
+      "Recall@20": 0.5787503607503607,
+      "Recall@100": 0.7394273345701918,
+      "MRR@10": 0.49529591836734693,
+      "NDCG@10": 0.43197978235060697,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 101.37624732035745,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4616974695938981,
+          0.5494408987837558
+        ],
+        "NDCG@10": [
+          0.39260469927497,
+          0.4708200070846926
+        ]
+      }
+    },
+    {
+      "run": "20261109-1817-enc-b-reencode-prefix-practice",
+      "config": "enc-b-reencode-prefix",
+      "Recall@5": 0.44120119562976706,
+      "Recall@10": 0.5161517212945784,
+      "Recall@20": 0.5894646464646465,
+      "Recall@100": 0.7587946815089672,
+      "MRR@10": 0.4923253968253968,
+      "NDCG@10": 0.4367312819582403,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 104.17188721226661,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4763058802308802,
+          0.5600062306740878
+        ],
+        "NDCG@10": [
+          0.3982361966575143,
+          0.47624754973458605
+        ]
+      }
+    },
+    {
+      "run": "20261109-1817-enc-b-translate-lstsq-practice",
+      "config": "enc-b-translate-lstsq",
+      "Recall@5": 0.3885005153576582,
+      "Recall@10": 0.4668251906823335,
+      "Recall@20": 0.551349000206143,
+      "Recall@100": 0.7239103277674707,
+      "MRR@10": 0.47045238095238096,
+      "NDCG@10": 0.39976150543227773,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 112.94015945035166,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4229690166975882,
+          0.5091827355184498
+        ],
+        "NDCG@10": [
+          0.3610410211778903,
+          0.4385055755284347
+        ]
+      }
+    },
+    {
+      "run": "20261109-1818-enc-b-translate-procrustes-practice",
+      "config": "enc-b-translate-procrustes",
+      "Recall@5": 0.3421036899608328,
+      "Recall@10": 0.42203607503607504,
+      "Recall@20": 0.495988455988456,
+      "Recall@100": 0.6685021645021646,
+      "MRR@10": 0.4193730158730159,
+      "NDCG@10": 0.3533961238602764,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 112.68642211016933,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.37630702432488145,
+          0.46283650278293126
+        ],
+        "NDCG@10": [
+          0.3159609734515647,
+          0.39156634838333154
+        ]
+      }
+    }
+  ]
+}

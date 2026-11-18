@@ -24,8 +24,8 @@ from mlsrag.trace import Trace
 def test_baseline_matches_course_code_path(tmp_path):
     config = baseline()
     transcripts = load_transcripts(checkout_path(config.asr_cache))
-    ids = load_subset("practice-smoke20")
-    assert all(q in transcripts for q in ids), "run `mlsrag transcribe` for the smoke subset first"
+    ids = load_subset("practice-20")
+    assert all(q in transcripts for q in ids), "run `mlsrag transcribe` for practice-20 first"
 
     data = CourseData(paths.data_dir)
     manifest = {row["query_id"]: row for row in data.load_audio_manifest()}

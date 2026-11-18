@@ -1,0 +1,867 @@
+{
+ "n": 125,
+ "runs": {
+  "baseline|whisper": "20261111-0115-baseline-test",
+  "raptor|whisper": "20261111-0719-raptor-tree-gpt5-evidence-test",
+  "baseline|course": "20261114-1448-baseline-courseasr-test",
+  "raptor|course": "20261114-1721-raptor-tree-gpt5-evidence-courseasr-test"
+ },
+ "means": {
+  "baseline|whisper": {
+   "Recall@5": {
+    "mean": 0.38235457875457873,
+    "ci": [
+     0.3154964835164836,
+     0.45733380952380953
+    ]
+   },
+   "Recall@10": {
+    "mean": 0.478785347985348,
+    "ci": [
+     0.4092163003663004,
+     0.5582015384615384
+    ]
+   },
+   "Recall@100": {
+    "mean": 0.7274739926739927,
+    "ci": [
+     0.6683363736263735,
+     0.7861190476190476
+    ]
+   },
+   "MRR@10": {
+    "mean": 0.460631746031746,
+    "ci": [
+     0.38355,
+     0.5404785714285713
+    ]
+   },
+   "NDCG@10": {
+    "mean": 0.4016262102970457,
+    "ci": [
+     0.337978894106094,
+     0.4704018093136944
+    ]
+   },
+   "correctness": {
+    "mean": 2.568,
+    "ci": [
+     2.2958,
+     2.8322
+    ]
+   },
+   "grounding": {
+    "mean": 2.792,
+    "ci": [
+     2.52,
+     3.048
+    ]
+   },
+   "completeness": {
+    "mean": 2.88,
+    "ci": [
+     2.624,
+     3.144
+    ]
+   },
+   "normalised_answer_score": {
+    "mean": 0.6866666666666666,
+    "ci": [
+     0.622,
+     0.7513333333333333
+    ]
+   },
+   "gen_ms": {
+    "mean": 87000.62977897655,
+    "ci": [
+     79114.83491161928,
+     94953.33672538285
+    ],
+    "median": 73815.27256098343
+   },
+   "prompt_tokens": {
+    "mean": 1148.936,
+    "ci": [
+     1073.1366,
+     1230.3492
+    ]
+   },
+   "completion_tokens": {
+    "mean": 2855.984,
+    "ci": [
+     2608.58,
+     3117.9212
+    ]
+   }
+  },
+  "raptor|whisper": {
+   "Recall@5": {
+    "mean": 0.38235457875457873,
+    "ci": [
+     0.3154964835164836,
+     0.45733380952380953
+    ]
+   },
+   "Recall@10": {
+    "mean": 0.476785347985348,
+    "ci": [
+     0.4085192673992674,
+     0.5555986813186812
+    ]
+   },
+   "Recall@100": {
+    "mean": 0.7274739926739927,
+    "ci": [
+     0.6683363736263735,
+     0.7861190476190476
+    ]
+   },
+   "MRR@10": {
+    "mean": 0.4604095238095238,
+    "ci": [
+     0.38330722222222224,
+     0.5404757936507936
+    ]
+   },
+   "NDCG@10": {
+    "mean": 0.40049249106830626,
+    "ci": [
+     0.33603326026269814,
+     0.46968711533250734
+    ]
+   },
+   "correctness": {
+    "mean": 2.568,
+    "ci": [
+     2.28,
+     2.84
+    ]
+   },
+   "grounding": {
+    "mean": 2.824,
+    "ci": [
+     2.5598,
+     3.096
+    ]
+   },
+   "completeness": {
+    "mean": 2.888,
+    "ci": [
+     2.632,
+     3.144
+    ]
+   },
+   "normalised_answer_score": {
+    "mean": 0.69,
+    "ci": [
+     0.6253333333333334,
+     0.7553333333333334
+    ]
+   },
+   "gen_ms": {
+    "mean": 90033.1512587415,
+    "ci": [
+     81130.53601564553,
+     99902.2581426561
+    ],
+    "median": 79929.6479379991
+   },
+   "prompt_tokens": {
+    "mean": 1156.08,
+    "ci": [
+     1083.462,
+     1234.804
+    ]
+   },
+   "completion_tokens": {
+    "mean": 2929.784,
+    "ci": [
+     2711.8276,
+     3165.7255999999998
+    ]
+   }
+  },
+  "baseline|course": {
+   "Recall@5": {
+    "mean": 0.3794974358974359,
+    "ci": [
+     0.3121550549450549,
+     0.451372673992674
+    ]
+   },
+   "Recall@10": {
+    "mean": 0.4745948717948718,
+    "ci": [
+     0.4040943956043956,
+     0.5515366666666667
+    ]
+   },
+   "Recall@100": {
+    "mean": 0.7244263736263736,
+    "ci": [
+     0.6636151282051282,
+     0.7846128571428572
+    ]
+   },
+   "MRR@10": {
+    "mean": 0.4597079365079365,
+    "ci": [
+     0.38651626984126985,
+     0.5387503174603173
+    ]
+   },
+   "NDCG@10": {
+    "mean": 0.3983424329360163,
+    "ci": [
+     0.3382655971490847,
+     0.46752195281431996
+    ]
+   },
+   "correctness": {
+    "mean": 2.584,
+    "ci": [
+     2.3278,
+     2.848
+    ]
+   },
+   "grounding": {
+    "mean": 2.776,
+    "ci": [
+     2.512,
+     3.032
+    ]
+   },
+   "completeness": {
+    "mean": 2.904,
+    "ci": [
+     2.6638,
+     3.136
+    ]
+   },
+   "normalised_answer_score": {
+    "mean": 0.6886666666666666,
+    "ci": [
+     0.62795,
+     0.7486666666666666
+    ]
+   },
+   "gen_ms": {
+    "mean": 72433.51959648728,
+    "ci": [
+     65153.99928624369,
+     80725.09380732724
+    ],
+    "median": 63989.08300010953
+   },
+   "prompt_tokens": {
+    "mean": 1134.04,
+    "ci": [
+     1063.8866,
+     1206.7826
+    ]
+   },
+   "completion_tokens": {
+    "mean": 2849.712,
+    "ci": [
+     2613.3488,
+     3082.0912
+    ]
+   }
+  },
+  "raptor|course": {
+   "Recall@5": {
+    "mean": 0.3794974358974359,
+    "ci": [
+     0.3121550549450549,
+     0.451372673992674
+    ]
+   },
+   "Recall@10": {
+    "mean": 0.4745948717948718,
+    "ci": [
+     0.4040943956043956,
+     0.5515366666666667
+    ]
+   },
+   "Recall@100": {
+    "mean": 0.7244263736263736,
+    "ci": [
+     0.6636151282051282,
+     0.7846128571428572
+    ]
+   },
+   "MRR@10": {
+    "mean": 0.4594857142857143,
+    "ci": [
+     0.38639126984126987,
+     0.5385300793650792
+    ]
+   },
+   "NDCG@10": {
+    "mean": 0.3980741071308084,
+    "ci": [
+     0.338071573249052,
+     0.46714196912904393
+    ]
+   },
+   "correctness": {
+    "mean": 2.472,
+    "ci": [
+     2.192,
+     2.752
+    ]
+   },
+   "grounding": {
+    "mean": 2.704,
+    "ci": [
+     2.44,
+     2.968
+    ]
+   },
+   "completeness": {
+    "mean": 2.784,
+    "ci": [
+     2.52,
+     3.048
+    ]
+   },
+   "normalised_answer_score": {
+    "mean": 0.6633333333333333,
+    "ci": [
+     0.5973166666666666,
+     0.7273333333333333
+    ]
+   },
+   "gen_ms": {
+    "mean": 74860.61567482352,
+    "ci": [
+     68516.64489771951,
+     82145.21287828464
+    ],
+    "median": 68641.06264396105
+   },
+   "prompt_tokens": {
+    "mean": 1139.888,
+    "ci": [
+     1070.5274000000002,
+     1212.5156
+    ]
+   },
+   "completion_tokens": {
+    "mean": 2848.32,
+    "ci": [
+     2620.8536000000004,
+     3072.96
+    ]
+   }
+  }
+ },
+ "paired": {
+  "baseline": {
+   "Recall@5": {
+    "diff": -0.002857142857142857,
+    "ci": [
+     -0.012,
+     0.002299999999999987
+    ],
+    "up": 1,
+    "down": 1
+   },
+   "Recall@10": {
+    "diff": -0.004190476190476191,
+    "ci": [
+     -0.026211904761904766,
+     0.01161904761904762
+    ],
+    "up": 4,
+    "down": 2
+   },
+   "Recall@100": {
+    "diff": -0.0030476190476190473,
+    "ci": [
+     -0.021771428571428567,
+     0.010285714285714285
+    ],
+    "up": 2,
+    "down": 1
+   },
+   "MRR@10": {
+    "diff": -0.0009238095238095234,
+    "ci": [
+     -0.01652404761904762,
+     0.0124347619047619
+    ],
+    "up": 4,
+    "down": 3
+   },
+   "NDCG@10": {
+    "diff": -0.0032837773610294068,
+    "ci": [
+     -0.016570009456065578,
+     0.007937680236583556
+    ],
+    "up": 9,
+    "down": 8
+   },
+   "correctness": {
+    "diff": 0.016,
+    "ci": [
+     -0.16,
+     0.2
+    ],
+    "up": 24,
+    "down": 19
+   },
+   "grounding": {
+    "diff": -0.016,
+    "ci": [
+     -0.16,
+     0.13619999999999982
+    ],
+    "up": 20,
+    "down": 19
+   },
+   "completeness": {
+    "diff": 0.024,
+    "ci": [
+     -0.128,
+     0.184
+    ],
+    "up": 26,
+    "down": 21
+   },
+   "normalised_answer_score": {
+    "diff": 0.0019999999999999996,
+    "ci": [
+     -0.034,
+     0.04
+    ],
+    "up": 34,
+    "down": 25
+   },
+   "ctx_differs": 41
+  },
+  "raptor": {
+   "Recall@5": {
+    "diff": -0.002857142857142857,
+    "ci": [
+     -0.012,
+     0.002299999999999987
+    ],
+    "up": 1,
+    "down": 1
+   },
+   "Recall@10": {
+    "diff": -0.00219047619047619,
+    "ci": [
+     -0.024014285714285714,
+     0.013999999999999999
+    ],
+    "up": 5,
+    "down": 2
+   },
+   "Recall@100": {
+    "diff": -0.0030476190476190473,
+    "ci": [
+     -0.021771428571428567,
+     0.010285714285714285
+    ],
+    "up": 2,
+    "down": 1
+   },
+   "MRR@10": {
+    "diff": -0.0009238095238095234,
+    "ci": [
+     -0.01652404761904762,
+     0.0124347619047619
+    ],
+    "up": 4,
+    "down": 3
+   },
+   "NDCG@10": {
+    "diff": -0.00241838393749786,
+    "ci": [
+     -0.016444874389647878,
+     0.009561175427410315
+    ],
+    "up": 9,
+    "down": 8
+   },
+   "correctness": {
+    "diff": -0.096,
+    "ci": [
+     -0.28,
+     0.096
+    ],
+    "up": 17,
+    "down": 26
+   },
+   "grounding": {
+    "diff": -0.12,
+    "ci": [
+     -0.264,
+     0.024
+    ],
+    "up": 15,
+    "down": 25
+   },
+   "completeness": {
+    "diff": -0.104,
+    "ci": [
+     -0.24819999999999998,
+     0.056
+    ],
+    "up": 23,
+    "down": 23
+   },
+   "normalised_answer_score": {
+    "diff": -0.02666666666666666,
+    "ci": [
+     -0.06199999999999999,
+     0.008683333333333322
+    ],
+    "up": 26,
+    "down": 33
+   },
+   "ctx_differs": 41
+  }
+ },
+ "split": {
+  "baseline|identical": {
+   "n": 76,
+   "ctx_differs": 0,
+   "ndcg_diff": 0.0,
+   "ans_diff": -0.029605263157894735,
+   "ans_changed": 39
+  },
+  "baseline|format": {
+   "n": 24,
+   "ctx_differs": 19,
+   "ndcg_diff": 0.012755123495284402,
+   "ans_diff": 0.027777777777777776,
+   "ans_changed": 13
+  },
+  "baseline|differs": {
+   "n": 25,
+   "ctx_differs": 22,
+   "ndcg_diff": -0.028663805360620062,
+   "ans_diff": 0.07333333333333333,
+   "ans_changed": 7
+  },
+  "raptor|identical": {
+   "n": 76,
+   "ctx_differs": 0,
+   "ndcg_diff": 0.0,
+   "ans_diff": -0.02741228070175438,
+   "ans_changed": 38
+  },
+  "raptor|format": {
+   "n": 24,
+   "ctx_differs": 19,
+   "ndcg_diff": 0.01726238090951121,
+   "ans_diff": -0.03819444444444444,
+   "ans_changed": 10
+  },
+  "raptor|differs": {
+   "n": 25,
+   "ctx_differs": 22,
+   "ndcg_diff": -0.028663805360620062,
+   "ans_diff": -0.01333333333333333,
+   "ans_changed": 11
+  }
+ },
+ "asr": {
+  "identical": 100,
+  "byte_identical": 76,
+  "word_disagreement": 0.027594481103779243,
+  "course_sec_median": 1.4489535100292414,
+  "course_sec_mean": 1.8078389329146594,
+  "course_sec_max": 42.27556415600702,
+  "course_load_s": 788.4941235800507,
+  "audio_s": 689.2250000000003,
+  "labels": {
+   "our ASR misheard": 5,
+   "number or code written out": 5,
+   "acronym spelled or dotted": 8,
+   "whisper misheard": 2,
+   "spelling or joining": 5
+  }
+ },
+ "examples": [
+  {
+   "qid": "q_6f8b73b746019a15",
+   "whisper": "What is the process for recording client deposits in Xero or other financial software?",
+   "course": "What is the process for recording client deposits in zero or other financial software?",
+   "ndcg_w": 1.0,
+   "ndcg_c": 0.43067655807339306,
+   "ans_w": 1.0,
+   "ans_c": 1.0,
+   "label": "our ASR misheard",
+   "note": "Xero \u2192 zero"
+  },
+  {
+   "qid": "q_118787619d2fa03e",
+   "whisper": "What were the prices of the long-term bond index before 2000?",
+   "course": "What were the prices of the long term bond index before two thousand",
+   "ndcg_w": 0.3562071871080222,
+   "ndcg_c": 0.0,
+   "ans_w": 1.0,
+   "ans_c": 1.0,
+   "label": "number or code written out",
+   "note": "2000 \u2192 two thousand"
+  },
+  {
+   "qid": "q_e3e73f9ccdca5810",
+   "whisper": "What are some sensible ways to invest in both funds and stocks using a UK ISA?",
+   "course": "What are some sensible ways to invest in both funds and stocks using a UK I S A?",
+   "ndcg_w": 0.8503449055347546,
+   "ndcg_c": 0.6131471927654584,
+   "ans_w": 0.6666666666666666,
+   "ans_c": 0.6666666666666666,
+   "label": "acronym spelled or dotted",
+   "note": "ISA \u2192 I S A"
+  },
+  {
+   "qid": "q_119cb1d92c34f085",
+   "whisper": "Due square credit card readers permit personal use.",
+   "course": "Do square credit card readers permit personal use?",
+   "ndcg_w": 0.36331756126716835,
+   "ndcg_c": 0.5646436081071458,
+   "ans_w": 0.5,
+   "ans_c": 0.5,
+   "label": "whisper misheard",
+   "note": "Due \u2192 Do (ours is right)"
+  },
+  {
+   "qid": "q_c6417d8dbf54e605",
+   "whisper": "What is the significance of endorsing a cheque?",
+   "course": "What is the significance of endorsing a check?",
+   "ndcg_w": 0.616564105751634,
+   "ndcg_c": 0.7908387778091585,
+   "ans_w": 0.5,
+   "ans_c": 0.25,
+   "label": "spelling or joining",
+   "note": "cheque \u2192 check"
+  },
+  {
+   "qid": "q_b8de4034a157d0db",
+   "whisper": "Should I choose a townhouse or a stand-alone house for my first home?",
+   "course": "Should I choose a townhouse or a standalone house for my first home?",
+   "ndcg_w": 0.8318724637288826,
+   "ndcg_c": 0.9550236580992476,
+   "ans_w": 1.0,
+   "ans_c": 1.0,
+   "label": "spelling or joining",
+   "note": "stand-alone \u2192 standalone"
+  },
+  {
+   "qid": "q_929d9f9a0e015d65",
+   "whisper": "Are mutual funds protected from default risk?",
+   "course": "Our mutual funds protected from default risk.",
+   "ndcg_w": 0.7653606369886217,
+   "ndcg_c": 0.6713860725233041,
+   "ans_w": 1.0,
+   "ans_c": 1.0,
+   "label": "our ASR misheard",
+   "note": "Are \u2192 Our"
+  },
+  {
+   "qid": "q_52dfde60d835ce82",
+   "whisper": "Why do checking savings accounts offer higher interest rates than stand-alone savings accounts?",
+   "course": "Why do checking savings accounts offer higher interest rates than standalone savings accounts?",
+   "ndcg_w": 0.31546487678572877,
+   "ndcg_c": 0.3333333333333333,
+   "ans_w": 1.0,
+   "ans_c": 1.0,
+   "label": "spelling or joining",
+   "note": "stand-alone \u2192 standalone"
+  },
+  {
+   "qid": "q_77e405127e09b49c",
+   "whisper": "What are some alternatives to Intuit's PayTrust service for online bill viewing and payment?",
+   "course": "What are some alternatives to Intuit's Pay Trust service for online bill viewing and payment?",
+   "ndcg_w": 0.8062079522181139,
+   "ndcg_c": 0.8207658584763088,
+   "ans_w": 0.9166666666666666,
+   "ans_c": 1.0,
+   "label": "spelling or joining",
+   "note": "PayTrust \u2192 Pay Trust"
+  },
+  {
+   "qid": "q_de2197727d6ce8d1",
+   "whisper": "Can I claim a tax deduction for working from home as an employee? I work there 90% of the time.",
+   "course": "Can I claim a tax deduction for working from home as an employee? I work there ninety percent of the time.",
+   "ndcg_w": 0.32531670832675136,
+   "ndcg_c": 0.33424620450682646,
+   "ans_w": 0.5,
+   "ans_c": 0.5,
+   "label": "number or code written out",
+   "note": "90% \u2192 ninety percent"
+  },
+  {
+   "qid": "q_3576d20498b24f50",
+   "whisper": "Do I need to pay taxes on self-employment income as a minor in the UK, and if so, how?",
+   "course": "Do I need to pay taxes on self employment income as a minor in the U K, and if so how.",
+   "ndcg_w": 1.0,
+   "ndcg_c": 1.0,
+   "ans_w": 0.5,
+   "ans_c": 0.9166666666666666,
+   "label": "acronym spelled or dotted",
+   "note": "UK \u2192 U K"
+  },
+  {
+   "qid": "q_83436a5f06f10cb0",
+   "whisper": "What is the typical duration of a bank's know-your-customer KYC process?",
+   "course": "What is the typical duration of a bank's \"no your customer\" KYC process?",
+   "ndcg_w": 0.0,
+   "ndcg_c": 0.0,
+   "ans_w": 1.0,
+   "ans_c": 1.0,
+   "label": "our ASR misheard",
+   "note": "know \u2192 no"
+  },
+  {
+   "qid": "q_4649a82e62e04522",
+   "whisper": "How are capital gains from selling property outside the U.S. calculated and taxed?",
+   "course": "How are capital gains from selling property outside the US calculated and taxed?",
+   "ndcg_w": 1.0,
+   "ndcg_c": 1.0,
+   "ans_w": 0.4166666666666667,
+   "ans_c": 0.9166666666666666,
+   "label": "acronym spelled or dotted",
+   "note": "U.S. \u2192 US"
+  },
+  {
+   "qid": "q_14946dca186a869c",
+   "whisper": "What is the tax liability for stocks vested by a H-1B visa holder?",
+   "course": "What is the tax liability for stocks vested by a H one B visa holder?",
+   "ndcg_w": 0.0,
+   "ndcg_c": 0.0,
+   "ans_w": 1.0,
+   "ans_c": 1.0,
+   "label": "number or code written out",
+   "note": "H-1B \u2192 H one B"
+  },
+  {
+   "qid": "q_c6b07e1ece323ce6",
+   "whisper": "What are the considerations for investing money 101?",
+   "course": "What are the considerations for investing money one hundred one",
+   "ndcg_w": 0.0,
+   "ndcg_c": 0.0,
+   "ans_w": 0.0,
+   "ans_c": 1.0,
+   "label": "number or code written out",
+   "note": "101 \u2192 one hundred one"
+  },
+  {
+   "qid": "q_bba95a0c50bb2b65",
+   "whisper": "Is Harmony Gold Mining Company's stock price different on the NYSE and JSE?",
+   "course": "Is harmony gold mining companies stock price different on the NYSE and JSE?",
+   "ndcg_w": 0.6131471927654584,
+   "ndcg_c": 0.6131471927654584,
+   "ans_w": 1.0,
+   "ans_c": 1.0,
+   "label": "our ASR misheard",
+   "note": "Company's \u2192 companies"
+  },
+  {
+   "qid": "q_94efba4b07bc12eb",
+   "whisper": "I'm starting a hedge fund. What does that entail given my specific, simple investment thesis?",
+   "course": "I am starting a hedge fund. What does that entail, given my specific, simple investment thesis?",
+   "ndcg_w": 1.0,
+   "ndcg_c": 1.0,
+   "ans_w": 1.0,
+   "ans_c": 1.0,
+   "label": "spelling or joining",
+   "note": "I'm \u2192 I am"
+  },
+  {
+   "qid": "q_a756969099a5c91a",
+   "whisper": "What are the best alternatives to an individual savings account, ISA?",
+   "course": "What are the best alternatives to an individual savings account? I S A.",
+   "ndcg_w": 0.0,
+   "ndcg_c": 0.0,
+   "ans_w": 0.4166666666666667,
+   "ans_c": 0.3333333333333333,
+   "label": "acronym spelled or dotted",
+   "note": "ISA \u2192 I S A"
+  },
+  {
+   "qid": "q_b81e42cba4ba2821",
+   "whisper": "What impact does a strong U.S. dollar have on the Canadian economy, investors, and consumers?",
+   "course": "What impact does a strong US dollar have on the Canadian economy, investors, and consumers?",
+   "ndcg_w": 1.0,
+   "ndcg_c": 1.0,
+   "ans_w": 1.0,
+   "ans_c": 1.0,
+   "label": "acronym spelled or dotted",
+   "note": "U.S. \u2192 US"
+  },
+  {
+   "qid": "q_9b0131c74d426d1e",
+   "whisper": "while keeping our current home, second property, as a rental affect our ability to purchase a third home.",
+   "course": "Will keeping our current home, second property, as a rental affect our ability to purchase a third home?",
+   "ndcg_w": 0.0,
+   "ndcg_c": 0.0,
+   "ans_w": 1.0,
+   "ans_c": 1.0,
+   "label": "whisper misheard",
+   "note": "while \u2192 Will (ours is right)"
+  },
+  {
+   "qid": "q_c54bc81ecb781544",
+   "whisper": "Do U.S. banks share financial information with foreign countries?",
+   "course": "Do US banks share financial information with foreign countries?",
+   "ndcg_w": 0.31546487678572877,
+   "ndcg_c": 0.31546487678572877,
+   "ans_w": 1.0,
+   "ans_c": 1.0,
+   "label": "acronym spelled or dotted",
+   "note": "U.S. \u2192 US"
+  },
+  {
+   "qid": "q_a104e341f2ad636f",
+   "whisper": "What impact does a declining U.S. dollar have on the real estate market?",
+   "course": "What impact does a declining US dollar have on the real estate market?",
+   "ndcg_w": 0.0,
+   "ndcg_c": 0.0,
+   "ans_w": 1.0,
+   "ans_c": 1.0,
+   "label": "acronym spelled or dotted",
+   "note": "U.S. \u2192 US"
+  },
+  {
+   "qid": "q_1a1bd6b10555ed7a",
+   "whisper": "What are the tax obligations associated with inheriting assets from a trust and how are these reported using Form K1?",
+   "course": "What are the tax obligations associated with inheriting assets from a trust, and how are these reported using Form K one?",
+   "ndcg_w": 1.0,
+   "ndcg_c": 1.0,
+   "ans_w": 0.5,
+   "ans_c": 0.6666666666666666,
+   "label": "number or code written out",
+   "note": "K1 \u2192 K one"
+  },
+  {
+   "qid": "q_623ca02323bdcf42",
+   "whisper": "Do I need to check the sale volume when selling an OTC stock to avoid an NSCC illiquid charge?",
+   "course": "Do I need to check the sale volume when selling an OTC stock to avoid an NSCC a liquid charge?",
+   "ndcg_w": 1.0,
+   "ndcg_c": 1.0,
+   "ans_w": 1.0,
+   "ans_c": 1.0,
+   "label": "our ASR misheard",
+   "note": "illiquid \u2192 a liquid"
+  },
+  {
+   "qid": "q_54feaf0a76462c56",
+   "whisper": "Will I receive a tax document for the sale of directly purchased stocks in the US?",
+   "course": "Will I receive a tax document for the sale of directly purchased stocks in the U.S.",
+   "ndcg_w": 0.0,
+   "ndcg_c": 0.0,
+   "ans_w": 1.0,
+   "ans_c": 1.0,
+   "label": "acronym spelled or dotted",
+   "note": "US \u2192 U.S."
+  }
+ ]
+}

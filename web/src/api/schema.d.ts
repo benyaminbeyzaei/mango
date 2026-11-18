@@ -370,26 +370,39 @@ export interface components {
              * Split
              * @enum {string}
              */
-            split: "dev" | "practice";
+            split: "test" | "practice";
             /** Duration Seconds */
             duration_seconds: number;
             /**
              * Whisper1
-             * @description null when not in rag/.cache/transcripts/whisper1-<split>.jsonl
+             * @description null when not in rag/.cache/transcripts/whisper1-<course split>.jsonl
              */
             whisper1: string | null;
             /**
              * Course
-             * @description null when not in rag/.cache/transcripts/course-<split>.jsonl
+             * @description null when not in rag/.cache/transcripts/course-<course split>.jsonl
              */
             course: string | null;
         };
         /** QuestionsPage */
         QuestionsPage: {
-            /** Total */
+            /**
+             * Total
+             * @description questions that pass the match filter
+             */
             total: number;
             /** Items */
             items: components["schemas"]["Question"][];
+            /**
+             * Same
+             * @description questions in the split whose two transcripts have the same words (ignoring case and punctuation)
+             */
+            same: number;
+            /**
+             * Differ
+             * @description questions in the split whose two transcripts have different words
+             */
+            differ: number;
         };
         /** RecordResponse */
         RecordResponse: {
@@ -537,7 +550,7 @@ export interface components {
             };
             /**
              * Subset
-             * @default practice-smoke20
+             * @default practice-20
              */
             subset: string;
             /**
@@ -848,7 +861,8 @@ export interface operations {
     questions_api_questions_get: {
         parameters: {
             query?: {
-                split?: "dev" | "practice";
+                split?: "test" | "practice";
+                match?: "all" | "differ" | "same";
                 offset?: number;
                 limit?: number;
             };

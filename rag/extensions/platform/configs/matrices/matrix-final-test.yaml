@@ -1,0 +1,7 @@
+# Final comparison R2: the three rows on test (125) with generation and judge (375 Qwen + 375 Mistral calls).
+# Same controls as the practice-20 gate; the test transcripts (whisper1-dev.jsonl) replace the practice ones. Nothing is chosen on test.
+# Run with --allow-full --fresh --force. Only summary.{md,json} and the slim per-run files are committed (no queries.jsonl).
+name: final-test
+subset: test
+override: {asr_cache: rag/.cache/transcripts/whisper1-dev.jsonl}
+configs: [baseline, rerank-minilm-p20, raptor-tree-gpt5-evidence]

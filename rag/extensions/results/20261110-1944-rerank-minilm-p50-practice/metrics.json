@@ -1,0 +1,45 @@
+{
+  "retrieval": {
+    "Recall@5": 0.40000845186559475,
+    "Recall@10": 0.49446011131725415,
+    "Recall@20": 0.5717957122242836,
+    "Recall@100": 0.7680191713048855,
+    "MRR@10": 0.4568412698412698,
+    "NDCG@10": 0.40417247475604656
+  },
+  "answers": null,
+  "cost": {
+    "elm_calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.018597786215000918,
+    "encode": 44.542539248276235,
+    "retrieve": 3003.1989206303842,
+    "rerank": 2998.740614443086,
+    "context": 0.03801851816076253,
+    "generate": null,
+    "end_to_end": {
+      "mean": 3047.879899737891,
+      "p50": 2983.7247984833084,
+      "p95": 3413.7410623574397
+    }
+  },
+  "resources": {
+    "cpu_s": 6188.6027894109975,
+    "peak_rss_mb": 1222.03125
+  },
+  "run": {
+    "run_id": "20261110-1944-rerank-minilm-p50-practice",
+    "config_name": "rerank-minilm-p50",
+    "subset": "practice",
+    "started": "2026-11-10T19:44:38",
+    "finished": "2026-11-10T20:02:25",
+    "git_commit": "38e3d0848ba6aae1209d9139e6f7ec9dca926d5e",
+    "fresh": true,
+    "n_queries": 350
+  }
+}

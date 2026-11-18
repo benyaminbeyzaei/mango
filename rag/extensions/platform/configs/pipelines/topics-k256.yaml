@@ -10,7 +10,7 @@ toc_index: {}
 # raptor: one summary per cluster from its 8 records nearest the centroid (400 chars each)
 summarise: {model: meta-llama/Llama-3.3-70B-Instruct, members: 8, chars: 400, words: 120}
 summary_index: {encoder: gte-small}
-# raptor-tree (plan 028): soft membership for about 15 % of records, one summary per cluster from
+# raptor-tree: soft membership for about 15 % of records, one summary per cluster from
 # all its members (split above 24k tokens, then combined), one per section, one index over both
 soft_members: {share: 0.15}
 summarise_full: {model: meta-llama/Llama-3.3-70B-Instruct, words: 150, max_input_tokens: 24000, max_calls: 450}

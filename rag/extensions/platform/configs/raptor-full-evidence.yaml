@@ -1,4 +1,4 @@
-# RunConfig: records + every layer of the faithful RAPTOR tree (plan 031) searched together; a summary hit is itself evidence.
+# RunConfig: records + every layer of the faithful RAPTOR tree searched together; a summary hit is itself evidence.
 name: raptor-full-evidence
 asr: cached
 asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl

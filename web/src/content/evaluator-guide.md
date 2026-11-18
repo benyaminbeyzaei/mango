@@ -1,6 +1,6 @@
 # Evaluator guide
 
-These are the course's own commands (from `rag/README.md`) for evaluating the system on **full splits**. They run on the university teaching cluster, in a GPU session, not in this app. Their numbers are the markers' yardstick: the results shown in this client come from the platform's subsets and should agree with them.
+These are the course's own commands (from `rag/README.md`) for evaluating the system on **full splits**. They run on the university teaching cluster, in a GPU session, not in this app. Their numbers are the markers' yardstick; the platform's results should agree with them.
 
 Run everything from the course repository root, where `hw1-asr/` and `rag/` are both visible.
 
@@ -48,7 +48,7 @@ export ASR_CUDA=all
 python rag/scripts/evaluate_rag.py --device cpu --split practice --transcript-cache rag/.cache/practice_transcripts.jsonl
 ```
 
-Prints Recall@5/10/20/100, MRR@10 and NDCG@10. Use `--split dev` for the dev split.
+Prints Recall@5/10/20/100, MRR@10 and NDCG@10. Use `--split dev` for the 125 questions we call **test** (the course calls them dev).
 
 ## 5. Generate and judge answers on a full split
 
@@ -62,24 +62,30 @@ The dry run checks candidate IDs and coverage without calling ELM. The last comm
 
 > Generation and judging send one ELM request per query (and per repeat): try `--limit 5` with `--allow-subset` first.
 
-## 6. Optional: run our experiment matrices
+## 6. Optional: rerun our comparisons
 
-The platform (`rag/extensions/platform/`, see its `README.md`) runs on any machine with the course data; no GPU, since it uses cached or whisper-1 transcripts. Install it in the RAG environment with `pip install -e "rag/extensions/platform[dev]"`, or use Docker (`docker compose run --rm cli mlsrag ...`). The committed results are smoke runs (practice-smoke20), plus full-split (practice-all, dev-all) matrix summaries for every retriever that makes no LLM call at query time (plans 029 and 030); the LLM-routed TOC and grep methods have smoke results only. A full split needs a copy of a matrix file with `subset: dev-all` (or `practice-all`) and both flags:
+The platform (`rag/extensions/platform/`, see its `README.md`) runs on any machine with the course data and needs no GPU, since it uses cached or whisper-1 transcripts. Install it in the RAG environment with `pip install -e "rag/extensions/platform[dev]"`, or use Docker (`docker compose run --rm cli mlsrag ...`). Every committed result is summarised in `rag/extensions/platform/docs/results.md`.
+
+Question sets: `practice` (350), `test` (125, the course's dev split), and `practice-20`, a fixed 20-question sample for quick checks. Methods that call an LLM at query time (grep, LLM-routed TOC) were only run on `practice-20`.
+
+Transcript caches are not in git, so a fresh clone first fills them: 125 whisper-1 calls for `test` (about 690 audio s, $0.07) and 350 for `practice` (about 1,800 s, $0.18). The command is resumable.
 
 ```bash
-mlsrag transcribe --asr whisper1 --subset dev-all --allow-full --out rag/.cache/transcripts/whisper1-dev.jsonl
-mlsrag estimate --config baseline --subset dev-all --judge --fresh      # calls for one config, nothing sent
-mlsrag matrix --matrix my-matrix-b-dev-all.yaml --fresh --allow-full --yes
+mlsrag transcribe --asr whisper1 --subset test --allow-full --out rag/.cache/transcripts/whisper1-dev.jsonl
+mlsrag estimate --config baseline --subset test --judge --fresh      # calls for one config, nothing sent
+mlsrag matrix --matrix rag/extensions/platform/configs/matrices/matrix-final-test.yaml --fresh --allow-full --yes
 ```
 
-Estimated cost on `dev-all` (125 queries), after the transcript cache is filled. Transcript caches are not in git, so a fresh clone first needs 125 whisper-1 calls for `dev-all` (about 690 audio s, $0.07) and 350 for `practice-all` (about 1,800 s, $0.18); the `transcribe` command above is resumable and skips queries already cached. The chat models are free university-hosted ELM models; wall time is at one request at a time, judging not included:
+Cost once the cache is filled. All chat models are free university-hosted ELM models; wall time is with one request at a time and leaves out judging.
 
-| Matrix | Mode | ELM calls | Wall time |
-|---|---|---|---|
-| A, 14 retrieval configs (`matrix-a-retrieval-dev.yaml`) | `--no-generate` | 1,750 | ~42 min |
-| A on `practice-all` (350 queries) | `--no-generate` | 4,900 | ~2 h |
-| B, 7 configs, generation + judge (`matrix-b-answers.yaml`) | generate + judge | 1,875 + 875 judge | ~13 h + judge |
-| B with the budgeted builder (`matrix-b-answers-budgeted.yaml`) | generate + judge | 1,875 + 875 judge | ~13 h + judge |
-| C, encoder policies (`matrix-c-secondary.yaml`) | `--no-generate` | 0 | minutes |
+| Matrix file (`configs/matrices/`) | Question set | Mode | ELM calls | Wall time |
+|---|---|---|---|---|
+| `matrix-retrievers-test.yaml` / `-practice.yaml` (retrievers without an LLM) | test / practice | `--no-generate` | 0 | ~2 / ~5 min |
+| `matrix-encoders-test.yaml` / `-practice.yaml` (encoder policies) | test / practice | `--no-generate` | 0 | minutes |
+| `matrix-rerank-practice.yaml` (first reranker settings) | practice | `--no-generate` | 0 | ~3.5 h on CPU |
+| `matrix-rerank-models-test.yaml` (MiniLM, bge-reranker-v2-m3, mxbai) | test | `--no-generate` | 0 | ~4 h on CPU |
+| `matrix-final-test.yaml` (baseline, MiniLM rerank, RAPTOR-tree summaries) | test | generate + judge | 375 + 375 judge | ~9 h + judge |
+| `matrix-final-bge-test.yaml`, `matrix-final-mxbai-test.yaml` | test | generate + judge | 125 + 125 judge each | ~3-4 h each |
+| `matrix-courseasr-test.yaml` (baseline and RAPTOR-tree, our ASR) | test | generate + judge | 250 + 250 judge | ~5 h + judge |
 
-Without `--allow-full` every command refuses a full split; without `--yes` the matrix prints its estimate and waits for `y`.
+The course-ASR row needs `rag/.cache/transcripts/course-dev.jsonl`, which only the cluster can make. Without `--allow-full` every command refuses a full question set; without `--yes` a matrix prints its estimate and waits for `y`.

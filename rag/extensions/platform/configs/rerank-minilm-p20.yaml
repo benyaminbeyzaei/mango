@@ -1,4 +1,4 @@
-# RunConfig (plan 032): flat dense top 20, re-scored by the local cross-encoder cross-encoder/ms-marco-MiniLM-L-6-v2 on CPU, top 5 into the prompt.
+# RunConfig: flat dense top 20, re-scored by the local cross-encoder cross-encoder/ms-marco-MiniLM-L-6-v2 on CPU, top 5 into the prompt.
 name: rerank-minilm-p20
 asr: cached
 asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl

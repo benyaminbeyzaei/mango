@@ -117,6 +117,7 @@ def test_toc_llm_flat_route_falls_back_to_centroid_route():
     assert [r for r, _ in hits] == ["a", "b"]
     assert g.trace.counters["toc.llm_fallbacks"] == 1
 
+
 def toy_summaries():
     # summary 0 sits near the z records; summary 1 near x
     return np.array([[0, 0.2, 1], [1, 0, 0]], dtype=np.float32), [
@@ -181,7 +182,7 @@ def test_run_items_resumes_and_retries(tmp_path):
     assert failed["status"] == "failed" and failed["tokens"] == 10  # the call happened, the parse failed
 
 
-# RAPTOR-tree (plan 028)
+# RAPTOR-tree
 
 def test_raptor_lite_prompt_and_stage_hashes_unchanged():
     import hashlib

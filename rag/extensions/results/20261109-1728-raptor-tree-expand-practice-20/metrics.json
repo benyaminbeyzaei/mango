@@ -1,0 +1,44 @@
+{
+  "retrieval": {
+    "Recall@5": 0.4041666666666667,
+    "Recall@10": 0.475,
+    "Recall@20": 0.5499999999999999,
+    "Recall@100": 0.7791666666666666,
+    "MRR@10": 0.4791666666666667,
+    "NDCG@10": 0.385690829443961
+  },
+  "answers": null,
+  "cost": {
+    "elm_calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.02139950229320675,
+    "encode": 94.60509810014628,
+    "retrieve": 7.215223700040951,
+    "context": 0.0320298015139997,
+    "generate": null,
+    "end_to_end": {
+      "mean": 102.00349860242568,
+      "p50": 102.83240649732761,
+      "p95": 114.61809913453183
+    }
+  },
+  "resources": {
+    "cpu_s": 27.444157913999987,
+    "peak_rss_mb": 632.16015625
+  },
+  "run": {
+    "run_id": "20261109-1728-raptor-tree-expand-practice-20",
+    "config_name": "raptor-tree-expand",
+    "subset": "practice-20",
+    "started": "2026-11-09T17:28:21",
+    "finished": "2026-11-09T17:28:23",
+    "git_commit": "40351c5e22581af3f27b1422045f3619b388a2e8",
+    "fresh": true,
+    "n_queries": 20
+  }
+}

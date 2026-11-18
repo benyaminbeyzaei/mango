@@ -6,7 +6,6 @@ import type { components } from "./schema"
 
 export type RunConfig = components["schemas"]["RunConfig"]
 export type QueryResponse = components["schemas"]["QueryResponse"]
-export type ConfigEntry = components["schemas"]["ConfigEntry"]
 
 export function useConfigs() {
   return useQuery({

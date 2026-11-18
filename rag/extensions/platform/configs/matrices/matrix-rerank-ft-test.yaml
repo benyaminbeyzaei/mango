@@ -1,0 +1,8 @@
+# Fine-tuned reranker (test, retrieval only): does fine-tuning the reranker on the practice labels fix it?
+# Variable: the reranker (none / MS MARCO MiniLM / the same model fine-tuned on practice). Run with
+# --no-generate --fresh --allow-full: no ELM calls (whisper-1 transcripts cached, local models).
+# Controls: whisper-1 transcript cache, gte-small on enc_a, k=5, pool 20, CPU.
+name: rerank-ft-test
+subset: test
+override: {asr_cache: rag/.cache/transcripts/whisper1-dev.jsonl}
+configs: [baseline, rerank-minilm-p20, rerank-minilm-ft-p20]

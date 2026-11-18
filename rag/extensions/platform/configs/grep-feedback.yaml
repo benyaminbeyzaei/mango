@@ -5,4 +5,4 @@ retriever: grep
 flow: grep-feedback
 k: 5
 params:
-  grep_model: meta-llama/Llama-3.3-70B-Instruct  # plan 021: Qwen reasoning made each pattern call ~70-100 s
+  grep_model: meta-llama/Llama-3.3-70B-Instruct  # Qwen reasoning made each pattern call ~70-100 s

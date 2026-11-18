@@ -1,4 +1,4 @@
-# RunConfig: records + every layer of the faithful RAPTOR tree (plan 031) searched together; a summary hit expands to its 3 best leaf records.
+# RunConfig: records + every layer of the faithful RAPTOR tree searched together; a summary hit expands to its 3 best leaf records.
 name: raptor-full-expand
 asr: cached
 asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl

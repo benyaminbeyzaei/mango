@@ -1,0 +1,6 @@
+# Reranker selection (practice, 350 questions): five reranker settings (bge-reranker-base with pool 100 dropped:
+# all six would take ~7.7 h on 6 cores, measured on practice-20; the five take ~3.5 h) against the baseline.
+# Retrieval only, 0 LLM calls: run with --allow-full --no-generate --fresh. The reranker is chosen on this split (highest NDCG@10; within 0.005 of the best, the lowest mean latency).
+name: rerank-practice
+subset: practice
+configs: [baseline, rerank-minilm-p20, rerank-minilm-p50, rerank-minilm-p100, rerank-bge-p20, rerank-bge-p50]

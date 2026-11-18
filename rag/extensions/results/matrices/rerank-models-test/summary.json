@@ -1,0 +1,118 @@
+{
+  "name": "rerank-models-test",
+  "subset": "test",
+  "rows": [
+    {
+      "run": "20261116-2051-baseline-test",
+      "config": "baseline",
+      "Recall@5": 0.38235457875457873,
+      "Recall@10": 0.478785347985348,
+      "Recall@20": 0.5832351648351648,
+      "Recall@100": 0.7274739926739927,
+      "MRR@10": 0.46063174603174606,
+      "NDCG@10": 0.4016262102970457,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 117.0508010899648,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4092163003663004,
+          0.5582015384615384
+        ],
+        "NDCG@10": [
+          0.337978894106094,
+          0.4704018093136944
+        ]
+      }
+    },
+    {
+      "run": "20261116-2051-rerank-minilm-p20-test",
+      "config": "rerank-minilm-p20",
+      "Recall@5": 0.3807604395604396,
+      "Recall@10": 0.49549010989010994,
+      "Recall@20": 0.5832351648351648,
+      "Recall@100": 0.7274739926739927,
+      "MRR@10": 0.4423365079365079,
+      "NDCG@10": 0.39346930059526875,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 1571.1668178346008,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.42588545787545795,
+          0.5688140293040294
+        ],
+        "NDCG@10": [
+          0.3325138853079841,
+          0.46018677449210205
+        ]
+      }
+    },
+    {
+      "run": "20261116-2055-rerank-bge-m3-p20-test",
+      "config": "rerank-bge-m3-p20",
+      "Recall@5": 0.46674725274725276,
+      "Recall@10": 0.5287208791208791,
+      "Recall@20": 0.5832351648351648,
+      "Recall@100": 0.7274739926739927,
+      "MRR@10": 0.5285047619047618,
+      "NDCG@10": 0.4598256709930569,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 42116.67735445406,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.4645004761904762,
+          0.6004631868131868
+        ],
+        "NDCG@10": [
+          0.3989112550559986,
+          0.5246628764033177
+        ]
+      }
+    },
+    {
+      "run": "20261116-2358-rerank-mxbai-v2-p20-test",
+      "config": "rerank-mxbai-v2-p20",
+      "Recall@5": 0.46962344322344324,
+      "Recall@10": 0.5370256410256411,
+      "Recall@20": 0.5832351648351648,
+      "Recall@100": 0.7274739926739927,
+      "MRR@10": 0.5322222222222222,
+      "NDCG@10": 0.4648236527176473,
+      "answer_norm": null,
+      "correctness": null,
+      "grounding": null,
+      "completeness": null,
+      "latency_ms": 61896.605843620375,
+      "calls/q": 0.0,
+      "tokens/q": 0.0,
+      "fresh": true,
+      "ci95": {
+        "Recall@10": [
+          0.47150571428571425,
+          0.611392783882784
+        ],
+        "NDCG@10": [
+          0.40220746548684444,
+          0.5343411126976267
+        ]
+      }
+    }
+  ]
+}

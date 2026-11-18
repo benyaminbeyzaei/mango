@@ -1,0 +1,173 @@
+{
+  "baseline": "20261111-0115-baseline-test",
+  "rows": {
+    "rerank-bge-m3-p20": {
+      "run": "20261116-2358-rerank-bge-m3-p20-test",
+      "minus_baseline": {
+        "answer_norm": {
+          "mean": -0.026000000000000006,
+          "ci95": [
+            -0.08201666666666667,
+            0.033333333333333326
+          ]
+        },
+        "correctness": {
+          "mean": -0.104,
+          "ci95": [
+            -0.352,
+            0.16
+          ]
+        },
+        "grounding": {
+          "mean": -0.12,
+          "ci95": [
+            -0.352,
+            0.112
+          ]
+        },
+        "completeness": {
+          "mean": -0.088,
+          "ci95": [
+            -0.3282,
+            0.16
+          ]
+        }
+      },
+      "by_recall5_change": {
+        "recall5_up": {
+          "n": 32,
+          "answer_norm": {
+            "mean": 0.015624999999999993,
+            "ci95": [
+              -0.10416666666666666,
+              0.12239583333333334
+            ]
+          }
+        },
+        "recall5_down": {
+          "n": 12,
+          "answer_norm": {
+            "mean": -0.06944444444444443,
+            "ci95": [
+              -0.24305555555555555,
+              0.09722222222222221
+            ]
+          }
+        },
+        "recall5_same": {
+          "n": 81,
+          "answer_norm": {
+            "mean": -0.03600823045267489,
+            "ci95": [
+              -0.10905349794238682,
+              0.03806584362139917
+            ]
+          }
+        }
+      }
+    },
+    "rerank-mxbai-v2-p20": {
+      "run": "20261117-0316-rerank-mxbai-v2-p20-test",
+      "minus_baseline": {
+        "answer_norm": {
+          "mean": -0.008666666666666668,
+          "ci95": [
+            -0.06268333333333333,
+            0.04533333333333334
+          ]
+        },
+        "correctness": {
+          "mean": 0.016,
+          "ci95": [
+            -0.216,
+            0.256
+          ]
+        },
+        "grounding": {
+          "mean": -0.08,
+          "ci95": [
+            -0.288,
+            0.136
+          ]
+        },
+        "completeness": {
+          "mean": -0.04,
+          "ci95": [
+            -0.2722,
+            0.184
+          ]
+        }
+      },
+      "by_recall5_change": {
+        "recall5_up": {
+          "n": 26,
+          "answer_norm": {
+            "mean": 0.03846153846153846,
+            "ci95": [
+              -0.01610576923076923,
+              0.10256410256410257
+            ]
+          }
+        },
+        "recall5_down": {
+          "n": 5,
+          "answer_norm": {
+            "mean": -0.3,
+            "ci95": [
+              -0.5008333333333334,
+              -0.06666666666666667
+            ]
+          }
+        },
+        "recall5_same": {
+          "n": 94,
+          "answer_norm": {
+            "mean": -0.006205673758865245,
+            "ci95": [
+              -0.07360372340425533,
+              0.06382978723404255
+            ]
+          }
+        }
+      }
+    }
+  },
+  "noise_same_contexts": {
+    "run": "20261111-0719-raptor-tree-gpt5-evidence-test",
+    "questions": 115,
+    "score_changed": 58,
+    "sd": 0.25940004778933773
+  },
+  "answer_norm_by_recall5": {
+    "baseline": {
+      "none_relevant": {
+        "n": 52,
+        "answer_norm": 0.6810897435897437
+      },
+      "some_relevant": {
+        "n": 73,
+        "answer_norm": 0.6906392694063926
+      }
+    },
+    "rerank-bge-m3-p20": {
+      "none_relevant": {
+        "n": 41,
+        "answer_norm": 0.5873983739837398
+      },
+      "some_relevant": {
+        "n": 84,
+        "answer_norm": 0.6964285714285714
+      }
+    },
+    "rerank-mxbai-v2-p20": {
+      "none_relevant": {
+        "n": 42,
+        "answer_norm": 0.5476190476190477
+      },
+      "some_relevant": {
+        "n": 83,
+        "answer_norm": 0.7439759036144578
+      }
+    }
+  }
+}

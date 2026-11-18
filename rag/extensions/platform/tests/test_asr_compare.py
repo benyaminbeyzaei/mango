@@ -58,11 +58,11 @@ def test_asr_compare_whisper_against_itself_and_a_corrupted_copy(tmp_path):
     whisper = load_transcripts(checkout_path(WHISPER))
     write_cache(corrupted, {q: drop_every_5th_word(t) for q, t in whisper.items()})
 
-    _, same = asr_compare(WHISPER, WHISPER, "practice-smoke20", baseline(), "same", tmp_path)
+    _, same = asr_compare(WHISPER, WHISPER, "practice-20", baseline(), "same", tmp_path)
     assert (same["wer"], same["agreement"]) == (0.0, 1.0)
     assert same["retrieval_a"] == same["retrieval_b"]
 
-    out, worse = asr_compare(WHISPER, corrupted, "practice-smoke20", baseline(), "corrupted", tmp_path)
+    out, worse = asr_compare(WHISPER, corrupted, "practice-20", baseline(), "corrupted", tmp_path)
     assert (out / "summary.json").exists()
     assert worse["wer"] > 0.1 and worse["agreement"] < 1.0
     assert worse["retrieval_b"] != worse["retrieval_a"]

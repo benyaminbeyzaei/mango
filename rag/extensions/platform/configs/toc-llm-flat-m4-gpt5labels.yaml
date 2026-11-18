@@ -1,6 +1,6 @@
 # RunConfig: flat TOC routing (llm-flat): one call picks 4 of all 256 topics (no section step);
 # an unusable reply falls back to the centroid route (2 sections, then 4 topics).
-# Plan 030: the same route over the TOC whose topic and section names were written by gpt-5-mini (label prompt v2, distinct names); the route model stays Llama-3.3.
+# The same route over the TOC whose topic and section names were written by gpt-5-mini (label prompt v2, distinct names); the route model stays Llama-3.3.
 name: toc-llm-flat-m4-gpt5labels
 asr: cached
 asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl

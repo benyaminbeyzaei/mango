@@ -1,4 +1,4 @@
-"""RAPTOR-tree stages (plan 028): soft cluster membership, one summary per cluster from all its
+"""RAPTOR-tree stages: soft cluster membership, one summary per cluster from all its
 members (level 1), one summary per TOC section from its topics' summaries (level 2), and one
 index over both levels for SummaryRetriever. Uses the `topics` clusters and `toc` sections."""
 import json

@@ -179,7 +179,7 @@ def test_timeout_applies_to_one_call_only(gateway, monkeypatch):
 
 def test_gpt5_payload_and_unchanged_keys_for_other_models(gateway, monkeypatch):
     """gpt-5 models get max_completion_tokens and no temperature; every other model's request and
-    cache key are exactly what they were before plan 030."""
+    cache key stay as they were, so existing cache entries still hit."""
     calls = install(gateway, monkeypatch, [fake_response("a"), fake_response("b")])
     msgs = [{"role": "user", "content": "q"}]
     gateway.chat("meta-llama/Llama-3.3-70B-Instruct", msgs, max_tokens=300, tag="v1")

@@ -2,7 +2,7 @@
 `toc` and `raptor` share the `topics` stages and folder, so they reuse them:
 `toc`: select -> cluster -> label -> section -> toc_index; `raptor`: select -> cluster -> summarise -> summary_index.
 `raptor-tree`: select -> cluster -> label -> section -> soft_members -> summarise_full -> section_summarise -> tree_index.
-`raptor-full` (plan 031, own folder): select -> raptor_build."""
+`raptor-full` (own folder): select -> raptor_build."""
 from pathlib import Path
 
 import yaml

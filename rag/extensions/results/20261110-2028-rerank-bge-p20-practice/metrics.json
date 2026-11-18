@@ -1,0 +1,45 @@
+{
+  "retrieval": {
+    "Recall@5": 0.37484065141207995,
+    "Recall@10": 0.4847355184498041,
+    "Recall@20": 0.5817357245928674,
+    "Recall@100": 0.7680191713048855,
+    "MRR@10": 0.414266439909297,
+    "NDCG@10": 0.37600235943148036
+  },
+  "answers": null,
+  "cost": {
+    "elm_calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.019918537332809398,
+    "encode": 36.35453842347488,
+    "retrieve": 9663.0094282364,
+    "rerank": 9658.098049603868,
+    "context": 0.035714671248570085,
+    "generate": null,
+    "end_to_end": {
+      "mean": 9699.5069751511,
+      "p50": 9969.807496003341,
+      "p95": 10059.758164928644
+    }
+  },
+  "resources": {
+    "cpu_s": 20159.048466710017,
+    "peak_rss_mb": 2654.23828125
+  },
+  "run": {
+    "run_id": "20261110-2028-rerank-bge-p20-practice",
+    "config_name": "rerank-bge-p20",
+    "subset": "practice",
+    "started": "2026-11-10T20:28:43",
+    "finished": "2026-11-10T21:25:18",
+    "git_commit": "38e3d0848ba6aae1209d9139e6f7ec9dca926d5e",
+    "fresh": true,
+    "n_queries": 350
+  }
+}

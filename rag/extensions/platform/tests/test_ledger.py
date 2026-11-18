@@ -1,6 +1,9 @@
 import json
 from types import SimpleNamespace
 
+import numpy as np
+import pytest
+
 from mlsrag.preprocess import label
 from mlsrag.preprocess.ledger import Ledger
 
@@ -29,8 +32,6 @@ class FlakyGateway:
 
 
 def test_label_stage_finishes_only_missing_clusters(tmp_path):
-    import json
-
     sel, clu, out = tmp_path / "sel", tmp_path / "clu", tmp_path / "out"
     for d in (sel, clu, out):
         d.mkdir()
@@ -58,8 +59,6 @@ def test_label_stage_finishes_only_missing_clusters(tmp_path):
 
 
 def test_parse_label_rejects_non_string_fields():
-    import pytest
-
     assert label.parse_label('ok {"topic": " A ", "summary": "B"}') == {"topic": "A", "summary": "B"}
     for bad in ['{"topic": null, "summary": "B"}', '{"topic": ["A"], "summary": "B"}', '{"topic": "A"}', "no json"]:
         with pytest.raises(ValueError):
@@ -89,8 +88,6 @@ class CachingBadGateway:
 
 
 def test_retry_after_bad_reply_uses_a_new_prompt(tmp_path):
-    import json
-
     sel, clu, out = tmp_path / "sel", tmp_path / "clu", tmp_path / "out"
     for d in (sel, clu, out):
         d.mkdir()
@@ -124,8 +121,6 @@ class NamingGateway:
 
 
 def test_label_v2_uses_nearest_records_and_renames_clashes(tmp_path, monkeypatch):
-    import numpy as np
-
     sel, clu, out = tmp_path / "sel", tmp_path / "clu", tmp_path / "out"
     for d in (sel, clu, out):
         d.mkdir()

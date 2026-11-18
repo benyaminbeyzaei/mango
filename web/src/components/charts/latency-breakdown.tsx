@@ -12,6 +12,8 @@ import {
 
 import type { ReactNode } from "react"
 
+import { label } from "@/lib/results"
+
 import { AXIS, ChartFrame, LEGEND, PALETTE, TOOLTIP } from "./chart-frame"
 import type { Series } from "./grouped-bars"
 
@@ -39,7 +41,7 @@ export function LatencyBreakdown({
       title={title}
       note={note}
       table={{
-        columns: ["run", ...stages.map((s) => `${s} (ms)`)],
+        columns: ["run", ...stages.map((s) => label(`latency_ms.${s}`))],
         rows: runs.map((r, i) => [r.label, ...stages.map((s) => value(i, s))]),
       }}
     >
@@ -62,6 +64,7 @@ export function LatencyBreakdown({
             <Bar
               key={s}
               dataKey={s}
+              name={label(`latency_ms.${s}`)}
               stackId="stages"
               isAnimationActive={false}
               fill={PALETTE[i % PALETTE.length]}

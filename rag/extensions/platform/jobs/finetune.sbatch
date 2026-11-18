@@ -1,5 +1,5 @@
 #!/bin/bash
-# Plan 035: fine-tune the MiniLM reranker on practice on one L40S. Submit with .ai/bin/cluster.sh from this folder:
+# Fine-tune the MiniLM reranker on practice on one L40S. Submit with .ai/bin/cluster.sh from this folder:
 #   cluster.sh submit <run> rag/extensions/platform/jobs/finetune.sbatch                # cross-validation
 #   cluster.sh submit <run> rag/extensions/platform/jobs/finetune.sbatch --export=ALL,MODE=train,LR=2e-5,EPOCHS=2
 # Needs jobs/finetune-data.json (python -m mlsrag.finetune prepare jobs/finetune-data.json, on the laptop).

@@ -16,7 +16,7 @@ def make_run(root, run_id, config_name, fresh):
     run_dir.mkdir(parents=True)
     config = matrix.resolve_config(config_name)
     (run_dir / "config.json").write_text(config.model_dump_json())
-    info = {"run_id": run_id, "config_name": config.name, "subset": "practice-smoke20",
+    info = {"run_id": run_id, "config_name": config.name, "subset": "practice-20",
             "started": "x", "finished": "x", "git_commit": None, "fresh": fresh}
     write_metrics(run_dir, build_metrics([ROW], info))
     (run_dir / "queries.jsonl").write_text(json.dumps(ROW) + "\n")
@@ -32,7 +32,7 @@ def setup(tmp_path, monkeypatch, configs):
     judged = []
     monkeypatch.setattr(evaluate, "judge", lambda *a, **k: judged.append((a, k)))
     spec = tmp_path / "m.yaml"
-    spec.write_text(f"name: t\nsubset: practice-smoke20\nconfigs: [{', '.join(configs)}]\n")
+    spec.write_text(f"name: t\nsubset: practice-20\nconfigs: [{', '.join(configs)}]\n")
     return root, spec, judged
 
 

@@ -178,7 +178,7 @@ class ModelGateway:
 
     def reranker(self, model, revision=None):
         """Load a local sentence-transformers CrossEncoder once per process (on the GPU when there is one).
-        `model` is a Hugging Face id or a folder relative to the checkout root (a fine-tuned model, plan 035)."""
+        `model` is a Hugging Face id or a folder relative to the checkout root (a fine-tuned model)."""
         if (model, revision) not in _rerankers:
             import torch
             from sentence_transformers import CrossEncoder

@@ -2,17 +2,16 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
 
 import { GroupedBars } from "@/components/charts/grouped-bars"
 import { LatencyBreakdown } from "@/components/charts/latency-breakdown"
-import { PerQueryStrip } from "@/components/charts/per-query-strip"
 import { QualityCostScatter } from "@/components/charts/quality-cost-scatter"
 import {
   NOT_FRESH,
   isTimeOrCost,
   uniqueIds,
   flatten,
+  label,
   runDate,
   unit,
   useRuns,
-  useRunsQueries,
 } from "@/lib/results"
 
 const STAGES = ["asr", "encode", "retrieve", "context", "generate"]
@@ -21,12 +20,19 @@ const X_AXES = {
   latency: "mean end-to-end latency (ms)",
 }
 
-type Search = { runs: string; metric?: string; x?: keyof typeof X_AXES }
+// metric: the bar chart; y and x: the quality and cost axes of the scatter.
+type Search = {
+  runs: string
+  metric?: string
+  y?: string
+  x?: keyof typeof X_AXES
+}
 
 export const Route = createFileRoute("/results/compare")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     runs: typeof s.runs === "string" ? uniqueIds(s.runs) : "",
     metric: typeof s.metric === "string" ? s.metric : undefined,
+    y: typeof s.y === "string" ? s.y : undefined,
     x: s.x === "latency" ? "latency" : undefined,
   }),
   component: Compare,
@@ -48,12 +54,12 @@ function Compare() {
   const {
     runs: runsParam,
     metric = "retrieval.NDCG@10",
+    y = "retrieval.NDCG@10",
     x = "calls",
   } = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const ids = runsParam.split(",").filter(Boolean)
   const runs = useRuns(ids)
-  const traces = useRunsQueries(ids)
 
   if (ids.length === 0)
     return (
@@ -61,13 +67,37 @@ function Compare() {
         No runs selected. Pick some on <Link to="/results">Results</Link>.
       </p>
     )
-  const failed = [...runs, ...traces].find((r) => r.error)
+  const setSearch = (next: Partial<Search>) =>
+    navigate({ search: (s) => ({ ...s, ...next }), replace: true })
+  const failed = runs.find((r) => r.error)
   if (failed) return <p>{failed.error!.message}</p>
-  if (runs.some((r) => !r.data) || traces.some((t) => !t.data))
-    return <p>Loading {ids.length} runs…</p>
+  if (runs.some((r) => !r.data)) return <p>Loading {ids.length} runs…</p>
 
   const details = runs.map((r) => r.data!)
-  const queries = traces.map((t) => t.data!)
+  const subsets = [...new Set(details.map((d) => d.metrics.run.subset))]
+  if (subsets.length > 1)
+    return (
+      <div className="flex flex-col gap-2">
+        <h1 className="font-heading text-2xl font-medium">Compare runs</h1>
+        <p>
+          These runs are on different subsets ({subsets.join(", ")}), so their
+          numbers come from different questions and cannot be compared. Pick
+          runs on one subset on{" "}
+          <Link to="/results" className="underline underline-offset-4">
+            Results
+          </Link>
+          .
+        </p>
+        <ul className="ml-6 list-disc text-sm">
+          {details.map((d) => (
+            <li key={d.metrics.run.run_id}>
+              <span className="font-mono text-xs">{d.metrics.run.run_id}</span>{" "}
+              on {d.metrics.run.subset}
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
   const series = details.map((d) => ({
     id: d.metrics.run.run_id,
     label: `${d.metrics.run.config_name} ${runDate(d.metrics.run.run_id)}`,
@@ -78,10 +108,13 @@ function Compare() {
   const family = metricKeys.filter(
     (k) => k.split(".")[0] === picked.split(".")[0] && unit(k) === unit(picked)
   )
-  const short = (k: string) => k.split(".").slice(1).join(".")
-  const perQuery = picked.startsWith("retrieval.")
-    ? picked
-    : "retrieval.NDCG@10"
+  // The scatter's quality axis: retrieval metrics and answer scores, not counts.
+  const qualityKeys = metricKeys.filter(
+    (k) =>
+      k.startsWith("retrieval.") ||
+      /^answers\.(correctness|grounding|completeness|normalized)$/.test(k)
+  )
+  const quality = qualityKeys.includes(y) ? y : "retrieval.NDCG@10"
 
   const configs = details.map((d) => flatConfig(d.config))
   const fields = [...new Set(configs.flatMap(Object.keys))]
@@ -131,56 +164,20 @@ function Compare() {
         </details>
       </section>
 
-      <div className="flex flex-wrap items-center gap-3 text-sm">
-        <label className="flex items-center gap-2">
-          Metric
-          <select
-            value={picked}
-            onChange={(e) =>
-              navigate({
-                search: (s) => ({ ...s, metric: e.target.value }),
-                replace: true,
-              })
-            }
-            className="h-8 rounded-lg border bg-background px-2"
-          >
-            {metricKeys.map((k) => (
-              <option key={k} value={k}>
-                {k}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex items-center gap-2">
-          Cost axis
-          <select
-            value={x}
-            onChange={(e) =>
-              navigate({
-                search: (s) => ({
-                  ...s,
-                  x: e.target.value as keyof typeof X_AXES,
-                }),
-                replace: true,
-              })
-            }
-            className="h-8 rounded-lg border bg-background px-2"
-          >
-            {Object.entries(X_AXES).map(([k, label]) => (
-              <option key={k} value={k}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <div className="grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="flex min-w-0 flex-col gap-4">
         <GroupedBars
           title={`${picked.split(".")[0]} (${unit(picked)}) by run`}
+          controls={
+            <Picker
+              label="Metric"
+              value={picked}
+              options={metricKeys.map((k) => [k, label(k)])}
+              onChange={(v) => setSearch({ metric: v })}
+            />
+          }
           runs={series}
-          metrics={family.map(short)}
-          value={(i, m) => sample(i, `${picked.split(".")[0]}.${m}`)}
+          metrics={family}
+          value={sample}
           yLabel={unit(picked)}
           note={isTimeOrCost(picked) ? cachedNote : undefined}
         />
@@ -192,32 +189,31 @@ function Compare() {
           note={cachedNote}
         />
         <QualityCostScatter
-          title={`${picked} against ${X_AXES[x]}`}
+          title={`${label(quality)} against ${X_AXES[x]}`}
+          controls={
+            <>
+              <Picker
+                label="Quality"
+                value={quality}
+                options={qualityKeys.map((k) => [k, label(k)])}
+                onChange={(v) => setSearch({ y: v })}
+              />
+              <Picker
+                label="Cost axis"
+                value={x}
+                options={Object.entries(X_AXES)}
+                onChange={(v) => setSearch({ x: v as keyof typeof X_AXES })}
+              />
+            </>
+          }
           points={series.map((s, i) => ({
             label: s.label,
             x: xValue(i),
-            y: sample(i, picked),
+            y: sample(i, quality),
           }))}
           xLabel={X_AXES[x]}
-          yLabel={picked}
+          yLabel={label(quality)}
           note={cachedNote}
-        />
-        <PerQueryStrip
-          title={`${perQuery} per query`}
-          runs={series}
-          queryIds={[
-            ...new Set(queries.flatMap((qs) => qs.map((q) => q.query_id))),
-          ]}
-          value={(i, id) =>
-            queries[i].find((q) => q.query_id === id)?.metrics[
-              short(perQuery)
-            ] ?? null
-          }
-          yLabel={short(perQuery)}
-          note={
-            perQuery !== picked &&
-            "Per-query values exist only for retrieval metrics."
-          }
         />
       </div>
     </div>
@@ -266,5 +262,34 @@ function ConfigTable({
         </tbody>
       </table>
     </div>
+  )
+}
+
+function Picker({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string
+  value: string
+  options: [string, string][] // [value, label]
+  onChange: (value: string) => void
+}) {
+  return (
+    <label className="flex items-center gap-2">
+      {label}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-8 rounded-lg border bg-background px-2"
+      >
+        {options.map(([v, l]) => (
+          <option key={v} value={v}>
+            {l}
+          </option>
+        ))}
+      </select>
+    </label>
   )
 }

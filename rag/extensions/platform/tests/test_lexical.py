@@ -109,7 +109,6 @@ def test_grep_agentic_stops_when_model_says_so():
     assert out["ranked_ids"] == ["r3", "r1"] and out["prompt"] == "r3"  # context: kept ids only
 
 
-
 def test_grep_feedback_keeps_nothing_and_returns_the_static_ranking():
     static, _, _ = run("grep-static", ['["roth"]'])
     out, trace, gw = run("grep-feedback", ['["roth"]', "[]"])
@@ -142,6 +141,7 @@ def test_grep_feedback_keep_ignores_ids_outside_the_shown_candidates(monkeypatch
 def test_grep_feedback_empty_rerank_reply_gives_an_empty_context():
     out, trace, gw = run("grep-feedback", ['["roth"]', '["r1"]', '["tax"]', "[]"])
     assert out["reranked_ids"] == [] and out["prompt"] == "" and out["ranked_ids"][0] == "r1"
+
 
 def test_build_stages_registers_grep(tmp_path):
     cfg = RunConfig(name="t", retriever="grep", flow="grep-static", asr_cache=str(tmp_path / "t.jsonl"))

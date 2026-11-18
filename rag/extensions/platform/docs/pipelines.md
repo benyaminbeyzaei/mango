@@ -1,6 +1,6 @@
 # Preprocessing pipelines (topics, toc, raptor, raptor-tree, raptor-full)
 
-Part of the [mlsrag README](../README.md).
+How the offline preprocessing works. Retrieval results of these methods are in [results.md](results.md).
 
 `mlsrag/preprocess/`: a pipeline is a list of `Stage`s run in order. Pipeline `topics`:
 `select` (which records) → `cluster` (k-means on enc_a) → `label` (one LLM call per cluster) →
@@ -23,7 +23,7 @@ mlsrag preprocess run    --pipeline topics --config rag/extensions/platform/conf
 mlsrag preprocess status --pipeline topics --config ...   # per stage: hash, ok|partial|missing, time, ELM calls/tokens
 mlsrag preprocess clean  --pipeline topics --config ... --stage label
 # selection flags (override the config's select section): --all | --ids FILE | --sample N --seed S
-mlsrag run --config rag/extensions/platform/configs/topics-k256-m4.yaml --subset practice-smoke20 --no-generate
+mlsrag run --config rag/extensions/platform/configs/topics-k256-m4.yaml --subset practice-20 --no-generate
 ```
 
 `retriever: topic` takes `params: {index: <topics pipeline config>, m: 4}`: it ranks the centroids,
@@ -47,7 +47,7 @@ so the clusters and labels are computed once.
 mlsrag preprocess run --pipeline toc    --config rag/extensions/platform/configs/pipelines/topics-k256.yaml  # 16 LLM calls
 mlsrag preprocess run --pipeline raptor --config rag/extensions/platform/configs/pipelines/topics-k256.yaml  # 256 LLM calls
 mlsrag preprocess run --pipeline raptor-tree --config rag/extensions/platform/configs/pipelines/topics-k256.yaml  # 423 + 16 LLM calls
-mlsrag matrix --matrix rag/extensions/platform/configs/matrices/matrix-toc-raptor-smoke.yaml --no-generate
+mlsrag matrix --matrix rag/extensions/platform/configs/matrices/matrix-toc-raptor-practice-20.yaml --no-generate
 ```
 
 **TOC** (`retriever: toc`, `params: {index, sections: 2, m: 4, route: centroid | llm | llm-topics | llm-flat, route_model}`).
@@ -76,7 +76,7 @@ summary that ranks is replaced by its cluster's `expand_top` members most simila
 (it never counts as relevant in the retrieval metrics). Trace: span `raptor.search`, counters
 `raptor.summary_hits`, `raptor.candidates_scanned`. No LLM calls at query time.
 
-**RAPTOR-tree** (`retriever: raptor-tree`, same `params`; plan 028). Pipeline `raptor-tree` reuses
+**RAPTOR-tree** (`retriever: raptor-tree`, same `params`). Pipeline `raptor-tree` reuses
 the `topics` clusters and the `toc` sections and fixes RAPTOR-lite's three gaps at about 6 % of
 full RAPTOR's cost. `soft_members` (no LLM): a record also joins its second-nearest centroid when
 `cos2 >= cos1 - delta`, with `delta` the `share` (0.15) quantile of `cos1 - cos2`, written to the
@@ -92,9 +92,9 @@ query each; with `summary_as_evidence: true` the id is `summary:t<cluster>` or `
 Extra counters `raptor.level1_hits`, `raptor.level2_hits`. Configs `raptor-tree-expand.yaml`,
 `raptor-tree-evidence.yaml`.
 
-**gpt-5-mini versions (plan 030).** `configs/pipelines/topics-k256-gpt5.yaml` is a copy of
+**gpt-5-mini versions.** `configs/pipelines/topics-k256-gpt5.yaml` is a copy of
 `topics-k256.yaml` that changes only `label`, `section`, `summarise_full` and `section_summarise`
-(model `gpt-5-mini`, a paid model named by Benyamin for these builds only; `max_tokens: 4000` leaves
+(model `gpt-5-mini`, a paid model used for these builds only; `max_tokens: 4000` leaves
 room for its hidden reasoning). `select`, `cluster` and `soft_members` keep their hashes and are
 reused; the Llama builds stay where they are. `label: {prompt: v2}` (selected in the config, so
 `prompt_version` and the old hash stay unchanged) shows the top words and the 8 records nearest the
@@ -112,7 +112,7 @@ tokens (26 k of them reasoning), 19 min, US$0.13, no name clash so no rename cal
 4.68 M prompt and 144 k completion tokens (55 k reasoning), 44 min, US$1.46 (list prices $0.25 / $2.00
 per M tokens; `results.py` prices only whisper, so run metrics show these builds as $0).
 
-## Faithful RAPTOR (`raptor-full`, plan 031)
+## Faithful RAPTOR (`raptor-full`)
 
 ```bash
 mlsrag preprocess run --pipeline raptor-full --config rag/extensions/platform/configs/pipelines/raptor-full.yaml
@@ -147,8 +147,8 @@ every cluster), 5,243 gpt-4o-mini calls, 5.28 M input + 0.52 M output tokens, $1
 0 failures. 95 % of summaries stop at the 100-token cap mid-sentence (gpt-4o-mini writes longer
 than gpt-3.5-turbo; the paper reports 131 tokens on average, so its runs must have used a larger
 cap than the code's default), and an upper-layer summary often describes only its first children.
-Summary hits per query in the ranked lists, layers 1 / 2 / 3 / 4 / 5: practice-all expand 20.54 / 2.07 /
-0.41 / 0.06 / 0.01, evidence 27.11 / 2.83 / 0.53 / 0.07 / 0.01; dev-all expand 20.95 / 2.30 / 0.42 /
+Summary hits per query in the ranked lists, layers 1 / 2 / 3 / 4 / 5: practice expand 20.54 / 2.07 /
+0.41 / 0.06 / 0.01, evidence 27.11 / 2.83 / 0.53 / 0.07 / 0.01; test expand 20.95 / 2.30 / 0.42 /
 0.03 / 0, evidence 28.96 / 3.15 / 0.58 / 0.05 / 0 (counters `raptor.level<n>_hits`).
 
 Deviations from the reference, on purpose: (1) leaves are the 24,000 records, not 100-token

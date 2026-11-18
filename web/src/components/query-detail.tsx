@@ -3,14 +3,8 @@
 import type { ReactNode } from "react"
 
 import type { QueryResponse, RunConfig } from "@/api/queries"
-import { useRecord } from "@/lib/results"
+import { fmt, useRecord, type Span } from "@/lib/results"
 
-type Span = {
-  name: string
-  start_ms: number
-  duration_ms: number
-  attrs: Record<string, unknown>
-}
 type Cost = {
   calls: number
   prompt_tokens: number
@@ -186,7 +180,7 @@ function Evidence({
           <span className="font-mono">
             {rank}. {hit.record_id}{" "}
             <span className="text-muted-foreground">
-              score {hit.score.toFixed(4)}
+              {hit.score != null && `score ${fmt(hit.score)}`}
             </span>
           </span>
           <span className="line-clamp-2 text-muted-foreground group-open:hidden">

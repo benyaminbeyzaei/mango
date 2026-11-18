@@ -92,15 +92,18 @@ class QueriesPage(BaseModel):
 
 class Question(BaseModel):
     query_id: str
-    split: Literal["dev", "practice"]
+    split: Literal["test", "practice"]
     duration_seconds: float
-    whisper1: str | None = Field(description="null when not in rag/.cache/transcripts/whisper1-<split>.jsonl")
-    course: str | None = Field(description="null when not in rag/.cache/transcripts/course-<split>.jsonl")
+    whisper1: str | None = Field(description="null when not in rag/.cache/transcripts/whisper1-<course split>.jsonl")
+    course: str | None = Field(description="null when not in rag/.cache/transcripts/course-<course split>.jsonl")
 
 
 class QuestionsPage(BaseModel):
-    total: int
+    total: int = Field(description="questions that pass the match filter")
     items: list[Question]
+    same: int = Field(description="questions in the split whose two transcripts have the same words "
+                                  "(ignoring case and punctuation)")
+    differ: int = Field(description="questions in the split whose two transcripts have different words")
 
 
 class RecordResponse(BaseModel):
@@ -110,7 +113,7 @@ class RecordResponse(BaseModel):
 
 class StartRunRequest(BaseModel):
     config: str | dict
-    subset: str = "practice-smoke20"
+    subset: str = "practice-20"
     generate: bool = True
     allow_full: bool = False
     fresh: bool = Field(False, description="skip cache reads so latency and cost are valid")
