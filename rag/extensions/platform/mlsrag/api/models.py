@@ -1,4 +1,4 @@
-"""Request and response bodies of the API (the OpenAPI contract the web client is built against)."""
+"""Request and response bodies of the API (the OpenAPI contract the Mango website is built against)."""
 from typing import Literal
 
 from pydantic import BaseModel, Field

@@ -1,7 +1,15 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react"
 
+import {
+  CardsSkeleton,
+  Heading,
+  Line,
+  Loading,
+  TableSkeleton,
+} from "@/components/page-skeletons"
 import { Input } from "@/components/ui/input"
+import { configLabel, runDate } from "@/lib/labels"
 import {
   Table,
   TableBody,
@@ -25,6 +33,15 @@ import {
 } from "@/lib/results"
 
 type Search = { sort?: string; desc?: boolean; filter?: string }
+
+// The sections of metrics.json, with readable titles.
+const GROUPS: Record<string, string> = {
+  retrieval: "Retrieval",
+  answers: "Answers (judge scores)",
+  latency_ms: "Latency",
+  cost: "Cost",
+  resources: "Resources",
+}
 
 export const Route = createFileRoute("/results/$runId/")({
   validateSearch: (s: Record<string, unknown>): Search => ({
@@ -61,7 +78,16 @@ function RunDetail() {
 
   if (run.error || queries.error)
     return <p>{(run.error ?? queries.error)!.message}</p>
-  if (!run.data || !queries.data) return <p>Loading {runId}…</p>
+  if (!run.data || !queries.data)
+    return (
+      <Loading label="Loading run">
+        <Line className="w-24" />
+        <Heading className="w-96 max-w-full" />
+        <Line className="w-72" />
+        <CardsSkeleton />
+        <TableSkeleton rows={10} cols={6} />
+      </Loading>
+    )
 
   const flat = flatten({ ...run.data.metrics, run: undefined })
   const fresh = run.data.metrics.run.fresh === true
@@ -83,16 +109,21 @@ function RunDetail() {
       replace: true,
     })
 
-  const groups = ["retrieval", "answers", "latency_ms", "cost", "resources"]
+  const groups = Object.keys(GROUPS)
   return (
     <div className="flex flex-col gap-4">
       <Link to="/results" className="text-sm text-muted-foreground">
         ← Results
       </Link>
-      <h1 className="font-heading text-xl font-medium break-all">{runId}</h1>
+      <h1 className="font-heading text-xl font-medium">
+        {configLabel(run.data.metrics.run.config_name)}
+      </h1>
       <p className="text-sm text-muted-foreground">
-        config {run.data.metrics.run.config_name}, subset{" "}
-        {run.data.metrics.run.subset}, {run.data.metrics.run.n_queries} queries
+        <span className="font-mono text-xs">
+          {run.data.metrics.run.config_name}
+        </span>{" "}
+        on {run.data.metrics.run.subset} ({run.data.metrics.run.n_queries}{" "}
+        questions), {runDate(runId)}
         {!fresh && `; ${NOT_FRESH}`}
       </p>
       {queries.data[0]?.slim && (
@@ -105,10 +136,14 @@ function RunDetail() {
           return (
             <section key={g} className="rounded-lg border p-3">
               <h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                {g}
+                {GROUPS[g]}
               </h2>
               {keys.length === 0 ? (
-                <p className="text-sm text-muted-foreground">not stored</p>
+                <p className="text-sm text-muted-foreground">
+                  {g === "answers"
+                    ? "Retrieval only: this run generated no answers, so there is nothing to judge."
+                    : "Not recorded for this run."}
+                </p>
               ) : (
                 <dl className="grid grid-cols-[1fr_auto] gap-x-3 text-sm">
                   {keys.map((k) => (

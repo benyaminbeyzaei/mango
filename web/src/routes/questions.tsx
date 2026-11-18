@@ -3,6 +3,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { SendIcon } from "lucide-react"
 
 import { api } from "@/api/client"
+import { Line, Loading } from "@/components/page-skeletons"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { fmt } from "@/lib/results"
@@ -124,14 +126,29 @@ function Questions() {
             )}
           </Button>
         ))}
-        {questions.data && (
+        {questions.data ? (
           <span className="text-sm text-muted-foreground">
             {questions.data.total} questions
           </span>
+        ) : (
+          <Line className="w-24" />
         )}
       </div>
       {questions.isError && <p>{questions.error.message}</p>}
-      {questions.isPending && <p>Loading…</p>}
+      {questions.isPending && (
+        <Loading label="Loading questions">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className="flex flex-col gap-2 rounded-lg border p-3">
+              <Line className="w-56" />
+              <Skeleton className="h-10 w-72 max-w-full" />
+              <div className="grid gap-3 md:grid-cols-2">
+                <Skeleton className="h-16" />
+                <Skeleton className="h-16" />
+              </div>
+            </div>
+          ))}
+        </Loading>
+      )}
       {questions.data && items.length === 0 && (
         <p className="text-sm text-muted-foreground">No questions match.</p>
       )}

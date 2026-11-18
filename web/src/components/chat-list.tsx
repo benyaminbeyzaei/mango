@@ -64,6 +64,7 @@ export function ChatList({
                 type="button"
                 onClick={() => onSelect(chat.id)}
                 aria-current={chat.id === activeId}
+                title={chat.title}
                 className={cn(
                   "min-w-0 flex-1 truncate rounded-md px-2 py-1.5 text-left text-sm outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50",
                   chat.id === activeId && "bg-muted font-medium"

@@ -1,5 +1,11 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
 
+import {
+  Heading,
+  Line,
+  Loading,
+  TableSkeleton,
+} from "@/components/page-skeletons"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -13,23 +19,30 @@ import {
   MAX_COMPARE,
   NOT_FRESH,
   fmt,
-  isQuickCheck,
   label,
-  runDate,
   uniqueIds,
   useResults,
 } from "@/lib/results"
+import {
+  SUBSETS,
+  configLabel,
+  matrixLabel,
+  runDate,
+  subsetOrder,
+} from "@/lib/labels"
 
 const HEADLINE = ["Recall@10", "MRR@10", "NDCG@10"]
 
-// "" = every run except 20-question quick checks (the default), "*" = every run, otherwise one subset.
-type Search = { q?: string; sel?: string; subset?: string }
+// hide: question sets left unticked, comma-separated; absent = the default (practice-20 hidden),
+// "none" = every set shown.
+type Search = { q?: string; sel?: string; hide?: string }
+const DEFAULT_HIDDEN = ["practice-20"]
 
 export const Route = createFileRoute("/results/")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     q: typeof s.q === "string" && s.q ? s.q : undefined,
     sel: typeof s.sel === "string" && s.sel ? uniqueIds(s.sel) : undefined,
-    subset: typeof s.subset === "string" && s.subset ? s.subset : undefined,
+    hide: typeof s.hide === "string" && s.hide ? s.hide : undefined,
   }),
   component: Results,
 })
@@ -41,7 +54,7 @@ type MatrixSummary = {
 }
 
 function Results() {
-  const { q = "", sel, subset = "" } = Route.useSearch()
+  const { q = "", sel, hide } = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const results = useResults()
   const selected = sel ? sel.split(",") : []
@@ -55,7 +68,7 @@ function Results() {
     setSearch({ sel: next.join(",") || undefined })
   }
 
-  if (results.isPending) return <p>Loading results…</p>
+  if (results.isPending) return <ResultsSkeleton />
   if (results.error) return <p>{results.error.message}</p>
 
   // Runs are comparable only on the same subset (the same questions): once one run is
@@ -72,16 +85,30 @@ function Results() {
           ? `only runs on ${pickedSubset} can be compared with the ticked runs`
           : undefined
   const needle = q.toLowerCase()
-  const inSubset = (s: string) =>
-    subset === "*" || (subset === "" ? !isQuickCheck(s) : s === subset)
+  const hiddenSets =
+    hide === undefined ? DEFAULT_HIDDEN : hide === "none" ? [] : hide.split(",")
+  const inSubset = (s: string) => !hiddenSets.includes(s)
+  const toggleSubset = (s: string) => {
+    const next = inSubset(s)
+      ? [...hiddenSets, s]
+      : hiddenSets.filter((h) => h !== s)
+    const same =
+      next.length === DEFAULT_HIDDEN.length &&
+      DEFAULT_HIDDEN.every((h) => next.includes(h))
+    setSearch({ hide: same ? undefined : next.join(",") || "none" })
+  }
   const runs = results.data.runs.filter(
     (r) =>
       inSubset(r.subset) &&
-      [r.run_id, r.config_name, r.subset].some((f) =>
-        f.toLowerCase().includes(needle)
+      [r.run_id, r.config_name, configLabel(r.config_name), r.subset].some(
+        (f) => f.toLowerCase().includes(needle)
       )
   )
-  const subsets = [...new Set(results.data.runs.map((r) => r.subset))].sort()
+  const subsets = [...new Set(results.data.runs.map((r) => r.subset))].sort(
+    (a, b) => subsetOrder(a) - subsetOrder(b)
+  )
+  const count = (s: string) =>
+    results.data.runs.filter((r) => r.subset === s).length
   const hidden = results.data.runs.filter((r) => !inSubset(r.subset)).length
   const matrices = (results.data.matrices as MatrixSummary[]).filter((m) =>
     inSubset(m.subset)
@@ -91,35 +118,38 @@ function Results() {
     <div className="flex flex-col gap-4">
       <h1 className="font-heading text-2xl font-medium">Results</h1>
       <p className="text-sm text-muted-foreground">
-        Every committed run under <code>rag/extensions/results/</code>. Tick up
-        to {MAX_COMPARE} runs on the same subset and compare them.
+        Every committed experiment run. Tick up to {MAX_COMPARE} runs on the
+        same question set to compare them.
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
         <Input
           type="search"
           aria-label="Search runs"
-          placeholder="Search run, config or subset"
+          placeholder="Search experiments"
           value={q}
           onChange={(e) => setSearch({ q: e.target.value || undefined })}
           className="max-w-xs"
         />
-        <label className="flex items-center gap-2 text-sm">
-          Subset
-          <select
-            value={subset}
-            onChange={(e) => setSearch({ subset: e.target.value || undefined })}
-            className="h-8 rounded-lg border bg-background px-2"
-          >
-            <option value="">all but quick checks (practice-20)</option>
-            <option value="*">all</option>
-            {subsets.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
+        <fieldset className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          <legend className="sr-only">Question sets shown</legend>
+          <span aria-hidden="true">Question sets</span>
+          {subsets.map((s) => (
+            <label
+              key={s}
+              className="flex items-center gap-1.5"
+              title={`${SUBSETS.find((x) => x.id === s)?.questions ?? "?"} questions`}
+            >
+              <input
+                type="checkbox"
+                checked={inSubset(s)}
+                onChange={() => toggleSubset(s)}
+              />
+              {s}
+              <span className="text-muted-foreground">({count(s)})</span>
+            </label>
+          ))}
+        </fieldset>
         <Link
           to="/results/compare"
           search={{ runs: selected.join(",") }}
@@ -130,7 +160,7 @@ function Results() {
         </Link>
         <span className="text-sm text-muted-foreground">
           {runs.length} runs
-          {hidden > 0 && `, ${hidden} hidden by the subset filter`}
+          {hidden > 0 && `, ${hidden} hidden`}
         </span>
       </div>
 
@@ -140,10 +170,8 @@ function Results() {
             <TableHead>
               <span className="sr-only">Compare</span>
             </TableHead>
-            <TableHead>Run</TableHead>
-            <TableHead>Config</TableHead>
-            <TableHead>Subset</TableHead>
-            <TableHead className="text-right">Queries</TableHead>
+            <TableHead>Experiment</TableHead>
+            <TableHead>Question set</TableHead>
             <TableHead>Date</TableHead>
             {HEADLINE.map((m) => (
               <TableHead key={m} className="text-right">
@@ -161,26 +189,36 @@ function Results() {
               <TableCell>
                 <input
                   type="checkbox"
-                  aria-label={`Compare ${r.run_id}`}
+                  aria-label={`Compare ${configLabel(r.config_name)}, ${runDate(r.run_id)}`}
                   checked={selected.includes(r.run_id)}
                   disabled={blocked(r) !== undefined}
                   title={blocked(r)}
                   onChange={() => toggle(r.run_id)}
                 />
               </TableCell>
-              <TableCell>
+              <TableCell className="max-w-80 whitespace-normal">
                 <Link
                   to="/results/$runId"
                   params={{ runId: r.run_id }}
-                  className="font-mono text-xs underline-offset-2 hover:underline"
+                  title={r.run_id}
+                  className="font-medium underline-offset-2 hover:underline"
                 >
-                  {r.run_id}
+                  {configLabel(r.config_name)}
                 </Link>
+                <div className="font-mono text-xs text-muted-foreground">
+                  {r.config_name}
+                </div>
               </TableCell>
-              <TableCell>{r.config_name}</TableCell>
-              <TableCell>{r.subset}</TableCell>
-              <TableCell className="text-right">{fmt(r.n_queries)}</TableCell>
-              <TableCell>{runDate(r.run_id)}</TableCell>
+              <TableCell>
+                {r.subset}
+                <span className="text-muted-foreground">
+                  {" "}
+                  ({fmt(r.n_queries)})
+                </span>
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-muted-foreground">
+                {runDate(r.run_id)}
+              </TableCell>
               {HEADLINE.map((m) => (
                 <TableCell
                   key={m}
@@ -204,7 +242,7 @@ function Results() {
         <p className="text-sm text-muted-foreground">No run matches.</p>
       )}
 
-      <h2 className="font-heading text-lg font-medium">Matrices</h2>
+      <h2 className="font-heading text-lg font-medium">Comparison groups</h2>
       {matrices.length === 0 ? (
         <p className="text-sm text-muted-foreground">
           No matrix has been committed yet (<code>mlsrag matrix</code> writes
@@ -222,17 +260,33 @@ function Results() {
                     .map((r) => r.run)
                     .join(","),
                 }}
+                title={m.name}
                 className="font-medium underline-offset-2 hover:underline"
               >
-                {m.name}
+                {matrixLabel(m.name, m.subset)}
               </Link>{" "}
               <span className="text-muted-foreground">
-                on {m.subset}: {m.rows.map((r) => r.config).join(", ")}
+                on {m.subset}:{" "}
+                {m.rows.map((r) => configLabel(r.config)).join("; ")}
               </span>
             </li>
           ))}
         </ul>
       )}
     </div>
+  )
+}
+
+function ResultsSkeleton() {
+  return (
+    <Loading label="Loading results">
+      <Heading className="w-32" />
+      <Line className="w-full max-w-lg" />
+      <div className="flex flex-wrap items-center gap-3">
+        <Line className="h-8 w-64" />
+        <Line className="w-80" />
+      </div>
+      <TableSkeleton rows={12} cols={7} rowHeight="h-14" />
+    </Loading>
   )
 }

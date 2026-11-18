@@ -74,7 +74,8 @@ export function QualityCostScatter({
               data={p.x == null || p.y == null ? [] : [p]}
               isAnimationActive={false}
               fill={PALETTE[i % PALETTE.length]}
-              stroke="var(--foreground)"
+              stroke="var(--background)"
+              strokeWidth={2}
             />
           ))}
         </ScatterChart>

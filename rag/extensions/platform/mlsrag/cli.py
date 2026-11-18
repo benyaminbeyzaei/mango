@@ -85,7 +85,7 @@ def main(argv=None):
     sv = sub.add_parser("serve", help="run the HTTP API (routes under /api)")
     sv.add_argument("--host", default="127.0.0.1")
     sv.add_argument("--port", type=int, default=8000)
-    sv.add_argument("--web-dir", help="also serve this folder (the built web client) at /")
+    sv.add_argument("--web-dir", help="also serve this folder (the built Mango website) at /")
 
     oa = sub.add_parser("openapi", help="write the API's OpenAPI document")
     oa.add_argument("--out", default=str(OPENAPI_PATH))

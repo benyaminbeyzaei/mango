@@ -1,6 +1,6 @@
-# web: the mlsrag client
+# Mango: the website
 
-A Vite + React + TypeScript app (shadcn preset `b1Q5GC`, TanStack Router and Query) in front of
+Mango is a Vite + React + TypeScript app (shadcn preset `b1Q5GC`, TanStack Router and Query) in front of
 the mlsrag API. Pages: Docs, Models, Results, Questions, Interactive, Guide.
 
 ## Run

@@ -57,7 +57,7 @@ export function LatencyBreakdown({
             tick={AXIS}
             label={{ ...AXIS, value: "mean time (ms)", position: "bottom" }}
           />
-          <YAxis type="category" dataKey="run" tick={AXIS} width={96} />
+          <YAxis type="category" dataKey="run" tick={AXIS} width={170} />
           <Tooltip {...TOOLTIP} cursor={{ fill: "var(--muted)" }} />
           <Legend {...LEGEND} verticalAlign="top" />
           {stages.map((s, i) => (
@@ -68,7 +68,8 @@ export function LatencyBreakdown({
               stackId="stages"
               isAnimationActive={false}
               fill={PALETTE[i % PALETTE.length]}
-              stroke="var(--border)"
+              stroke="var(--background)"
+              strokeWidth={2}
             />
           ))}
         </BarChart>

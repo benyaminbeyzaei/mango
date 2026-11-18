@@ -31,6 +31,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { Skeleton } from "@/components/ui/skeleton"
 import { db, type Message } from "@/lib/db"
 import { getConfirmTranscript, getDefaultPreset } from "@/lib/settings"
 import { useRecorder } from "@/lib/use-recorder"
@@ -89,7 +90,7 @@ function Interactive() {
     try {
       let id = chatId
       if (id === null) {
-        const title = voice ? "Voice question" : question.text.slice(0, 60)
+        const title = voice ? "Voice question" : question.text
         id = await db.chats.add({ title, created: Date.now(), config })
         setChatId(id)
       } else {
@@ -120,7 +121,7 @@ function Interactive() {
           } as Message)
           if (fields.response && chat.title === "Voice question")
             await db.chats.update(chatIdForReply, {
-              title: fields.response.transcript.slice(0, 60),
+              title: fields.response.transcript,
             })
         })
       try {
@@ -181,7 +182,10 @@ function Interactive() {
               {chatList}
             </SheetContent>
           </Sheet>
-          <h1 className="truncate font-heading text-2xl font-medium">
+          <h1
+            className="truncate font-heading text-2xl font-medium"
+            title={chats?.find((c) => c.id === chatId)?.title}
+          >
             {chats?.find((c) => c.id === chatId)?.title ?? "New chat"}
           </h1>
         </div>
@@ -206,8 +210,11 @@ function Interactive() {
             {config ? (
               <ConfigChips config={config} />
             ) : (
-              <span className="text-xs text-muted-foreground">
-                Loading configs…
+              <span aria-busy="true" className="flex items-center gap-1">
+                <span className="sr-only">Loading configs</span>
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-6 w-28" />
               </span>
             )}
             {config && (

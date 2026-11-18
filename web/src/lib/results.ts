@@ -138,6 +138,7 @@ const UNITS: Record<string, string> = {
   "latency_ms.asr": "ms",
   "latency_ms.encode": "ms",
   "latency_ms.retrieve": "ms",
+  "latency_ms.rerank": "ms",
   "latency_ms.context": "ms",
   "latency_ms.generate": "ms",
   "latency_ms.end_to_end.mean": "ms",
@@ -198,9 +199,6 @@ export const SLIM_NOTE =
 export const uniqueIds = (list: string) =>
   [...new Set(list.split(",").filter(Boolean))].slice(0, MAX_COMPARE).join(",")
 
-export const runDate = (runId: string) =>
-  runId.replace(/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2}).*/, "$1-$2-$3 $4:$5")
-
 // How every number is shown, the same as in the docs: scores with three decimals
 // (0.402, 2.568), latencies 113 or 74,123 and counts 1,250. The stored value
 // stays in each cell's tooltip (`title`).
@@ -219,6 +217,3 @@ export function fmt(v: number | string | null | undefined): string {
   if (a >= 0.001) return v.toFixed(3)
   return v.toPrecision(2)
 }
-
-// The 20-question quick-check subset; the Results page hides its runs unless asked.
-export const isQuickCheck = (subset: string) => subset === "practice-20"

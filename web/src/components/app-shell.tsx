@@ -68,14 +68,18 @@ export function AppShell({ children }: { children: ReactNode }) {
               <MenuIcon />
             </SheetTrigger>
             <SheetContent side="left" className="p-4">
-              <SheetTitle>mlsrag</SheetTitle>
+              <SheetTitle>Mango</SheetTitle>
               <nav className="flex flex-col" aria-label="Sections">
                 <NavLinks onNavigate={() => setMenuOpen(false)} />
               </nav>
             </SheetContent>
           </Sheet>
-          <Link to="/" className="mr-2 font-heading font-medium">
-            mlsrag
+          <Link
+            to="/"
+            className="mr-2 flex items-center gap-2 font-heading font-medium"
+          >
+            <img src="/logo-64.png" alt="" width={32} height={32} />
+            Mango
           </Link>
           <nav className="hidden items-center md:flex" aria-label="Sections">
             <NavLinks />

@@ -4,12 +4,19 @@ import { GroupedBars } from "@/components/charts/grouped-bars"
 import { LatencyBreakdown } from "@/components/charts/latency-breakdown"
 import { QualityCostScatter } from "@/components/charts/quality-cost-scatter"
 import {
+  ChartSkeleton,
+  Heading,
+  Line,
+  Loading,
+  TableSkeleton,
+} from "@/components/page-skeletons"
+import { configLabel, runDate } from "@/lib/labels"
+import {
   NOT_FRESH,
   isTimeOrCost,
   uniqueIds,
   flatten,
   label,
-  runDate,
   unit,
   useRuns,
 } from "@/lib/results"
@@ -71,7 +78,17 @@ function Compare() {
     navigate({ search: (s) => ({ ...s, ...next }), replace: true })
   const failed = runs.find((r) => r.error)
   if (failed) return <p>{failed.error!.message}</p>
-  if (runs.some((r) => !r.data)) return <p>Loading {ids.length} runs…</p>
+  if (runs.some((r) => !r.data))
+    return (
+      <Loading label={`Loading ${ids.length} runs`}>
+        <Line className="w-24" />
+        <Heading className="w-48" />
+        <TableSkeleton rows={3} cols={ids.length + 1} />
+        <ChartSkeleton />
+        <ChartSkeleton />
+        <ChartSkeleton />
+      </Loading>
+    )
 
   const details = runs.map((r) => r.data!)
   const subsets = [...new Set(details.map((d) => d.metrics.run.subset))]
@@ -91,16 +108,21 @@ function Compare() {
         <ul className="ml-6 list-disc text-sm">
           {details.map((d) => (
             <li key={d.metrics.run.run_id}>
-              <span className="font-mono text-xs">{d.metrics.run.run_id}</span>{" "}
-              on {d.metrics.run.subset}
+              {configLabel(d.metrics.run.config_name)},{" "}
+              {runDate(d.metrics.run.run_id)}, on {d.metrics.run.subset}
             </li>
           ))}
         </ul>
       </div>
     )
-  const series = details.map((d) => ({
+  // Series are named by experiment; the date is added only when one experiment appears twice.
+  const names = details.map((d) => configLabel(d.metrics.run.config_name))
+  const series = details.map((d, i) => ({
     id: d.metrics.run.run_id,
-    label: `${d.metrics.run.config_name} ${runDate(d.metrics.run.run_id)}`,
+    label:
+      names.filter((n) => n === names[i]).length > 1
+        ? `${names[i]}, ${runDate(d.metrics.run.run_id)}`
+        : names[i],
   }))
   const flat = details.map((d) => flatten({ ...d.metrics, run: undefined }))
   const metricKeys = [...new Set(flat.flatMap(Object.keys))]
@@ -237,10 +259,11 @@ function ConfigTable({
     )
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-xs">
+      {/* Fixed layout: every value stays on one line, cut with "…"; hover shows it whole. */}
+      <table className="w-full table-fixed text-xs">
         <thead>
           <tr className="border-b">
-            <th className="p-1 text-left font-medium">field</th>
+            <th className="w-36 p-1 text-left font-medium">field</th>
             {runs.map((r) => (
               <th key={r.id} className="p-1 text-left font-medium">
                 {r.label}
@@ -251,9 +274,11 @@ function ConfigTable({
         <tbody>
           {fields.map((f) => (
             <tr key={f} className="border-b last:border-0">
-              <td className="p-1 font-mono">{f}</td>
+              <td className="truncate p-1 font-mono" title={f}>
+                {f}
+              </td>
               {configs.map((c, i) => (
-                <td key={i} className="p-1 font-mono break-all">
+                <td key={i} className="truncate p-1 font-mono" title={c[f]}>
                   {c[f] ?? "–"}
                 </td>
               ))}

@@ -15,7 +15,7 @@ repository [ed-aisys/edin-mls-26-autumn](https://github.com/ed-aisys/edin-mls-26
 | `rag/` | the course RAG pipeline, scripts and data installer (unchanged) | [rag/README.md](rag/README.md) |
 | `rag/extensions/platform/` | `mlsrag`, our experiment platform: traced, cached, costed runs | [README](rag/extensions/platform/README.md) |
 | `rag/extensions/results/` | every run and matrix summary we report | [docs/results.md](rag/extensions/platform/docs/results.md) |
-| `web/` | web client: results, comparisons, questions, interactive queries | [web/README.md](web/README.md) |
+| `web/` | **Mango**, the website: results, comparisons, questions, interactive queries | [web/README.md](web/README.md) |
 | `report/` | LaTeX template and PDF format checker (6-page main body) | [report/README.md](report/README.md) |
 | `cuda-tutorial/` | the lecture's CUDA examples | [cuda-tutorial/README.md](cuda-tutorial/README.md) |
 
@@ -39,7 +39,7 @@ generating and judging. All tables, the reasons and the costs: [docs/results.md]
 ## Setup
 
 Everything with a GPU runs on the university cluster (log in with `ssh YOUR_UUN@ssh.inf.ed.ac.uk`, then
-`ssh mlp.inf.ed.ac.uk`; the head node has no GPU). The platform and web client also run on a laptop without one.
+`ssh mlp.inf.ed.ac.uk`; the head node has no GPU). The platform and Mango also run on a laptop without one.
 
 ```bash
 git clone <this repo> && cd edin-mls-26-autumn
@@ -86,7 +86,7 @@ Our experiments run through `mlsrag`, which wraps the same code:
 ```bash
 uv pip install -e "rag/extensions/platform[dev]"
 mlsrag run --config baseline --subset practice-20 --no-generate    # retrieval only, no ELM call
-docker compose up                                                   # API + web client at http://localhost:8000
+docker compose up                                                   # API + Mango at http://localhost:8000
 ```
 
 Question sets: `practice-20` (quick checks), `practice` (350, for choosing settings) and `test` (125, for reporting).

@@ -77,7 +77,9 @@ export function GroupedBars({
               name={r.label}
               isAnimationActive={false}
               fill={PALETTE[i % PALETTE.length]}
-              stroke="var(--border)"
+              stroke="var(--background)"
+              strokeWidth={1}
+              radius={[4, 4, 0, 0]}
             />
           ))}
         </BarChart>

@@ -2,6 +2,9 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 
 import { Markdown } from "@/components/markdown"
 import { QueryDetail } from "@/components/query-detail"
+import { Heading, Line, Loading } from "@/components/page-skeletons"
+import { Skeleton } from "@/components/ui/skeleton"
+import { configLabel, runDate } from "@/lib/labels"
 import { SLIM_NOTE, fmt, useRun, useRunQueries } from "@/lib/results"
 
 export const Route = createFileRoute("/results/$runId/$queryId")({
@@ -16,7 +19,15 @@ function StoredQuery() {
 
   if (run.error || queries.error)
     return <p>{(run.error ?? queries.error)!.message}</p>
-  if (!run.data || !queries.data) return <p>Loading {queryId}…</p>
+  if (!run.data || !queries.data)
+    return (
+      <Loading label="Loading question">
+        <Line className="w-40" />
+        <Heading className="w-72" />
+        <Skeleton className="h-28 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </Loading>
+    )
   const q = queries.data.find((x) => x.query_id === queryId)
   if (!q)
     return (
@@ -44,7 +55,7 @@ function StoredQuery() {
         params={{ runId }}
         className="text-sm break-all text-muted-foreground"
       >
-        ← {runId}
+        ← {configLabel(run.data.metrics.run.config_name)}, {runDate(runId)}
       </Link>
       <h1 className="font-heading text-xl font-medium break-all">{queryId}</h1>
       {q.slim && <p className="text-sm text-muted-foreground">{SLIM_NOTE}</p>}
