@@ -1,4 +1,4 @@
-// Several metrics side by side, one bar per run.
+// Several metrics (by path) side by side, one bar per run.
 import {
   Bar,
   BarChart,
@@ -11,6 +11,8 @@ import {
 } from "recharts"
 
 import type { ReactNode } from "react"
+
+import { label } from "@/lib/results"
 
 import { AXIS, ChartFrame, LEGEND, PALETTE, TOOLTIP } from "./chart-frame"
 
@@ -35,7 +37,7 @@ export function GroupedBars({
 }) {
   const data = metrics.map((metric) =>
     Object.fromEntries([
-      ["metric", metric],
+      ["metric", label(metric)],
       ...runs.map((r, i) => [r.id, value(i, metric)]),
     ])
   )
@@ -46,7 +48,10 @@ export function GroupedBars({
       controls={controls}
       table={{
         columns: ["metric", ...runs.map((r) => r.label)],
-        rows: metrics.map((m) => [m, ...runs.map((_, i) => value(i, m))]),
+        rows: metrics.map((m) => [
+          label(m),
+          ...runs.map((_, i) => value(i, m)),
+        ]),
       }}
     >
       <ResponsiveContainer>

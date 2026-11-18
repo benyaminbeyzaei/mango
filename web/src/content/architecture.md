@@ -12,12 +12,12 @@ Each query goes through five stages, the course's standard flow. The course give
 
 ## Where the platform sits
 
-The course code in `rag/src/` is used unchanged. `mlsrag` (in `rag/extensions/platform/`) wraps it: a run configuration picks one implementation per stage, every model call goes through one cached, logged and costed gateway, and every query leaves a trace of spans, counts and costs. A run over a query subset writes `config.json`, `queries.jsonl` and `metrics.json` under `rag/extensions/results/`. The HTTP API (`mlsrag serve`, routes under `/api`) exposes those runs, the available models and single queries; this web client only talks to that API.
+The course code in `rag/src/` is used unchanged. `mlsrag` (in `rag/extensions/platform/`) wraps it: a run configuration picks one implementation per stage, every model call goes through one cached, logged and costed gateway, and every query leaves a trace of spans, counts and costs. A run over a question set writes `config.json`, `queries.jsonl` and `metrics.json` under `rag/extensions/results/`. The HTTP API (`mlsrag serve`, routes under `/api`) exposes those runs, the available models and single queries; this web client only talks to that API.
 
 ## The modes
 
 - **Docs, Models, Guide**: reference pages; Models shows what the running API reports.
-- **Results**: browse saved runs (smoke tests hidden unless you pick them in the subset filter) and compare their retrieval quality, answer scores and cost.
+- **Results**: browse saved runs (20-question quick checks hidden unless you pick `practice-20` in the filter) and compare their retrieval quality, answer scores and cost.
 - **Questions**: listen to each benchmark question and compare the whisper-1 transcript with our own ASR's, word by word.
 - **Interactive**: ask one question by text or audio and see every stage's output and timing.
 

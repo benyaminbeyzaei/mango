@@ -4,7 +4,7 @@
 # Controls (same in every row): whisper-1 transcript cache (rag/.cache/transcripts/whisper1-<split>.jsonl),
 # retriever exact, k=5, standard flow. The lstsq/procrustes maps were fitted offline (mlsrag fit-map).
 # The summary gives a 95 % bootstrap interval (1,000 resamples over queries, seed 0) for Recall@10 and NDCG@10.
-# Only summary.{md,json} is committed; the run folders it names stay local (plan 029).
+# Only summary.{md,json} is committed; the run folders it names stay local.
 # Settings are chosen on this split; the test matrix only reports them.
 name: encoders-practice
 subset: practice

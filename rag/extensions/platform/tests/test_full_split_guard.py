@@ -1,4 +1,4 @@
-"""Every entry point refuses practice / test without the explicit flag (plan 015)."""
+"""Every entry point refuses practice / test without the explicit flag."""
 from types import SimpleNamespace
 
 import pytest

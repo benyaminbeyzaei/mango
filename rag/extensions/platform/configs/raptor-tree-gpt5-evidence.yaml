@@ -1,5 +1,5 @@
 # RunConfig: records + the two-level summary tree (256 cluster + 16 section summaries) searched together; a summary hit is itself evidence.
-# Plan 030: the same tree (clusters, soft membership, split/combine rule), summaries written by gpt-5-mini.
+# The same tree (clusters, soft membership, split/combine rule), summaries written by gpt-5-mini.
 name: raptor-tree-gpt5-evidence
 asr: cached
 asr_cache: rag/.cache/transcripts/whisper1-practice.jsonl

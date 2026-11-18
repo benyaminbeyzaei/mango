@@ -294,6 +294,8 @@ def rerank_retriever(config, gateway, data):
     base = RETRIEVERS[p.get("base", "exact")](config, gateway, data)
     gateway.reranker(p["model"], p.get("revision"))  # load now so the first query's timing is not the model load
     return RerankRetriever(base, data, gateway, p["model"], pool=p.get("pool", 50), revision=p.get("revision"))
+
+
 def budgeted_context(config, data):
     from .context import BudgetedContext
 

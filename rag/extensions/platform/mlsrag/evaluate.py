@@ -98,7 +98,7 @@ def judge(run_dir, judge_model=None, repeats=1, dry_run=False):
     return metrics["answers"]
 
 
-def estimate(config, subset, judge=False, repeats=1, generate=True) -> dict:
+def estimate(config, subset, judge=False, generate=True) -> dict:
     """Upper bound on the ELM calls a run makes (cached calls are free) and the whisper cost."""
     ids = load_subset(subset)
     durations = {r["query_id"]: r["duration_seconds"]
@@ -113,7 +113,7 @@ def estimate(config, subset, judge=False, repeats=1, generate=True) -> dict:
     audio_seconds = sum(durations[q] for q in to_transcribe)
     calls = {
         "generation": len(ids) if generate else 0,
-        "judge": len(ids) * repeats if judge else 0,
+        "judge": len(ids) if judge else 0,
         "flow": FLOW_CALLS_PER_QUERY[config.flow] * len(ids),
         "retriever": retriever_calls_per_query(config) * len(ids),
         "whisper": len(to_transcribe),

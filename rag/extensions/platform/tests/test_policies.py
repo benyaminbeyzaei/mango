@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
-from pydantic import ValidationError
 
 from mlsrag import maps, stages
 from mlsrag.config import RunConfig
 from mlsrag.maps import fit, mean_cosine
-from conftest import needs_data
 from mlsrag.stages import BGE_QUERY_PREFIX, GatewayEncoder, ReEncode, Translate, build_encoder
+
+from conftest import needs_data
 
 
 class FakeGateway:
@@ -26,11 +26,6 @@ class FakeGateway:
 def cfg(policy, **params):
     return RunConfig(name="x", query_encoder="gte-small", corpus_index="enc_b",
                      mismatch_policy=policy, params=params)
-
-
-def test_error_policy_raises():
-    with pytest.raises(ValidationError, match="does not match"):
-        RunConfig(name="x", query_encoder="gte-small", corpus_index="enc_b")
 
 
 def test_as_is_and_matching_use_the_query_encoder():

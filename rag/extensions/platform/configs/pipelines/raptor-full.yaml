@@ -1,4 +1,4 @@
-# Faithful RAPTOR (plan 031): mlsrag preprocess run --pipeline raptor-full --config <this file>.
+# Faithful RAPTOR: mlsrag preprocess run --pipeline raptor-full --config <this file>.
 # The clustering and summary settings are the reference implementation's, fixed in
 # mlsrag/preprocess/raptor_full.py (sources in docs/pipelines.md); here only what we chose.
 select: {mode: all}

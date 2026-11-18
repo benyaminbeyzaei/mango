@@ -14,7 +14,7 @@ import type { ReactNode } from "react"
 
 import { AXIS, ChartFrame, LEGEND, PALETTE, TOOLTIP } from "./chart-frame"
 
-export type Point = { label: string; x: number | null; y: number | null }
+type Point = { label: string; x: number | null; y: number | null }
 
 export function QualityCostScatter({
   title,

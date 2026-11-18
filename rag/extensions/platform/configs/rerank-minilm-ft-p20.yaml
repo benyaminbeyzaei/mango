@@ -1,4 +1,4 @@
-# RunConfig (plan 035): rerank-minilm-p20 with the cross-encoder fine-tuned on the practice labels
+# RunConfig: rerank-minilm-p20 with the cross-encoder fine-tuned on the practice labels
 # (python -m mlsrag.finetune, see docs/retrievers.md "Fine-tuned reranker"). The weights are not in git:
 # rebuild them into rag/.cache/models/rerank-minilm-ft before running.
 name: rerank-minilm-ft-p20

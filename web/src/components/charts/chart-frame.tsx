@@ -33,7 +33,7 @@ export const LEGEND = {
   ),
 }
 
-export type TableData = {
+type TableData = {
   columns: string[]
   rows: (string | number | null)[][]
 }

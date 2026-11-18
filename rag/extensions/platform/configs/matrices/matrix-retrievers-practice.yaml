@@ -4,7 +4,7 @@
 # query encoder gte-small, corpus vectors enc_a (course embeddings/corpus_enc_a.npy), k=5, standard flow.
 # The topic/TOC/RAPTOR indexes were built offline (preprocessing is not re-run here).
 # The summary gives a 95 % bootstrap interval (1,000 resamples over queries, seed 0) for Recall@10 and NDCG@10.
-# Only summary.{md,json} is committed; the run folders it names stay local (plan 029).
+# Only summary.{md,json} is committed; the run folders it names stay local.
 # Settings are chosen on this split; the test matrix only reports them.
 name: retrievers-practice
 subset: practice

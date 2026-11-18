@@ -1,4 +1,4 @@
-# Plan 032, step 2 (smoke): six reranker settings (two cross-encoders x pools 20/50/100) against the baseline.
+# Reranker selection (practice-20): six reranker settings (two cross-encoders x pools 20/50/100) against the baseline.
 # Retrieval only, 0 LLM calls: run with --no-generate --fresh.
 name: rerank-practice-20
 subset: practice-20

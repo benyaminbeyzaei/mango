@@ -45,7 +45,7 @@ class Latency(Strict):  # mean ms per query; None when the stage did not run
     asr: float | None
     encode: float | None
     retrieve: float | None  # includes rerank
-    rerank: float | None = None  # missing in runs before plan 032
+    rerank: float | None = None  # missing in older runs
     context: float | None
     generate: float | None
     end_to_end: Percentiles

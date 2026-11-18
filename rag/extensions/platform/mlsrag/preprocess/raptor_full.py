@@ -1,4 +1,4 @@
-"""Faithful RAPTOR (plan 031): UMAP + Gaussian-mixture soft clustering, global then local, with
+"""Faithful RAPTOR: UMAP + Gaussian-mixture soft clustering, global then local, with
 size re-clustering, summarised layer by layer with the paper's prompt.
 
 Follows github.com/parthsarthi03/raptor (MIT licence, commit 7da1d48), raptor/cluster_utils.py,

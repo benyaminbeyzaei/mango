@@ -1,5 +1,5 @@
-# Plan 032, final comparison R1: the three rows on practice (350), retrieval only (0 LLM calls).
+# Final comparison R1: the three rows on practice (350), retrieval only (0 LLM calls).
 # Run with --allow-full --no-generate --fresh --force, so the three latencies come from one session.
 name: final-practice
 subset: practice
-configs: [baseline, rerank-best, raptor-tree-gpt5-evidence]
+configs: [baseline, rerank-minilm-p20, raptor-tree-gpt5-evidence]

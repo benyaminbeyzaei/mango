@@ -91,7 +91,7 @@ def test_models_and_configs_come_from_the_registries(client):
     assert m["flows"] == sorted(app_module.FLOWS)
     names = [c["name"] for c in client.get("/api/configs").json()]
     assert "baseline" in names and "enc-b-translate-lstsq" in names
-    assert "topics-k256-m4" in names  # a RunConfig using plan 002's topic retriever
+    assert "topics-k256-m4" in names  # a RunConfig using the topic retriever
     assert not any(n.startswith("matrix-") for n in names) and "topics-k256" not in names  # matrix / preprocessing
 
 
@@ -281,7 +281,10 @@ def test_questions_match_filter(questions_client):
     course = {"q0": "W0!", "q1": "something else"}  # q0 differs from "w0" only in case and punctuation; q2 has none
     (cache / "transcripts" / "course-dev.jsonl").write_text(
         "".join(json.dumps({"query_id": k, "transcript": v}) + "\n" for k, v in course.items()))
-    ids = lambda match: [q["query_id"] for q in client.get("/api/questions", params={"match": match}).json()["items"]]
+
+    def ids(match):
+        return [q["query_id"] for q in client.get("/api/questions", params={"match": match}).json()["items"]]
+
     assert (ids("all"), ids("same"), ids("differ")) == (["q0", "q1", "q2"], ["q0"], ["q1"])
     page = client.get("/api/questions", params={"match": "differ"}).json()
     assert (page["total"], page["same"], page["differ"]) == (1, 1, 1)

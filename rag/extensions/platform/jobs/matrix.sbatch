@@ -1,5 +1,5 @@
 #!/bin/bash
-# Plan 036: run a retrieval-only matrix (no ELM calls) on one L40S. Submit with .ai/bin/cluster.sh from the checkout root:
+# Run a retrieval-only matrix (no ELM calls) on one L40S. Submit with .ai/bin/cluster.sh from the checkout root:
 #   cluster.sh submit <run> rag/extensions/platform/jobs/matrix.sbatch --export=ALL,MATRIX=matrix-rerank-models-test
 # The run folder needs the course assets and rag/.cache (transcripts, preprocess) copied in with rsync -L.
 #SBATCH --cpus-per-task=4

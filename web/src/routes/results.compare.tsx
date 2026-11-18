@@ -8,6 +8,7 @@ import {
   isTimeOrCost,
   uniqueIds,
   flatten,
+  label,
   runDate,
   unit,
   useRuns,
@@ -107,7 +108,6 @@ function Compare() {
   const family = metricKeys.filter(
     (k) => k.split(".")[0] === picked.split(".")[0] && unit(k) === unit(picked)
   )
-  const short = (k: string) => k.split(".").slice(1).join(".")
   // The scatter's quality axis: retrieval metrics and answer scores, not counts.
   const qualityKeys = metricKeys.filter(
     (k) =>
@@ -171,13 +171,13 @@ function Compare() {
             <Picker
               label="Metric"
               value={picked}
-              options={metricKeys.map((k) => [k, k])}
+              options={metricKeys.map((k) => [k, label(k)])}
               onChange={(v) => setSearch({ metric: v })}
             />
           }
           runs={series}
-          metrics={family.map(short)}
-          value={(i, m) => sample(i, `${picked.split(".")[0]}.${m}`)}
+          metrics={family}
+          value={sample}
           yLabel={unit(picked)}
           note={isTimeOrCost(picked) ? cachedNote : undefined}
         />
@@ -189,13 +189,13 @@ function Compare() {
           note={cachedNote}
         />
         <QualityCostScatter
-          title={`${quality} against ${X_AXES[x]}`}
+          title={`${label(quality)} against ${X_AXES[x]}`}
           controls={
             <>
               <Picker
                 label="Quality"
                 value={quality}
-                options={qualityKeys.map((k) => [k, k])}
+                options={qualityKeys.map((k) => [k, label(k)])}
                 onChange={(v) => setSearch({ y: v })}
               />
               <Picker
@@ -212,7 +212,7 @@ function Compare() {
             y: sample(i, quality),
           }))}
           xLabel={X_AXES[x]}
-          yLabel={quality}
+          yLabel={label(quality)}
           note={cachedNote}
         />
       </div>

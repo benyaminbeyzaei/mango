@@ -1,4 +1,4 @@
-# Plan 013 step 1: simple vs budgeted vs dedupe context on the smoke subset (generation + judge, --fresh).
+# Simple vs budgeted vs dedupe context on practice-20 (generation + judge, --fresh).
 name: context-practice-20
 subset: practice-20
 configs: [baseline, context-budgeted, context-dedupe]

@@ -1,4 +1,4 @@
-"""Plan 032 analysis: the reranker choice rule, paired differences, summary counts, slim rows."""
+"""final.py: the reranker choice rule, paired differences, summary counts, slim rows."""
 from mlsrag.final import choose_reranker, paired, slim_row, summary_levels, top5_moves
 
 

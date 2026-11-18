@@ -10,7 +10,6 @@ if str(RAG_DIR) not in sys.path:
 from src.context_builder import SimpleContextBuilder  # noqa: F401
 from src.data import CourseData  # noqa: F401
 from src.encoder import LocalEncoder  # noqa: F401
-from src.generator import ELMGenerator  # noqa: F401
 from src.metrics import mrr_at_k, ndcg_at_k, recall_at_k  # noqa: F401
 from src.retriever import ExactDenseRetriever  # noqa: F401
 

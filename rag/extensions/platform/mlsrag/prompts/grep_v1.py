@@ -1,4 +1,4 @@
-"""Prompts for the grep flows. Fixed: do not tune them on the dev split. VERSION enters the cache key."""
+"""Prompts for the grep flows. Fixed: do not tune them on the test set. VERSION enters the cache key."""
 
 VERSION = "grep_v1"
 

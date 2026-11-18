@@ -18,7 +18,7 @@ import {
   isCached,
   isGatewaySpan,
   isTimeOrCost,
-  unit,
+  label,
   useRun,
   useRunQueries,
   type QueryTrace,
@@ -113,11 +113,8 @@ function RunDetail() {
                 <dl className="grid grid-cols-[1fr_auto] gap-x-3 text-sm">
                   {keys.map((k) => (
                     <div key={k} className="contents">
-                      <dt className="truncate">
-                        {k.slice(g.length + 1)}{" "}
-                        <span className="text-xs text-muted-foreground">
-                          {unit(k)}
-                        </span>
+                      <dt className="truncate" title={k}>
+                        {label(k)}
                       </dt>
                       {isTimeOrCost(k) && !fresh ? (
                         <dd className="text-right font-mono" title={NOT_FRESH}>

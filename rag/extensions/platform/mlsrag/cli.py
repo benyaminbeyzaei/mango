@@ -145,8 +145,6 @@ def selection(args):
     if args.all:
         return {"mode": "all"}
     if args.ids:
-        from pathlib import Path
-
         ids = [line.strip() for line in Path(args.ids).read_text(encoding="utf-8").splitlines() if line.strip()]
         return {"mode": "ids", "ids": ids}
     if args.sample is not None:

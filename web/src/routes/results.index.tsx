@@ -14,6 +14,7 @@ import {
   NOT_FRESH,
   fmt,
   isQuickCheck,
+  label,
   runDate,
   uniqueIds,
   useResults,
@@ -146,10 +147,12 @@ function Results() {
             <TableHead>Date</TableHead>
             {HEADLINE.map((m) => (
               <TableHead key={m} className="text-right">
-                {m}
+                {label(`retrieval.${m}`)}
               </TableHead>
             ))}
-            <TableHead className="text-right">ELM calls</TableHead>
+            <TableHead className="text-right">
+              {label("cost.elm_calls")}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

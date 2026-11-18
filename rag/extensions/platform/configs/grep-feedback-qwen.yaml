@@ -5,4 +5,4 @@ retriever: grep
 flow: grep-feedback
 k: 5
 params:
-  grep_model: Qwen/Qwen3.5-397B-A17B-FP8  # comparison row (plan 025): same flow, Qwen (reasoning on) as the helper
+  grep_model: Qwen/Qwen3.5-397B-A17B-FP8  # comparison row: same flow, Qwen (reasoning on) as the helper

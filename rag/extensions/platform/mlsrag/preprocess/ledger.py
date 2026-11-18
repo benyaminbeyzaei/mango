@@ -1,5 +1,7 @@
 """Per-item ledger for LLM stages: one JSONL line per attempt, so a stopped run resumes."""
+import hashlib
 import json
+import time
 from pathlib import Path
 
 
@@ -70,9 +72,6 @@ def run_items(items, ctx, model, build_prompt, parse, max_tokens=None, system=No
     ItemsFailed. `system`, if given, goes before the prompt as a system message. With `retry_tag`, a
     retry keeps the prompt and passes tag=retry<attempt> instead, so the gateway cache key still changes.
     """
-    import hashlib
-    import time
-
     ledger = Ledger(ctx.out_dir / "ledger.jsonl")
     done = ledger.done_ids()
     attempts = {}

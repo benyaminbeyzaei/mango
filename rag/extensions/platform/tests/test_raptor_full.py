@@ -29,6 +29,7 @@ def test_soft_membership_puts_a_midway_point_in_both_clusters():
 
 
 def test_perform_clustering_separates_blobs_with_umap():
+    pytest.importorskip("umap")
     x = blobs([np.eye(16)[0] * 5, np.eye(16)[1] * 5, np.eye(16)[2] * 5], 30, 0.3)
     clusters = raptor_full.perform_clustering(x)
     covered = {int(i) for c in clusters for i in c}
@@ -85,6 +86,7 @@ CONFIG = {"model": "gpt-4o-mini", "max_usd": 20, "usd_per_m_input": 0.15, "usd_p
 
 
 def build(tmp_path, monkeypatch, config=CONFIG, n=40, gateway=None, logs=None):
+    pytest.importorskip("tiktoken")  # build_run counts tokens with it
     select = tmp_path / "select"
     select.mkdir(parents=True)
     with (select / "records.jsonl").open("w") as f:

@@ -1,4 +1,4 @@
-# Plan 007 (+ plan 028 raptor-tree, plan 031 raptor-full): flat, one-level topics, two-level TOC, RAPTOR-lite and RAPTOR-tree on the smoke subset (retrieval only).
+# Flat, one-level topics, two-level TOC, RAPTOR-lite, RAPTOR-tree and RAPTOR-full on practice-20 (retrieval only).
 name: toc-raptor-practice-20
 subset: practice-20
 configs: [baseline, topics-k256-m4, toc-centroid-m4, toc-llm-m4, toc-llm-topics-m4, toc-llm-flat-m4,

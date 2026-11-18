@@ -1,5 +1,5 @@
-"""Plan 036: do the better rerankers give better answers on test? Each reranker's end-to-end run minus the
-plan 032 baseline per question, split by whether the top 5 gained or lost relevant records, plus two checks that
+"""Do the better rerankers give better answers on test? Each reranker's end-to-end run minus the
+final-test baseline per question, split by whether the top 5 gained or lost relevant records, plus two checks that
 explain the result: answer-score noise (baseline vs a row with the same contexts) and how much the answer score
 depends on retrieving a relevant record at all. Run: python -m mlsrag.rerank_answers"""
 import json
@@ -9,7 +9,7 @@ import numpy as np
 from .final import load_queries, mean_ci, paths
 
 BASELINE = "20261111-0115-baseline-test"
-SAME_CONTEXTS = "20261111-0719-raptor-tree-gpt5-evidence-test"  # plan 032: same top 5 as the baseline for 115 of 125
+SAME_CONTEXTS = "20261111-0719-raptor-tree-gpt5-evidence-test"  # same top 5 as the baseline for 115 of 125
 RUNS = {"rerank-bge-m3-p20": "20261116-2358-rerank-bge-m3-p20-test",
         "rerank-mxbai-v2-p20": "20261117-0316-rerank-mxbai-v2-p20-test"}
 SCORES = ["answer_norm", "correctness", "grounding", "completeness"]
