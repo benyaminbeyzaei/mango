@@ -1,9 +1,7 @@
-Use this directory for investigation-specific code if useful. You are not required
-to place all modifications here; substantive changes may naturally involve src/.
+Our additions to the RAG coursework live here; the course code in `rag/src/` and `rag/scripts/` is unchanged.
 
-The experiment platform is the `mlsrag` package in `platform/` (see `platform/README.md`;
-hand-over notes in `platform/HANDOVER.md`). Run results it writes go to `results/`, one folder per run.
-
-**Evaluators:** `web/src/content/evaluator-guide.md` (also the web client's Guide page) shows how to
-reproduce the baseline numbers with the course scripts on the cluster, and how to run our matrices
-on a full split with `mlsrag matrix ... --fresh --allow-full --yes`, with the estimated cost.
+- `platform/`: the `mlsrag` experiment platform ([README](platform/README.md)). Every result is in
+  [platform/docs/results.md](platform/docs/results.md).
+- `results/`: one folder per run, plus matrix summaries in `results/matrices/`.
+- The web client's Guide page (`web/src/content/evaluator-guide.md`) shows how to reproduce the baseline with the
+  course scripts and how to rerun our comparisons.
