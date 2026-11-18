@@ -225,6 +225,25 @@ def test_openapi_json_is_current():
     assert json.loads(OPENAPI_PATH.read_text(encoding="utf-8")) == json.loads(openapi_json(app_module.create_app()))
 
 
+def test_queries_from_slim_file(tmp_path):
+    run = tmp_path / "r-dev-all"
+    (run / "judge").mkdir(parents=True)
+    (run / "metrics.json").write_text("{}")
+    ms = {"asr": 0.1, "encode": 50.0, "dense_retrieve": 5.0, "rerank": None, "generate": 900.0, "end_to_end": 960.0}
+    (run / "per_query.jsonl").write_text(json.dumps(
+        {"query_id": "q0", "context_ids": ["r1", "r2"], "ms": ms, "llm_calls": 1, "prompt_tokens": 10,
+         "completion_tokens": 5, "rerank_pool": 0, "rerank_truncated": 0, "Recall@10": 0.5, "NDCG@10": 0.25}) + "\n")
+    (run / "judge" / "answer_judge_per_query.jsonl").write_text(json.dumps(
+        {"query_id": "q0", "correctness": 3, "grounding": 4, "completeness": 2, "normalised_answer_score": 0.75}) + "\n")
+    client = TestClient(app_module.create_app(results_dir=tmp_path))
+    page = client.get("/api/results/r-dev-all/queries").json()
+    q = page["items"][0]
+    assert page["total"] == 1 and q["slim"] and q["metrics"] == {"Recall@10": 0.5, "NDCG@10": 0.25}
+    assert [(s["name"], s["start_ms"]) for s in q["spans"]] == [("asr", 0), ("encode", 0.1), ("retrieve", 50.1),
+                                                                ("generate", 55.1)]
+    assert q["artifacts"]["ranked_ids"] == ["r1", "r2"] and q["judge"]["normalised_answer_score"] == 0.75
+
+
 @pytest.fixture
 def questions_client(stage, tmp_path):
     data, cache = tmp_path / "data", tmp_path / "cache"
@@ -242,8 +261,9 @@ def questions_client(stage, tmp_path):
 def test_questions_order_paging_and_missing_course(questions_client):
     client, _ = questions_client
     page = client.get("/api/questions", params={"split": "dev", "offset": 1, "limit": 1}).json()
-    assert page == {"total": 3, "items": [{"query_id": "q1", "split": "dev", "duration_seconds": 1.5,
-                                           "whisper1": "w1", "course": None}]}
+    assert page == {"total": 3, "same": 0, "differ": 0,
+                    "items": [{"query_id": "q1", "split": "dev", "duration_seconds": 1.5,
+                               "whisper1": "w1", "course": None}]}
     assert [q["query_id"] for q in client.get("/api/questions").json()["items"]] == ["q0", "q1", "q2"]
     practice = client.get("/api/questions", params={"split": "practice"}).json()
     assert practice["items"][0]["whisper1"] is None
@@ -254,6 +274,17 @@ def test_questions_partial_course_file(questions_client):
     (cache / "transcripts" / "course-dev.jsonl").write_text(json.dumps({"query_id": "q2", "transcript": "c2"}) + "\n")
     items = client.get("/api/questions").json()["items"]
     assert [q["course"] for q in items] == [None, None, "c2"]
+
+
+def test_questions_match_filter(questions_client):
+    client, cache = questions_client
+    course = {"q0": "W0!", "q1": "something else"}  # q0 differs from "w0" only in case and punctuation; q2 has none
+    (cache / "transcripts" / "course-dev.jsonl").write_text(
+        "".join(json.dumps({"query_id": k, "transcript": v}) + "\n" for k, v in course.items()))
+    ids = lambda match: [q["query_id"] for q in client.get("/api/questions", params={"match": match}).json()["items"]]
+    assert (ids("all"), ids("same"), ids("differ")) == (["q0", "q1", "q2"], ["q0"], ["q1"])
+    page = client.get("/api/questions", params={"match": "differ"}).json()
+    assert (page["total"], page["same"], page["differ"]) == (1, 1, 1)
 
 
 def test_questions_bad_split(questions_client):

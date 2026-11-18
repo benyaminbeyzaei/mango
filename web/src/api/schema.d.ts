@@ -386,10 +386,23 @@ export interface components {
         };
         /** QuestionsPage */
         QuestionsPage: {
-            /** Total */
+            /**
+             * Total
+             * @description questions that pass the match filter
+             */
             total: number;
             /** Items */
             items: components["schemas"]["Question"][];
+            /**
+             * Same
+             * @description questions in the split whose two transcripts have the same words (ignoring case and punctuation)
+             */
+            same: number;
+            /**
+             * Differ
+             * @description questions in the split whose two transcripts have different words
+             */
+            differ: number;
         };
         /** RecordResponse */
         RecordResponse: {
@@ -849,6 +862,7 @@ export interface operations {
         parameters: {
             query?: {
                 split?: "dev" | "practice";
+                match?: "all" | "differ" | "same";
                 offset?: number;
                 limit?: number;
             };

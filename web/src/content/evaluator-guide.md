@@ -64,7 +64,14 @@ The dry run checks candidate IDs and coverage without calling ELM. The last comm
 
 ## 6. Optional: run our experiment matrices
 
-The platform (`rag/extensions/platform/`, see its `README.md`) runs on any machine with the course data; no GPU, since it uses cached or whisper-1 transcripts. Install it in the RAG environment with `pip install -e "rag/extensions/platform[dev]"`, or use Docker (`docker compose run --rm cli mlsrag ...`). The committed results are smoke runs (practice-smoke20), plus full-split (practice-all, dev-all) matrix summaries for every retriever that makes no LLM call at query time (plans 029 and 030); the LLM-routed TOC and grep methods have smoke results only. A full split needs a copy of a matrix file with `subset: dev-all` (or `practice-all`) and both flags:
+The platform (`rag/extensions/platform/`, see its `README.md`) runs on any machine with the course data; no GPU, since it uses cached or whisper-1 transcripts. Install it in the RAG environment with `pip install -e "rag/extensions/platform[dev]"`, or use Docker (`docker compose run --rm cli mlsrag ...`). The committed results are:
+
+- smoke runs on `practice-smoke20` for every method;
+- full-split retrieval summaries (`practice-all`, `dev-all`) for every retriever that makes no LLM call at query time, and for the encoder policies (plans 029 and 030);
+- the reranker choice on `practice-all` and the final three-way comparison (baseline, reranker, RAPTOR tree), retrieval on `practice-all` and answers with judge scores on `dev-all` (plan 032);
+- the same final comparison on `dev-all` with our own ASR's transcripts instead of whisper-1 (plan 033).
+
+The LLM-routed TOC and grep methods have smoke results only. To run any other matrix on a full split, copy its file with `subset: dev-all` (or `practice-all`) and pass both flags:
 
 ```bash
 mlsrag transcribe --asr whisper1 --subset dev-all --allow-full --out rag/.cache/transcripts/whisper1-dev.jsonl
@@ -72,14 +79,22 @@ mlsrag estimate --config baseline --subset dev-all --judge --fresh      # calls 
 mlsrag matrix --matrix my-matrix-b-dev-all.yaml --fresh --allow-full --yes
 ```
 
-Estimated cost on `dev-all` (125 queries), after the transcript cache is filled. Transcript caches are not in git, so a fresh clone first needs 125 whisper-1 calls for `dev-all` (about 690 audio s, $0.07) and 350 for `practice-all` (about 1,800 s, $0.18); the `transcribe` command above is resumable and skips queries already cached. The chat models are free university-hosted ELM models; wall time is at one request at a time, judging not included:
+Transcript caches are not in git, so a fresh clone first needs 125 whisper-1 calls for `dev-all` (about 690 audio s, $0.07) and 350 for `practice-all` (about 1,800 s, $0.18); the `transcribe` command above is resumable and skips queries already cached.
 
-| Matrix | Mode | ELM calls | Wall time |
-|---|---|---|---|
-| A, 14 retrieval configs (`matrix-a-retrieval-dev.yaml`) | `--no-generate` | 1,750 | ~42 min |
-| A on `practice-all` (350 queries) | `--no-generate` | 4,900 | ~2 h |
-| B, 7 configs, generation + judge (`matrix-b-answers.yaml`) | generate + judge | 1,875 + 875 judge | ~13 h + judge |
-| B with the budgeted builder (`matrix-b-answers-budgeted.yaml`) | generate + judge | 1,875 + 875 judge | ~13 h + judge |
-| C, encoder policies (`matrix-c-secondary.yaml`) | `--no-generate` | 0 | minutes |
+Expected cost per matrix once the cache is filled. All chat models are free, university-hosted ELM models. ELM calls include the grep and TOC helper calls; wall time is with one request at a time and does not include judging.
+
+| Matrix file (`configs/matrices/`)                                                    | Subset                 | Mode             | ELM calls         | Wall time     |
+| ------------------------------------------------------------------------------------ | ---------------------- | ---------------- | ----------------- | ------------- |
+| `matrix-a-retrieval-dev.yaml`, copied to `dev-all` (14 retrievers)                   | dev-all (125)          | `--no-generate`  | 1,750             | ~45 min       |
+| `matrix-a-retrieval.yaml`, copied to `practice-all`                                  | practice-all (350)     | `--no-generate`  | 4,900             | ~2 h          |
+| `matrix-b-answers.yaml`, copied to `dev-all` (7 configs, simple context)             | dev-all                | generate + judge | 1,875 + 875 judge | ~13 h + judge |
+| `matrix-b-answers-budgeted.yaml`, copied to `dev-all` (budgeted context)             | dev-all                | generate + judge | 1,875 + 875 judge | ~13 h + judge |
+| `matrix-a-free-dev-all.yaml` / `matrix-a-free-practice-all.yaml` (no-LLM retrievers) | dev-all / practice-all | `--no-generate`  | 0                 | ~2 / ~5 min   |
+| `matrix-c-dev-all.yaml` / `matrix-c-practice-all.yaml` (encoder policies)            | dev-all / practice-all | `--no-generate`  | 0                 | minutes       |
+| `matrix-rerank-practice-all.yaml` (reranker settings)                                | practice-all           | `--no-generate`  | 0                 | minutes       |
+| `matrix-final-dev-all.yaml` (baseline, reranker, RAPTOR tree)                        | dev-all                | generate + judge | 375 + 375 judge   | ~9 h + judge  |
+| `matrix-courseasr-dev-all.yaml` (baseline and RAPTOR tree, our ASR)                  | dev-all                | generate + judge | 250 + 250 judge   | ~5 h + judge  |
+
+The rows that copy a smoke-sized matrix are the README's dev-20pct (25 queries) and practice-20pct (70 queries) estimates scaled ×5; the last two rows come from the committed runs (about 87 s and 72 s per answer). The course-ASR row needs `rag/.cache/transcripts/course-dev.jsonl`, which only the cluster can make.
 
 Without `--allow-full` every command refuses a full split; without `--yes` the matrix prints its estimate and waits for `y`.

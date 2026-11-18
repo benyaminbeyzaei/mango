@@ -315,6 +315,21 @@
             }
           },
           {
+            "name": "match",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "all",
+                "differ",
+                "same"
+              ],
+              "type": "string",
+              "default": "all",
+              "title": "Match"
+            }
+          },
+          {
             "name": "offset",
             "in": "query",
             "required": false,
@@ -917,7 +932,8 @@
         "properties": {
           "total": {
             "type": "integer",
-            "title": "Total"
+            "title": "Total",
+            "description": "questions that pass the match filter"
           },
           "items": {
             "items": {
@@ -925,12 +941,24 @@
             },
             "type": "array",
             "title": "Items"
+          },
+          "same": {
+            "type": "integer",
+            "title": "Same",
+            "description": "questions in the split whose two transcripts have the same words (ignoring case and punctuation)"
+          },
+          "differ": {
+            "type": "integer",
+            "title": "Differ",
+            "description": "questions in the split whose two transcripts have different words"
           }
         },
         "type": "object",
         "required": [
           "total",
-          "items"
+          "items",
+          "same",
+          "differ"
         ],
         "title": "QuestionsPage"
       },

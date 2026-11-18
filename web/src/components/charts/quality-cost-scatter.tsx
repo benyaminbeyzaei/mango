@@ -19,12 +19,14 @@ export type Point = { label: string; x: number | null; y: number | null }
 export function QualityCostScatter({
   title,
   note,
+  controls,
   points,
   xLabel,
   yLabel,
 }: {
   title: string
   note?: ReactNode
+  controls?: ReactNode
   points: Point[]
   xLabel: string
   yLabel: string
@@ -33,6 +35,7 @@ export function QualityCostScatter({
     <ChartFrame
       title={title}
       note={note}
+      controls={controls}
       table={{
         columns: ["run", xLabel, yLabel],
         rows: points.map((p) => [p.label, p.x, p.y]),

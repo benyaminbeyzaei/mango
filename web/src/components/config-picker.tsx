@@ -92,7 +92,11 @@ export function ConfigPicker({
     ] satisfies RunConfig["mismatch_policy"][],
     retriever: models.data?.retrievers ?? "text",
     k: "number",
-    context_builder: models.data?.context_builders ?? "text",
+    // with-summaries shows RAPTOR summaries, so it is offered only with a raptor-* retriever
+    context_builder:
+      models.data?.context_builders.filter(
+        (b) => b !== "with-summaries" || config.retriever.startsWith("raptor-")
+      ) ?? "text",
     generator_model: models.data?.chat_models ?? "text",
     judge_model: models.data?.chat_models ?? "text",
     flow: models.data?.flows ?? "text",

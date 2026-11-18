@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table"
 import {
   NOT_FRESH,
+  SLIM_NOTE,
   fmt,
   flatten,
   isCached,
@@ -35,14 +36,19 @@ export const Route = createFileRoute("/results/$runId/")({
 })
 
 // Per-query columns: the stored retrieval metrics, then wall time and real (uncached) remote calls.
+// A slim trace has no gateway spans, so its call columns would read 0: they are left out.
 function row(q: QueryTrace): Record<string, number | string> {
   const calls = q.spans.filter(isGatewaySpan)
   return {
     query_id: q.query_id,
     ...q.metrics,
     wall_ms: q.resources.wall_ms ?? 0,
-    remote_calls: calls.filter((s) => !isCached(s)).length,
-    cache_hits: calls.filter(isCached).length,
+    ...(q.slim
+      ? {}
+      : {
+          remote_calls: calls.filter((s) => !isCached(s)).length,
+          cache_hits: calls.filter(isCached).length,
+        }),
   }
 }
 
@@ -89,6 +95,9 @@ function RunDetail() {
         {run.data.metrics.run.subset}, {run.data.metrics.run.n_queries} queries
         {!fresh && `; ${NOT_FRESH}`}
       </p>
+      {queries.data[0]?.slim && (
+        <p className="text-sm text-muted-foreground">{SLIM_NOTE}</p>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {groups.map((g) => {
@@ -191,9 +200,9 @@ function RunDetail() {
                   ) : c === "wall_ms" &&
                     r.remote_calls === 0 &&
                     Number(r.cache_hits) > 0 ? (
-                    `${r[c]} (cached)`
+                    `${fmt(r[c])} (cached)`
                   ) : (
-                    r[c]
+                    <span title={String(r[c])}>{fmt(r[c])}</span>
                   )}
                 </TableCell>
               ))}

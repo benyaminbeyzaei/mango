@@ -1,7 +1,8 @@
-// Shared frame for every chart: a title, a note, and a button that swaps the chart for a table of the same numbers.
+// Shared frame for every chart: a title, the controls that change it, a note, and a button that swaps the chart for a table of the same numbers.
 import { useState, type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
+import { fmt } from "@/lib/results"
 
 // The preset's chart colours (greyscale), ordered so neighbours contrast, plus the text colour for a sixth series.
 export const PALETTE = [
@@ -21,6 +22,7 @@ export const TOOLTIP = {
     fontSize: 12,
   },
   labelStyle: { color: "var(--popover-foreground)" },
+  formatter: (v: unknown) => (typeof v === "number" ? fmt(v) : String(v)),
 }
 
 // Legend text in the text colour; Recharts would otherwise use each series' (possibly pale) colour.
@@ -38,11 +40,13 @@ export type TableData = {
 
 export function ChartFrame({
   title,
+  controls,
   note,
   table,
   children,
 }: {
   title: string
+  controls?: ReactNode
   note?: ReactNode
   table: TableData
   children: ReactNode
@@ -61,6 +65,11 @@ export function ChartFrame({
           {showTable ? "Show chart" : "Show table"}
         </Button>
       </div>
+      {controls && (
+        <div className="flex flex-wrap items-center gap-3 text-sm">
+          {controls}
+        </div>
+      )}
       {note && <p className="text-xs text-muted-foreground">{note}</p>}
       {showTable ? (
         <div className="overflow-x-auto">
@@ -78,8 +87,12 @@ export function ChartFrame({
               {table.rows.map((row, i) => (
                 <tr key={i} className="border-b last:border-0">
                   {row.map((v, j) => (
-                    <td key={j} className="p-1 font-mono break-all">
-                      {v ?? "–"}
+                    <td
+                      key={j}
+                      className="p-1 font-mono break-all"
+                      title={typeof v === "number" ? String(v) : undefined}
+                    >
+                      {fmt(v)}
                     </td>
                   ))}
                 </tr>

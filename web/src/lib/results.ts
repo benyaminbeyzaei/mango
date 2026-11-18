@@ -23,9 +23,11 @@ export type Span = {
   duration_ms: number
   attrs: Record<string, unknown>
 }
-// One line of queries.jsonl.
+// One line of queries.jsonl. Full-split runs commit only a slim per_query.jsonl; the API turns
+// its lines into this shape with `slim: true` (no transcript, prompt, answer or gateway spans).
 export type QueryTrace = {
   query_id: string
+  slim?: boolean
   spans: Span[]
   counters: Record<string, number>
   cost: Record<string, unknown>
@@ -168,6 +170,9 @@ export const isTimeOrCost = (path: string) =>
 
 export const MAX_COMPARE = 6
 
+export const SLIM_NOTE =
+  "This run kept only per-query metrics, stage timings and judge scores; its transcripts, prompts and answers were not committed."
+
 // A comma-separated run list from the URL without repeats, at most MAX_COMPARE runs.
 export const uniqueIds = (list: string) =>
   [...new Set(list.split(",").filter(Boolean))].slice(0, MAX_COMPARE).join(",")
@@ -175,6 +180,24 @@ export const uniqueIds = (list: string) =>
 export const runDate = (runId: string) =>
   runId.replace(/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2}).*/, "$1-$2-$3 $4:$5")
 
-// Short display of a stored number for cards; tables print stored values in full.
-export const fmt = (v: number | null | undefined) =>
-  v == null ? "–" : Number.isInteger(v) ? String(v) : v.toFixed(4)
+// How every number is shown: decimals by size, so scores read 0.18 (not
+// 0.18333333333333335), latencies 113 or 74,123 and counts 1,250. The stored
+// value stays in the data and in each cell's tooltip (`title`).
+//   integers           1,250
+//   |v| >= 100         74,123   (no decimals)
+//   10 <= |v| < 100    85.3     (one)
+//   0.01 <= |v| < 10   0.18     (two)
+//   0 < |v| < 0.01     0.0012   (two significant digits, so small costs do not read 0.00)
+export function fmt(v: number | string | null | undefined): string {
+  if (v == null) return "–"
+  if (typeof v === "string") return v
+  const a = Math.abs(v)
+  if (Number.isInteger(v)) return v.toLocaleString("en-GB")
+  if (a >= 100) return Math.round(v).toLocaleString("en-GB")
+  if (a >= 10) return v.toFixed(1)
+  if (a >= 0.01) return v.toFixed(2)
+  return v.toPrecision(2)
+}
+
+// Subsets used for quick tests; the Results page hides their runs unless asked.
+export const isSmoke = (subset: string) => subset.includes("smoke")

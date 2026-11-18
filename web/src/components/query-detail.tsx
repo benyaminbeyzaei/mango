@@ -186,7 +186,7 @@ function Evidence({
           <span className="font-mono">
             {rank}. {hit.record_id}{" "}
             <span className="text-muted-foreground">
-              score {hit.score.toFixed(4)}
+              {hit.score != null && `score ${hit.score.toFixed(3)}`}
             </span>
           </span>
           <span className="line-clamp-2 text-muted-foreground group-open:hidden">

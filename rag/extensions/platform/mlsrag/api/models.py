@@ -99,8 +99,11 @@ class Question(BaseModel):
 
 
 class QuestionsPage(BaseModel):
-    total: int
+    total: int = Field(description="questions that pass the match filter")
     items: list[Question]
+    same: int = Field(description="questions in the split whose two transcripts have the same words "
+                                  "(ignoring case and punctuation)")
+    differ: int = Field(description="questions in the split whose two transcripts have different words")
 
 
 class RecordResponse(BaseModel):

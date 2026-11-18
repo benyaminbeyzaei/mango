@@ -2,6 +2,7 @@
 import hmac
 import json
 import os
+import re
 import tempfile
 import threading
 import uuid
@@ -95,6 +96,34 @@ def run_dir(root, run_id) -> Path:
     if path.parent != root.resolve() or not (path / "metrics.json").exists():
         raise HTTPException(404, f"no run {run_id!r}")
     return path
+
+
+def slim_trace(row: dict, judge: dict) -> dict:
+    """A per_query.jsonl line (the slim file committed for full-split runs: ids, timings, tokens, retrieval
+    metrics; no transcript, prompt or answer) in the shape of a queries.jsonl trace, marked "slim"."""
+    ms = row["ms"]
+    stages = [("asr", ms["asr"]), ("encode", ms["encode"]),
+              ("retrieve", (ms["dense_retrieve"] or 0) + (ms["rerank"] or 0)), ("generate", ms["generate"])]
+    spans, start = [], 0.0
+    for name, duration in stages:
+        if duration is not None:
+            spans.append({"name": name, "start_ms": start, "duration_ms": duration, "attrs": {}})
+            start += duration
+    j = judge.get(row["query_id"])
+    return {
+        "query_id": row["query_id"], "slim": True, "spans": spans,
+        "counters": {"rerank.pool": row["rerank_pool"], "rerank.truncated": row["rerank_truncated"]},
+        "cost": {}, "resources": {"wall_ms": ms["end_to_end"]},
+        "artifacts": {"transcript": "", "ranked_ids": row["context_ids"], "scores": [], "prompt": "", "answer": None},
+        "metrics": {k: v for k, v in row.items() if "@" in k},
+        **({"judge": {k: j[k] for k in ["correctness", "grounding", "completeness", "normalised_answer_score"]}}
+           if j else {}),
+    }
+
+
+def words(text: str) -> list[str]:
+    """Lower-case words without punctuation: two transcripts are "the same" when these match."""
+    return re.findall(r"[a-z0-9']+", text.lower())
 
 
 def create_app(web_dir=None, results_dir=None, data_dir=None, cache_dir=None) -> FastAPI:
@@ -243,9 +272,19 @@ def create_app(web_dir=None, results_dir=None, data_dir=None, cache_dir=None) ->
     def result_queries(run_id: str, offset: int = 0, limit: int = 20):
         if offset < 0 or not 1 <= limit <= 100:
             raise HTTPException(400, "offset >= 0 and 1 <= limit <= 100")
-        lines = (run_dir(results_root, run_id) / "queries.jsonl").read_text(encoding="utf-8").splitlines()
-        return QueriesPage(total=len(lines), offset=offset,
-                           items=[json.loads(line) for line in lines[offset: offset + limit]])
+        folder = run_dir(results_root, run_id)
+        if (folder / "queries.jsonl").exists():
+            lines = (folder / "queries.jsonl").read_text(encoding="utf-8").splitlines()
+            items = [json.loads(line) for line in lines[offset: offset + limit]]
+        elif (folder / "per_query.jsonl").exists():
+            lines = (folder / "per_query.jsonl").read_text(encoding="utf-8").splitlines()
+            judged = folder / "judge" / "answer_judge_per_query.jsonl"
+            judge = {j["query_id"]: j for j in map(json.loads, judged.read_text(encoding="utf-8").splitlines())
+                     } if judged.exists() else {}
+            items = [slim_trace(json.loads(line), judge) for line in lines[offset: offset + limit]]
+        else:
+            raise HTTPException(404, f"run {run_id!r} has no per-query file")
+        return QueriesPage(total=len(lines), offset=offset, items=items)
 
     @api.get("/records/{record_id}", response_model=RecordResponse)
     def record(record_id: str):
@@ -255,16 +294,21 @@ def create_app(web_dir=None, results_dir=None, data_dir=None, cache_dir=None) ->
         return RecordResponse(record_id=record_id, text=records[record_id])
 
     @api.get("/questions", response_model=QuestionsPage)
-    def questions(split: Literal["dev", "practice"] = "dev", offset: int = 0, limit: int = 20):
+    def questions(split: Literal["dev", "practice"] = "dev", match: Literal["all", "differ", "same"] = "all",
+                  offset: int = 0, limit: int = 20):
         if offset < 0 or not 1 <= limit <= 100:
             raise HTTPException(400, "offset >= 0 and 1 <= limit <= 100")
-        entries = [e for e in manifest().values() if e["split"] == split]
         whisper1 = load_transcripts(transcripts_dir / f"whisper1-{split}.jsonl")
         course = load_transcripts(transcripts_dir / f"course-{split}.jsonl")
-        items = [Question(query_id=e["query_id"], split=split, duration_seconds=e["duration_seconds"],
-                          whisper1=whisper1.get(e["query_id"]), course=course.get(e["query_id"]))
-                 for e in entries[offset: offset + limit]]
-        return QuestionsPage(total=len(entries), items=items)
+        rows = [Question(query_id=e["query_id"], split=split, duration_seconds=e["duration_seconds"],
+                         whisper1=whisper1.get(e["query_id"]), course=course.get(e["query_id"]))
+                for e in manifest().values() if e["split"] == split]
+        same = {q.query_id: words(q.whisper1) == words(q.course)
+                for q in rows if q.whisper1 is not None and q.course is not None}
+        if match != "all":
+            rows = [q for q in rows if q.query_id in same and same[q.query_id] == (match == "same")]
+        return QuestionsPage(total=len(rows), items=rows[offset: offset + limit],
+                             same=sum(same.values()), differ=len(same) - sum(same.values()))
 
     @api.get("/questions/{query_id}/audio", response_class=FileResponse)
     def question_audio(query_id: str):

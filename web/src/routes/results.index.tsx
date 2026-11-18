@@ -12,6 +12,8 @@ import {
 import {
   MAX_COMPARE,
   NOT_FRESH,
+  fmt,
+  isSmoke,
   runDate,
   uniqueIds,
   useResults,
@@ -19,12 +21,14 @@ import {
 
 const HEADLINE = ["Recall@10", "MRR@10", "NDCG@10"]
 
-type Search = { q?: string; sel?: string }
+// "" = every run except smoke tests (the default), "*" = every run, otherwise one subset.
+type Search = { q?: string; sel?: string; subset?: string }
 
 export const Route = createFileRoute("/results/")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     q: typeof s.q === "string" && s.q ? s.q : undefined,
     sel: typeof s.sel === "string" && s.sel ? uniqueIds(s.sel) : undefined,
+    subset: typeof s.subset === "string" && s.subset ? s.subset : undefined,
   }),
   component: Results,
 })
@@ -36,7 +40,7 @@ type MatrixSummary = {
 }
 
 function Results() {
-  const { q = "", sel } = Route.useSearch()
+  const { q = "", sel, subset = "" } = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const results = useResults()
   const selected = sel ? sel.split(",") : []
@@ -53,20 +57,41 @@ function Results() {
   if (results.isPending) return <p>Loading results…</p>
   if (results.error) return <p>{results.error.message}</p>
 
+  // Runs are comparable only on the same subset (the same questions): once one run is
+  // ticked, runs on other subsets cannot be.
+  const pickedSubset = results.data.runs.find((r) =>
+    selected.includes(r.run_id)
+  )?.subset
+  const blocked = (r: { run_id: string; subset: string }) =>
+    selected.includes(r.run_id)
+      ? undefined
+      : selected.length >= MAX_COMPARE
+        ? `at most ${MAX_COMPARE} runs`
+        : pickedSubset && r.subset !== pickedSubset
+          ? `only runs on ${pickedSubset} can be compared with the ticked runs`
+          : undefined
   const needle = q.toLowerCase()
-  const runs = results.data.runs.filter((r) =>
-    [r.run_id, r.config_name, r.subset].some((f) =>
-      f.toLowerCase().includes(needle)
-    )
+  const inSubset = (s: string) =>
+    subset === "*" || (subset === "" ? !isSmoke(s) : s === subset)
+  const runs = results.data.runs.filter(
+    (r) =>
+      inSubset(r.subset) &&
+      [r.run_id, r.config_name, r.subset].some((f) =>
+        f.toLowerCase().includes(needle)
+      )
   )
-  const matrices = results.data.matrices as MatrixSummary[]
+  const subsets = [...new Set(results.data.runs.map((r) => r.subset))].sort()
+  const hidden = results.data.runs.filter((r) => !inSubset(r.subset)).length
+  const matrices = (results.data.matrices as MatrixSummary[]).filter((m) =>
+    inSubset(m.subset)
+  )
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="font-heading text-2xl font-medium">Results</h1>
       <p className="text-sm text-muted-foreground">
         Every committed run under <code>rag/extensions/results/</code>. Tick up
-        to {MAX_COMPARE} runs and compare them.
+        to {MAX_COMPARE} runs on the same subset and compare them.
       </p>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -78,6 +103,22 @@ function Results() {
           onChange={(e) => setSearch({ q: e.target.value || undefined })}
           className="max-w-xs"
         />
+        <label className="flex items-center gap-2 text-sm">
+          Subset
+          <select
+            value={subset}
+            onChange={(e) => setSearch({ subset: e.target.value || undefined })}
+            className="h-8 rounded-lg border bg-background px-2"
+          >
+            <option value="">all but smoke tests</option>
+            <option value="*">all</option>
+            {subsets.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </label>
         <Link
           to="/results/compare"
           search={{ runs: selected.join(",") }}
@@ -86,6 +127,10 @@ function Results() {
         >
           Compare {selected.length} of {MAX_COMPARE}
         </Link>
+        <span className="text-sm text-muted-foreground">
+          {runs.length} runs
+          {hidden > 0 && `, ${hidden} hidden by the subset filter`}
+        </span>
       </div>
 
       <Table>
@@ -115,10 +160,8 @@ function Results() {
                   type="checkbox"
                   aria-label={`Compare ${r.run_id}`}
                   checked={selected.includes(r.run_id)}
-                  disabled={
-                    !selected.includes(r.run_id) &&
-                    selected.length >= MAX_COMPARE
-                  }
+                  disabled={blocked(r) !== undefined}
+                  title={blocked(r)}
                   onChange={() => toggle(r.run_id)}
                 />
               </TableCell>
@@ -133,18 +176,22 @@ function Results() {
               </TableCell>
               <TableCell>{r.config_name}</TableCell>
               <TableCell>{r.subset}</TableCell>
-              <TableCell className="text-right">{r.n_queries}</TableCell>
+              <TableCell className="text-right">{fmt(r.n_queries)}</TableCell>
               <TableCell>{runDate(r.run_id)}</TableCell>
               {HEADLINE.map((m) => (
-                <TableCell key={m} className="text-right font-mono">
-                  {r.retrieval[m]}
+                <TableCell
+                  key={m}
+                  className="text-right font-mono"
+                  title={String(r.retrieval[m])}
+                >
+                  {fmt(r.retrieval[m])}
                 </TableCell>
               ))}
               <TableCell
                 className="text-right font-mono"
                 title={r.fresh ? undefined : NOT_FRESH}
               >
-                {r.fresh ? String(r.cost.elm_calls) : "–"}
+                {r.fresh ? fmt(r.cost.elm_calls as number) : "–"}
               </TableCell>
             </TableRow>
           ))}

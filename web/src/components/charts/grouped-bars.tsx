@@ -19,6 +19,7 @@ export type Series = { id: string; label: string }
 export function GroupedBars({
   title,
   note,
+  controls,
   runs,
   metrics,
   value,
@@ -26,6 +27,7 @@ export function GroupedBars({
 }: {
   title: string
   note?: ReactNode
+  controls?: ReactNode
   runs: Series[]
   metrics: string[]
   value: (run: number, metric: string) => number | null
@@ -41,6 +43,7 @@ export function GroupedBars({
     <ChartFrame
       title={title}
       note={note}
+      controls={controls}
       table={{
         columns: ["metric", ...runs.map((r) => r.label)],
         rows: metrics.map((m) => [m, ...runs.map((_, i) => value(i, m))]),

@@ -172,6 +172,10 @@ def stage_dir(pipeline_name, config, stage) -> Path:
 
     if config.corpus_index != "enc_a":
         raise ValueError("the preprocessing indexes are built from enc_a vectors")
+    if "index" not in config.params:
+        raise ValueError(f"retriever {config.retriever} needs params.index, the pipeline config its index is built "
+                         "from (e.g. rag/extensions/platform/configs/pipelines/topics-k256-gpt5.yaml); "
+                         "start from a preset that uses it")
     pipeline = PIPELINES[pipeline_name]()
     rows = {r["stage"]: r for r in pipeline.status(load_pipeline_config(checkout_path(config.params["index"])))}
     if rows[stage]["status"] != "ok":

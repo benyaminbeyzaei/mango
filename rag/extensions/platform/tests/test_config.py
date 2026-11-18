@@ -28,3 +28,17 @@ def test_load_yaml_json_and_preset(tmp_path):
     (tmp_path / "bad.yaml").write_text("name: a\ntypo_field: 1\n")
     with pytest.raises(ValidationError):
         load_config(tmp_path / "bad.yaml")
+
+
+def test_with_summaries_needs_a_raptor_retriever():
+    with pytest.raises(ValueError, match="needs retriever raptor"):
+        RunConfig.model_validate(baseline().model_dump() | {"context_builder": "with-summaries"})
+    RunConfig.model_validate(baseline().model_dump() | {"retriever": "raptor-tree", "context_builder": "with-summaries"})
+
+
+def test_index_retriever_without_params_index():
+    from mlsrag.stages import stage_dir
+
+    config = RunConfig.model_validate(baseline().model_dump() | {"retriever": "raptor-tree"})
+    with pytest.raises(ValueError, match="needs params.index"):
+        stage_dir("raptor-tree", config, "tree_index")

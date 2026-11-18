@@ -2,7 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 
 import { Markdown } from "@/components/markdown"
 import { QueryDetail } from "@/components/query-detail"
-import { useRun, useRunQueries } from "@/lib/results"
+import { SLIM_NOTE, fmt, useRun, useRunQueries } from "@/lib/results"
 
 export const Route = createFileRoute("/results/$runId/$queryId")({
   component: StoredQuery,
@@ -47,6 +47,7 @@ function StoredQuery() {
         ← {runId}
       </Link>
       <h1 className="font-heading text-xl font-medium break-all">{queryId}</h1>
+      {q.slim && <p className="text-sm text-muted-foreground">{SLIM_NOTE}</p>}
 
       <section className="flex flex-col gap-1">
         <h2 className="text-sm font-medium">Answer</h2>
@@ -56,7 +57,9 @@ function StoredQuery() {
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            This run did not generate answers.
+            {q.slim
+              ? "The answer was not committed for this run."
+              : "This run did not generate answers."}
           </p>
         )}
       </section>
@@ -65,7 +68,7 @@ function StoredQuery() {
         <h2 className="text-sm font-medium">Retrieval metrics</h2>
         <p className="font-mono text-xs">
           {Object.entries(q.metrics)
-            .map(([m, v]) => `${m} ${v}`)
+            .map(([m, v]) => `${m} ${fmt(v)}`)
             .join(" · ")}
         </p>
       </section>
