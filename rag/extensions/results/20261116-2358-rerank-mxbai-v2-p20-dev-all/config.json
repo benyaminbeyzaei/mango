@@ -1,0 +1,20 @@
+{
+  "name": "rerank-mxbai-v2-p20",
+  "asr": "cached",
+  "asr_cache": "rag/.cache/transcripts/whisper1-dev.jsonl",
+  "query_encoder": "gte-small",
+  "corpus_index": "enc_a",
+  "mismatch_policy": "error",
+  "retriever": "rerank",
+  "k": 5,
+  "context_builder": "simple",
+  "generator_model": "Qwen/Qwen3.5-397B-A17B-FP8",
+  "judge_model": "mistralai/Mistral-Small-4-119B-2603",
+  "flow": "standard",
+  "params": {
+    "base": "exact",
+    "pool": 20,
+    "model": "mixedbread-ai/mxbai-rerank-base-v2",
+    "revision": "3ea9d4dffa7d12a4f366be8e275c349de9fc9865"
+  }
+}

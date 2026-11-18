@@ -1,0 +1,45 @@
+{
+  "retrieval": {
+    "Recall@5": 0.46674725274725276,
+    "Recall@10": 0.5287208791208791,
+    "Recall@20": 0.5832351648351648,
+    "Recall@100": 0.7274739926739927,
+    "MRR@10": 0.5285047619047618,
+    "NDCG@10": 0.4598256709930569
+  },
+  "answers": null,
+  "cost": {
+    "elm_calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.03251588996499777,
+    "encode": 46.928960158489645,
+    "retrieve": 42069.508158294484,
+    "rerank": 42062.181247854605,
+    "context": 0.05146393273025751,
+    "generate": null,
+    "end_to_end": {
+      "mean": 42116.67735445406,
+      "p50": 43498.51373001002,
+      "p95": 44410.401329235174
+    }
+  },
+  "resources": {
+    "cpu_s": 60111.036646794004,
+    "peak_rss_mb": 3452.0625
+  },
+  "run": {
+    "run_id": "20261116-2055-rerank-bge-m3-p20-dev-all",
+    "config_name": "rerank-bge-m3-p20",
+    "subset": "dev-all",
+    "started": "2026-11-16T20:55:04",
+    "finished": "2026-11-16T22:22:49",
+    "git_commit": "9eec4d93f25fef3dcd8dceebf66a604bad260a43",
+    "fresh": true,
+    "n_queries": 125
+  }
+}

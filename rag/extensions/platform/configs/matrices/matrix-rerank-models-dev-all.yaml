@@ -1,0 +1,8 @@
+# Plan 036 (dev-all, retrieval only): does a stronger reranker beat the dense baseline?
+# Variable: the reranker model (none / MiniLM / bge-reranker-v2-m3 / mxbai-rerank-base-v2). Run with
+# --no-generate --fresh --allow-full: no ELM calls (whisper-1 transcripts cached, local models).
+# Controls: whisper-1 transcript cache, gte-small on enc_a, k=5, pool 20, max length 512, CPU.
+name: rerank-models-dev-all
+subset: dev-all
+override: {asr_cache: rag/.cache/transcripts/whisper1-dev.jsonl}
+configs: [baseline, rerank-minilm-p20, rerank-bge-m3-p20, rerank-mxbai-v2-p20]
