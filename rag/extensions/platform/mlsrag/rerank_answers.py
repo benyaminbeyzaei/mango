@@ -1,4 +1,4 @@
-"""Plan 036: do the better rerankers give better answers on dev-all? Each reranker's end-to-end run minus the
+"""Plan 036: do the better rerankers give better answers on test? Each reranker's end-to-end run minus the
 plan 032 baseline per question, split by whether the top 5 gained or lost relevant records, plus two checks that
 explain the result: answer-score noise (baseline vs a row with the same contexts) and how much the answer score
 depends on retrieving a relevant record at all. Run: python -m mlsrag.rerank_answers"""
@@ -8,10 +8,10 @@ import numpy as np
 
 from .final import load_queries, mean_ci, paths
 
-BASELINE = "20261111-0115-baseline-dev-all"
-SAME_CONTEXTS = "20261111-0719-raptor-tree-gpt5-evidence-dev-all"  # plan 032: same top 5 as the baseline for 115 of 125
-RUNS = {"rerank-bge-m3-p20": "20261116-2358-rerank-bge-m3-p20-dev-all",
-        "rerank-mxbai-v2-p20": "20261117-0316-rerank-mxbai-v2-p20-dev-all"}
+BASELINE = "20261111-0115-baseline-test"
+SAME_CONTEXTS = "20261111-0719-raptor-tree-gpt5-evidence-test"  # plan 032: same top 5 as the baseline for 115 of 125
+RUNS = {"rerank-bge-m3-p20": "20261116-2358-rerank-bge-m3-p20-test",
+        "rerank-mxbai-v2-p20": "20261117-0316-rerank-mxbai-v2-p20-test"}
 SCORES = ["answer_norm", "correctness", "grounding", "completeness"]
 
 
@@ -53,7 +53,7 @@ def analyse() -> dict:
 
 
 if __name__ == "__main__":
-    path = paths.results_dir / "matrices" / "final-rerank-dev-all" / "analysis.json"
+    path = paths.results_dir / "matrices" / "final-rerank-test" / "analysis.json"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(analyse(), indent=2) + "\n", encoding="utf-8")
     print(f"wrote {path}")

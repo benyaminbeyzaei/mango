@@ -1,0 +1,44 @@
+{
+  "retrieval": {
+    "Recall@5": 0.4041666666666667,
+    "Recall@10": 0.45,
+    "Recall@20": 0.5499999999999999,
+    "Recall@100": 0.7791666666666666,
+    "MRR@10": 0.4791666666666667,
+    "NDCG@10": 0.37646204460498256
+  },
+  "answers": null,
+  "cost": {
+    "elm_calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.03142249770462513,
+    "encode": 96.66730140743311,
+    "retrieve": 7.201842701761052,
+    "context": 0.05017704679630697,
+    "generate": null,
+    "end_to_end": {
+      "mean": 104.07998020236846,
+      "p50": 103.58351847389713,
+      "p95": 124.9446625239216
+    }
+  },
+  "resources": {
+    "cpu_s": 28.03164840400001,
+    "peak_rss_mb": 647.71875
+  },
+  "run": {
+    "run_id": "20261108-2202-raptor-lite-expand-practice-20",
+    "config_name": "raptor-lite-expand",
+    "subset": "practice-20",
+    "started": "2026-11-08T22:02:59",
+    "finished": "2026-11-08T22:03:01",
+    "git_commit": "984a736beabb070759b85781fd6c9fed065bfa1a",
+    "fresh": true,
+    "n_queries": 20
+  }
+}

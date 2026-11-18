@@ -1,4 +1,4 @@
-# rerank-best (plan 032): a copy of rerank-minilm-p20, the setting chosen on practice-all by the fixed rule
+# rerank-best (plan 032): a copy of rerank-minilm-p20, the setting chosen on practice by the fixed rule
 # (highest NDCG@10, 0.418 [0.380, 0.454]; no other setting within 0.005). It does not beat the baseline's NDCG@10 (0.425).
 name: rerank-best
 asr: cached

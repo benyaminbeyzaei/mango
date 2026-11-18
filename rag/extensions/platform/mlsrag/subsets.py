@@ -8,13 +8,13 @@ SUBSETS_DIR = Path(__file__).resolve().parents[1] / "subsets"
 SEED = 0
 # name -> (split, number of queries; None = all)
 SUBSETS = {
-    "practice-smoke20": ("practice", 20),
-    "practice-20pct": ("practice", 70),
-    "dev-20pct": ("dev", 25),
-    "practice-all": ("practice", None),
-    "dev-all": ("dev", None),
+    "practice-20": ("practice", 20),
+    "practice-70": ("practice", 70),
+    "test-25": ("dev", 25),
+    "practice": ("practice", None),
+    "test": ("dev", None),
 }
-FULL_SUBSETS = {"practice-all", "dev-all"}
+FULL_SUBSETS = {"practice", "test"}
 
 
 def check_subset(name, allow_full):

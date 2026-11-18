@@ -1,0 +1,8 @@
+# Plan 032, final comparison, smoke gate: the three rows on practice-20 with generation and judge (60 answers).
+# Rows: baseline (flat dense top 5), rerank-best (dense top N re-scored by a local cross-encoder), and
+# raptor-tree-gpt5-evidence (records + gpt-5-mini summaries searched together, summaries as evidence).
+# Controls: whisper-1 transcripts, gte-small on enc_a, k=5, Qwen3.5-397B at 0.1 with the course prompt, Mistral-Small-4 judge.
+# Run with --fresh --force.
+name: final-practice-20
+subset: practice-20
+configs: [baseline, rerank-best, raptor-tree-gpt5-evidence]

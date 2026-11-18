@@ -1,0 +1,54 @@
+{
+  "retrieval": {
+    "Recall@5": 0.38235457875457873,
+    "Recall@10": 0.478785347985348,
+    "Recall@20": 0.5832351648351648,
+    "Recall@100": 0.7274739926739927,
+    "MRR@10": 0.46063174603174606,
+    "NDCG@10": 0.4016262102970457
+  },
+  "answers": {
+    "correctness": 2.568,
+    "grounding": 2.792,
+    "completeness": 2.88,
+    "normalized": 0.6866666666666664,
+    "judged_queries": 125,
+    "judge_model": "mistralai/Mistral-Small-4-119B-2603",
+    "repeats": 1,
+    "judge_calls": 125
+  },
+  "cost": {
+    "elm_calls": 125,
+    "prompt_tokens": 143617,
+    "completion_tokens": 356998,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.03862921753898263,
+    "encode": 43.35248358687386,
+    "retrieve": 4.427197421900928,
+    "rerank": null,
+    "context": 0.0306731048040092,
+    "generate": 87000.62977897657,
+    "end_to_end": {
+      "mean": 87048.58869040849,
+      "p50": 73858.15973300487,
+      "p95": 171211.51763919042
+    }
+  },
+  "resources": {
+    "cpu_s": 146.70840708300003,
+    "peak_rss_mb": 589.8046875
+  },
+  "run": {
+    "run_id": "20261111-0115-baseline-test",
+    "config_name": "baseline",
+    "subset": "test",
+    "started": "2026-11-11T01:15:00",
+    "finished": "2026-11-11T04:16:21",
+    "git_commit": "38e3d0848ba6aae1209d9139e6f7ec9dca926d5e",
+    "fresh": true,
+    "n_queries": 125
+  }
+}

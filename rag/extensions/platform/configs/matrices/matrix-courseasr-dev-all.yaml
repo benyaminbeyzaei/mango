@@ -1,6 +1,0 @@
-# Whisper-1 vs course ASR: baseline and RAPTOR-tree on dev-all (125) with the course-ASR transcripts
-# (GLM-ASR-Nano on our hw1 kernels, one L40S job). Compare against final-dev-all, which used whisper-1.
-# Run with --allow-full --fresh. Only summary.{md,json} and the slim per-run files are committed (no queries.jsonl).
-name: courseasr-dev-all
-subset: dev-all
-configs: [baseline-courseasr, raptor-tree-gpt5-evidence-courseasr]

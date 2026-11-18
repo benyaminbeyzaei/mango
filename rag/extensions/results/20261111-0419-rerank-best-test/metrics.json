@@ -1,0 +1,54 @@
+{
+  "retrieval": {
+    "Recall@5": 0.3807604395604396,
+    "Recall@10": 0.49549010989010994,
+    "Recall@20": 0.5832351648351648,
+    "Recall@100": 0.7274739926739927,
+    "MRR@10": 0.4423365079365079,
+    "NDCG@10": 0.39346930059526875
+  },
+  "answers": {
+    "correctness": 2.432,
+    "grounding": 2.64,
+    "completeness": 2.68,
+    "normalized": 0.6459999999999998,
+    "judged_queries": 125,
+    "judge_model": "mistralai/Mistral-Small-4-119B-2603",
+    "repeats": 1,
+    "judge_calls": 125
+  },
+  "cost": {
+    "elm_calls": 125,
+    "prompt_tokens": 161341,
+    "completion_tokens": 377405,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.039926928002387285,
+    "encode": 40.327406791970134,
+    "retrieve": 888.0908249802887,
+    "rerank": 882.5951174702495,
+    "context": 0.03407124197110534,
+    "generate": 84354.04065748026,
+    "end_to_end": {
+      "mean": 85282.6618125043,
+      "p50": 74235.69849901833,
+      "p95": 168510.9853027854
+    }
+  },
+  "resources": {
+    "cpu_s": 1132.0803420450006,
+    "peak_rss_mb": 987.671875
+  },
+  "run": {
+    "run_id": "20261111-0419-rerank-best-test",
+    "config_name": "rerank-best",
+    "subset": "test",
+    "started": "2026-11-11T04:19:06",
+    "finished": "2026-11-11T07:16:46",
+    "git_commit": "38e3d0848ba6aae1209d9139e6f7ec9dca926d5e",
+    "fresh": true,
+    "n_queries": 125
+  }
+}

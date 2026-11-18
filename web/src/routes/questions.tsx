@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { fmt } from "@/lib/results"
 
 const PAGE = 20
-type Split = "dev" | "practice"
+type Split = "test" | "practice"
 type Match = "all" | "differ" | "same"
 type Search = { split?: Split; match?: Match; page?: number }
 
@@ -60,7 +60,7 @@ const ONLY = {
 }
 
 function Questions() {
-  const { split = "dev", match = "all", page = 1 } = Route.useSearch()
+  const { split = "test", match = "all", page = 1 } = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const questions = useQuery({
     queryKey: ["questions", split, match, page],
@@ -96,13 +96,13 @@ function Questions() {
         </span>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        {(["dev", "practice"] as const).map((s) => (
+        {(["test", "practice"] as const).map((s) => (
           <Button
             key={s}
             size="sm"
             variant={s === split ? "default" : "outline"}
             onClick={() =>
-              go({ split: s === "dev" ? undefined : s, page: undefined })
+              go({ split: s === "test" ? undefined : s, page: undefined })
             }
           >
             {s}

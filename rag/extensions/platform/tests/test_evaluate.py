@@ -22,7 +22,7 @@ def write_matrix(tmp_path, subset):
 
 def test_matrix_refuses_full_split_without_flag(tmp_path):
     with pytest.raises(ValueError, match="--allow-full"):
-        matrix.run_matrix(write_matrix(tmp_path, "practice-all"), yes=True)
+        matrix.run_matrix(write_matrix(tmp_path, "practice"), yes=True)
 
 
 @needs_data
@@ -30,13 +30,13 @@ def test_matrix_asks_before_running(tmp_path, monkeypatch):
     monkeypatch.setattr("builtins.input", lambda _: "n")
     monkeypatch.setattr(matrix.runner, "run", lambda *a, **k: pytest.fail("ran without a yes"))
     with pytest.raises(SystemExit, match="aborted"):
-        matrix.run_matrix(write_matrix(tmp_path, "practice-smoke20"))
+        matrix.run_matrix(write_matrix(tmp_path, "practice-20"))
 
 
 @needs_data
 def test_matrix_override_applies_to_every_config(tmp_path, monkeypatch):
     path = tmp_path / "m.yaml"
-    path.write_text("name: t\nsubset: dev-20pct\nconfigs: [baseline, bm25]\n"
+    path.write_text("name: t\nsubset: test-25\nconfigs: [baseline, bm25]\n"
                     "override: {asr_cache: rag/.cache/transcripts/whisper1-dev.jsonl, context_builder: budgeted}\n")
     seen, real = [], evaluate.estimate
     monkeypatch.setattr(evaluate, "estimate", lambda c, *a, **k: seen.append(c) or real(c, *a, **k))
@@ -61,7 +61,7 @@ def test_every_flow_has_a_call_estimate():
 
 
 def test_estimate_counts_generation_and_judge_calls():
-    e = estimate(baseline(), "practice-20pct", judge=True)
+    e = estimate(baseline(), "practice-70", judge=True)
     assert e["calls"]["generation"] == 70 and e["calls"]["judge"] == 70
     assert e["calls"]["flow"] == 0
 
@@ -83,7 +83,7 @@ def test_candidates_follow_the_course_format(tmp_path):
 
 @needs_data
 def test_candidates_list_the_ids_the_context_was_built_from(tmp_path):
-    qids = load_subset("practice-smoke20")[:2]
+    qids = load_subset("practice-20")[:2]
     ranked = [f"r{i}" for i in range(10)]
     rows = [  # a grep-feedback trace whose rerank kept 2 ids, and an older trace without context_ids
         {"query_id": qids[0], "spans": [], "resources": {"wall_ms": 1},
@@ -92,7 +92,7 @@ def test_candidates_list_the_ids_the_context_was_built_from(tmp_path):
          "artifacts": {"transcript": "q", "answer": "a", "ranked_ids": ranked}},
     ]
     (tmp_path / "config.json").write_text(json.dumps({"k": 5}))
-    (tmp_path / "metrics.json").write_text(json.dumps({"run": {"subset": "practice-smoke20"}}))
+    (tmp_path / "metrics.json").write_text(json.dumps({"run": {"subset": "practice-20"}}))
     (tmp_path / "queries.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
     out = read_jsonl(write_candidates(tmp_path))
     assert out[0]["retrieved_record_ids"] == ["r7", "r2"]
@@ -143,7 +143,7 @@ def test_matrix_reuses_a_judged_run_and_writes_summary(tmp_path, monkeypatch):
     monkeypatch.setattr(matrix.runner, "run", lambda *a, **k: pytest.fail("should reuse the run"))
     monkeypatch.setattr(evaluate, "judge", lambda *a, **k: pytest.fail("already judged"))
 
-    out = matrix.run_matrix(write_matrix(tmp_path, "practice-smoke20"), yes=True)
+    out = matrix.run_matrix(write_matrix(tmp_path, "practice-20"), yes=True)
     rows = json.loads((out / "summary.json").read_text())["rows"]
     assert [r["run"] for r in rows] == [run_dir.name] and rows[0]["answer_norm"] == 0.25
     assert run_dir.name in (out / "summary.md").read_text()

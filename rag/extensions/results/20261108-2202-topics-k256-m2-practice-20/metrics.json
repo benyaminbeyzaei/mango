@@ -1,0 +1,44 @@
+{
+  "retrieval": {
+    "Recall@5": 0.2791666666666667,
+    "Recall@10": 0.32500000000000007,
+    "Recall@20": 0.35416666666666663,
+    "Recall@100": 0.5208333333333334,
+    "MRR@10": 0.3333333333333333,
+    "NDCG@10": 0.2648035677786371
+  },
+  "answers": null,
+  "cost": {
+    "elm_calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.02771739091258496,
+    "encode": 26.107454995508306,
+    "retrieve": 0.6555241590831429,
+    "context": 0.0404927006457001,
+    "generate": null,
+    "end_to_end": {
+      "mean": 26.935237148427404,
+      "p50": 22.712804493494332,
+      "p95": 36.69676669233014
+    }
+  },
+  "resources": {
+    "cpu_s": 6.113184485999966,
+    "peak_rss_mb": 646.015625
+  },
+  "run": {
+    "run_id": "20261108-2202-topics-k256-m2-practice-20",
+    "config_name": "topics-k256-m2",
+    "subset": "practice-20",
+    "started": "2026-11-08T22:02:34",
+    "finished": "2026-11-08T22:02:35",
+    "git_commit": "984a736beabb070759b85781fd6c9fed065bfa1a",
+    "fresh": true,
+    "n_queries": 20
+  }
+}

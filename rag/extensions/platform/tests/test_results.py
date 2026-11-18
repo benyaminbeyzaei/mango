@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 from mlsrag.results import Metrics, bootstrap_ci, build_metrics, compare, list_runs, load_run, write_metrics
 
-INFO = {"run_id": "r1", "config_name": "c", "subset": "practice-smoke20",
+INFO = {"run_id": "r1", "config_name": "c", "subset": "practice-20",
         "started": "2026-11-07T17:00:00", "finished": None, "git_commit": None}
 
 

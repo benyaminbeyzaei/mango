@@ -1,0 +1,44 @@
+{
+  "retrieval": {
+    "Recall@5": 0.4041666666666667,
+    "Recall@10": 0.475,
+    "Recall@20": 0.5499999999999999,
+    "Recall@100": 0.7791666666666666,
+    "MRR@10": 0.4791666666666667,
+    "NDCG@10": 0.385690829443961
+  },
+  "answers": null,
+  "cost": {
+    "elm_calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.031353646772913635,
+    "encode": 100.79046090540942,
+    "retrieve": 7.021300599444658,
+    "context": 0.047421702765859663,
+    "generate": null,
+    "end_to_end": {
+      "mean": 108.16930524888448,
+      "p50": 107.4247595097404,
+      "p95": 144.5375765208155
+    }
+  },
+  "resources": {
+    "cpu_s": 28.712777135999993,
+    "peak_rss_mb": 589.2265625
+  },
+  "run": {
+    "run_id": "20261108-1949-baseline-practice-20",
+    "config_name": "baseline",
+    "subset": "practice-20",
+    "started": "2026-11-08T19:49:55",
+    "finished": "2026-11-08T19:49:58",
+    "git_commit": "984a736beabb070759b85781fd6c9fed065bfa1a",
+    "fresh": true,
+    "n_queries": 20
+  }
+}

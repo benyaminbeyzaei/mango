@@ -1,5 +1,0 @@
-# Plan 032, step 2 (smoke): six reranker settings (two cross-encoders x pools 20/50/100) against the baseline.
-# Retrieval only, 0 LLM calls: run with --no-generate --fresh.
-name: rerank-smoke
-subset: practice-smoke20
-configs: [baseline, rerank-minilm-p20, rerank-minilm-p50, rerank-minilm-p100, rerank-bge-p20, rerank-bge-p50, rerank-bge-p100]

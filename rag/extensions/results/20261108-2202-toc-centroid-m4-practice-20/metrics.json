@@ -1,0 +1,44 @@
+{
+  "retrieval": {
+    "Recall@5": 0.3458333333333333,
+    "Recall@10": 0.38333333333333336,
+    "Recall@20": 0.4,
+    "Recall@100": 0.5916666666666666,
+    "MRR@10": 0.37916666666666665,
+    "NDCG@10": 0.30647100734571714
+  },
+  "answers": null,
+  "cost": {
+    "elm_calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.015621251077391207,
+    "encode": 18.36563474498689,
+    "retrieve": 0.44230819621589035,
+    "context": 0.02286554081365466,
+    "generate": null,
+    "end_to_end": {
+      "mean": 18.90131694090087,
+      "p50": 19.028328999411315,
+      "p95": 24.077891898923557
+    }
+  },
+  "resources": {
+    "cpu_s": 4.530866667000012,
+    "peak_rss_mb": 647.53515625
+  },
+  "run": {
+    "run_id": "20261108-2202-toc-centroid-m4-practice-20",
+    "config_name": "toc-centroid-m4",
+    "subset": "practice-20",
+    "started": "2026-11-08T22:02:36",
+    "finished": "2026-11-08T22:02:36",
+    "git_commit": "984a736beabb070759b85781fd6c9fed065bfa1a",
+    "fresh": true,
+    "n_queries": 20
+  }
+}

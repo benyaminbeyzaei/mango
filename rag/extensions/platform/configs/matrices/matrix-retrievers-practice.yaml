@@ -1,0 +1,14 @@
+# Matrix A, no-LLM methods (practice, 350 questions): which retrieval strategy finds the evidence?
+# Variable: the retriever. Retrieval only, no LLM call at query time: run with --allow-full --no-generate --fresh.
+# Controls (same in every row): whisper-1 transcript cache (rag/.cache/transcripts/whisper1-<split>.jsonl),
+# query encoder gte-small, corpus vectors enc_a (course embeddings/corpus_enc_a.npy), k=5, standard flow.
+# The topic/TOC/RAPTOR indexes were built offline (preprocessing is not re-run here).
+# The summary gives a 95 % bootstrap interval (1,000 resamples over queries, seed 0) for Recall@10 and NDCG@10.
+# Only summary.{md,json} is committed; the run folders it names stay local (plan 029).
+# Settings are chosen on this split; the test matrix only reports them.
+name: retrievers-practice
+subset: practice
+configs: [baseline, bm25, topics-k256-m2, topics-k256-m4, topics-k256-m8, toc-centroid-m4,
+          raptor-lite-expand, raptor-lite-evidence, raptor-tree-expand, raptor-tree-evidence,
+          raptor-tree-gpt5-expand, raptor-tree-gpt5-evidence,
+          raptor-full-expand, raptor-full-evidence]

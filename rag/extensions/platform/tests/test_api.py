@@ -68,7 +68,7 @@ def stage(monkeypatch, tmp_path):
 
 @pytest.fixture
 def client(stage, tmp_path):
-    src = sorted(paths.results_dir.glob("*-baseline-practice-smoke20"))[0]
+    src = sorted(paths.results_dir.glob("*-baseline-practice-20"))[0]
     shutil.copytree(src, tmp_path / src.name)
     (tmp_path / "matrices" / "m1").mkdir(parents=True)
     (tmp_path / "matrices" / "m1" / "summary.json").write_text('{"name": "m1", "subset": "s", "rows": []}')
@@ -163,7 +163,7 @@ def test_audio_query_with_a_cached_config_uses_whisper(client):
 def test_results_endpoints(client):
     listing = client.get("/api/results").json()
     run_id = listing["runs"][0]["run_id"]
-    assert listing["runs"][0]["subset"] == "practice-smoke20" and listing["matrices"][0]["name"] == "m1"
+    assert listing["runs"][0]["subset"] == "practice-20" and listing["matrices"][0]["name"] == "m1"
     assert listing["asr_compare"] == [{"wer": 0.1}]
     metrics = json.loads((paths.results_dir / run_id / "metrics.json").read_text())
     assert listing["runs"][0]["retrieval"] == metrics["retrieval"] and listing["runs"][0]["cost"] == metrics["cost"]
@@ -189,15 +189,15 @@ def test_admin_runs(stage, tmp_path, monkeypatch):
 
     def fake_run(config, subset, generate, results_dir, allow_full, fresh):
         calls.append((config.name, subset, generate, fresh))
-        return tmp_path / "20261107-0000-baseline-practice-smoke20", {}
+        return tmp_path / "20261107-0000-baseline-practice-20", {}
 
     monkeypatch.setattr(runner, "run", fake_run)
     client = TestClient(app_module.create_app(results_dir=tmp_path))
-    body = {"config": "baseline", "subset": "practice-smoke20", "generate": False, "fresh": True}
+    body = {"config": "baseline", "subset": "practice-20", "generate": False, "fresh": True}
     assert client.post("/api/runs", json=body).status_code == 403
     assert client.post("/api/runs", json=body, headers={"X-Admin-Token": "wrong"}).status_code == 403
     admin = {"X-Admin-Token": "s3cret"}
-    full = client.post("/api/runs", json={"config": "baseline", "subset": "practice-all"}, headers=admin)
+    full = client.post("/api/runs", json={"config": "baseline", "subset": "practice"}, headers=admin)
     assert full.status_code == 400 and "full split" in full.json()["detail"]
     job = client.post("/api/runs", json=body, headers=admin).json()
     assert job["estimate"] == {"calls": {"generation": 0}, "elm_calls": 0}  # generate: false
@@ -206,8 +206,8 @@ def test_admin_runs(stage, tmp_path, monkeypatch):
         if status["status"] != "running":
             break
         time.sleep(0.02)
-    assert status["status"] == "done" and status["run_id"] == "20261107-0000-baseline-practice-smoke20"
-    assert calls == [("baseline", "practice-smoke20", False, True)]
+    assert status["status"] == "done" and status["run_id"] == "20261107-0000-baseline-practice-20"
+    assert calls == [("baseline", "practice-20", False, True)]
 
 
 def test_web_dir_serves_the_client_with_spa_fallback(stage, tmp_path):
@@ -226,7 +226,7 @@ def test_openapi_json_is_current():
 
 
 def test_queries_from_slim_file(tmp_path):
-    run = tmp_path / "r-dev-all"
+    run = tmp_path / "r-test"
     (run / "judge").mkdir(parents=True)
     (run / "metrics.json").write_text("{}")
     ms = {"asr": 0.1, "encode": 50.0, "dense_retrieve": 5.0, "rerank": None, "generate": 900.0, "end_to_end": 960.0}
@@ -236,7 +236,7 @@ def test_queries_from_slim_file(tmp_path):
     (run / "judge" / "answer_judge_per_query.jsonl").write_text(json.dumps(
         {"query_id": "q0", "correctness": 3, "grounding": 4, "completeness": 2, "normalised_answer_score": 0.75}) + "\n")
     client = TestClient(app_module.create_app(results_dir=tmp_path))
-    page = client.get("/api/results/r-dev-all/queries").json()
+    page = client.get("/api/results/r-test/queries").json()
     q = page["items"][0]
     assert page["total"] == 1 and q["slim"] and q["metrics"] == {"Recall@10": 0.5, "NDCG@10": 0.25}
     assert [(s["name"], s["start_ms"]) for s in q["spans"]] == [("asr", 0), ("encode", 0.1), ("retrieve", 50.1),
@@ -260,9 +260,9 @@ def questions_client(stage, tmp_path):
 
 def test_questions_order_paging_and_missing_course(questions_client):
     client, _ = questions_client
-    page = client.get("/api/questions", params={"split": "dev", "offset": 1, "limit": 1}).json()
+    page = client.get("/api/questions", params={"split": "test", "offset": 1, "limit": 1}).json()
     assert page == {"total": 3, "same": 0, "differ": 0,
-                    "items": [{"query_id": "q1", "split": "dev", "duration_seconds": 1.5,
+                    "items": [{"query_id": "q1", "split": "test", "duration_seconds": 1.5,
                                "whisper1": "w1", "course": None}]}
     assert [q["query_id"] for q in client.get("/api/questions").json()["items"]] == ["q0", "q1", "q2"]
     practice = client.get("/api/questions", params={"split": "practice"}).json()
@@ -289,7 +289,7 @@ def test_questions_match_filter(questions_client):
 
 def test_questions_bad_split(questions_client):
     client, _ = questions_client
-    assert client.get("/api/questions", params={"split": "test"}).status_code == 422
+    assert client.get("/api/questions", params={"split": "dev"}).status_code == 422
 
 
 def test_question_audio(questions_client):

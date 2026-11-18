@@ -306,11 +306,11 @@
             "required": false,
             "schema": {
               "enum": [
-                "dev",
+                "test",
                 "practice"
               ],
               "type": "string",
-              "default": "dev",
+              "default": "test",
               "title": "Split"
             }
           },
@@ -884,7 +884,7 @@
           "split": {
             "type": "string",
             "enum": [
-              "dev",
+              "test",
               "practice"
             ],
             "title": "Split"
@@ -903,7 +903,7 @@
               }
             ],
             "title": "Whisper1",
-            "description": "null when not in rag/.cache/transcripts/whisper1-<split>.jsonl"
+            "description": "null when not in rag/.cache/transcripts/whisper1-<course split>.jsonl"
           },
           "course": {
             "anyOf": [
@@ -915,7 +915,7 @@
               }
             ],
             "title": "Course",
-            "description": "null when not in rag/.cache/transcripts/course-<split>.jsonl"
+            "description": "null when not in rag/.cache/transcripts/course-<course split>.jsonl"
           }
         },
         "type": "object",
@@ -1215,7 +1215,7 @@
           "subset": {
             "type": "string",
             "title": "Subset",
-            "default": "practice-smoke20"
+            "default": "practice-20"
           },
           "generate": {
             "type": "boolean",

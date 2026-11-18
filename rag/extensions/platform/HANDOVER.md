@@ -9,13 +9,13 @@
 - `compose.yaml` + `Dockerfile`: `docker compose up` from a clean clone (sequence in the README,
   checked on 2026-11-08: about 6 minutes including the image build).
 - `rag/extensions/results/`: 36 smoke runs, all fresh (`run.fresh: true`), and four matrix summaries:
-  `a-smoke` (20 retrievers, retrieval only), `context-smoke` (judged baseline, budgeted, dedupe),
-  `encoders-smoke` (encoder policies), `toc-raptor-smoke`. Plan 029 added four full-split matrix
-  summaries for the no-LLM methods (`a-free-practice-all`, `a-free-dev-all`, `c-practice-all`,
-  `c-dev-all`, with 95 % bootstrap intervals); their run folders are local only, not committed.
-  Plan 032 added `rerank-smoke`, `rerank-practice-all`, `final-smoke`, `final-practice-all`, `final-dev-all`
+  `retrievers-practice-20` (20 retrievers, retrieval only), `context-practice-20` (judged baseline, budgeted, dedupe),
+  `encoders-practice-20` (encoder policies), `toc-raptor-practice-20`. Plan 029 added four full-split matrix
+  summaries for the no-LLM methods (`retrievers-practice`, `retrievers-test`, `encoders-practice`,
+  `encoders-test`, with 95 % bootstrap intervals); their run folders are local only, not committed.
+  Plan 032 added `rerank-practice-20`, `rerank-practice`, `final-practice-20`, `final-practice`, `final-test`
   and `final/comparison.json`; the 10 smoke runs are committed whole, the full-split runs as `metrics.json`,
-  `config.json`, `per_query.jsonl` (plus judge scores for dev-all), never prompts or answers, so
+  `config.json`, `per_query.jsonl` (plus judge scores for test), never prompts or answers, so
   `python -m mlsrag.final` rebuilds `comparison.json` from a clean clone.
 
 ## What each plan produced
@@ -42,7 +42,7 @@
 - 019: `--fresh`: latency and cost are valid only for fresh runs.
 - 020: second simplicity pass (stage folders, one ledger loop, `estimate` generate flag, static config picker).
 - 021: grep pattern calls on Llama-3.3 (Qwen's reasoning took ~70-100 s per call); answers stay on Qwen.
-- 022: `seconds`/`audio_s` in new transcript cache lines, `transcribe --fresh` for whisper-1, ASR latency and RTF in `asr-compare`; whisper-1 measured on practice-smoke20.
+- 022: `seconds`/`audio_s` in new transcript cache lines, `transcribe --fresh` for whisper-1, ASR latency and RTF in `asr-compare`; whisper-1 measured on practice-20.
 - 023: the grep-feedback flow (static grep, keep, one expansion from the kept records, rerank); matrix A and B rows.
 - 024: stale cost numbers fixed, `pnpm typecheck` checks the app, small simplifications, and the
   candidates file lists the ids the answer's context was built from.
@@ -53,7 +53,7 @@
   index; 439 Llama calls, 50 min build) as a new matrix A row; `raptor-lite` kept unchanged.
 - 029: whisper-1 transcripts for all of practice and dev (430 calls, ~$0.23); 95 % bootstrap
   intervals for Recall@10 and NDCG@10 in matrix summaries; matrices A (10 no-LLM retrievers) and C
-  on practice-all and dev-all, fresh, summaries committed (results in the README).
+  on practice and test, fresh, summaries committed (results in the README).
 - 030: gpt-5-mini (paid, named for these two builds only) versions of the TOC labels (label prompt
   `v2`: nearest records, distinct names) and of the RAPTOR-tree summaries, next to the Llama builds;
   smoke rows for the four TOC routes and both RAPTOR-tree modes, full-split rows for RAPTOR-tree;
@@ -64,8 +64,8 @@
   matrix A rows on smoke and both full splits (below the baseline; README). Each copied value cites
   its reference file:line in `preprocess/raptor_full.py`; deviations in `docs/pipelines.md`.
 - 032: the final three-way comparison. `rerank` retriever (dense top N re-scored by a local cross-encoder,
-  `gateway.rerank`), chosen on practice-all among five settings (`rerank-best` = MiniLM-L-6, pool 20);
-  baseline, rerank-best and raptor-tree-gpt5-evidence on practice-all (retrieval) and dev-all (375 Qwen
+  `gateway.rerank`), chosen on practice among five settings (`rerank-best` = MiniLM-L-6, pool 20);
+  baseline, rerank-best and raptor-tree-gpt5-evidence on practice (retrieval) and test (375 Qwen
   answers, judged). Neither change improves answers (README). `results/matrices/final/comparison.json`
   holds every number plus `explanations.json`; `python -m mlsrag.final` rebuilds it. The gateway now never
   rewrites an existing cache file (`--fresh` only adds files).
@@ -75,14 +75,14 @@
 - **Full runs to schedule** (each needs Benyamin's go-ahead; numbers from `mlsrag estimate`,
   wall time at one request at a time, judging not included):
   - (done by 029: both transcript caches are full, and every no-LLM retriever has run on
-    practice-all and dev-all; what remains are the LLM methods below);
-  - matrix A on practice-20pct: 980 ELM calls, ~24 min; on dev-20pct: 350 calls, ~9 min;
-  - matrix B (simple and budgeted) on dev-20pct: 375 + 175 judge calls each, ~2.6 h + judging each;
-  - `dev-all` costs five times the dev-20pct numbers (see the Guide page for the full-split table).
+    practice and test; what remains are the LLM methods below);
+  - matrix A on practice-70: 980 ELM calls, ~24 min; on test-25: 350 calls, ~9 min;
+  - matrix B (simple and budgeted) on test-25: 375 + 175 judge calls each, ~2.6 h + judging each;
+  - `test` costs five times the test-25 numbers (see the Guide page for the full-split table).
 - **Course ASR transcripts** from the teammate (the CUDA model on the cluster): needed for
   `mlsrag asr-compare` (no comparison is committed yet) and for matrix C's ASR row. Put them in
   `rag/.cache/transcripts/course-<split>.jsonl` (`{query_id, transcript}` per line).
-- **Course ASR latency** (plan 022): run `mlsrag transcribe --asr course` on practice-smoke20 on a
+- **Course ASR latency** (plan 022): run `mlsrag transcribe --asr course` on practice-20 on a
   cluster GPU, then `asr-compare` it against `whisper1-practice-timed.jsonl`; exact commands in
   [docs/retrievers.md, ASR latency](docs/retrievers.md#asr-latency). Nothing has been run on the cluster yet.
 - **The report** (`report/`): Benyamin writes the argument; the matrices above are its evidence.

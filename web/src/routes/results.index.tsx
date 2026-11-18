@@ -13,7 +13,7 @@ import {
   MAX_COMPARE,
   NOT_FRESH,
   fmt,
-  isSmoke,
+  isQuickCheck,
   runDate,
   uniqueIds,
   useResults,
@@ -21,7 +21,7 @@ import {
 
 const HEADLINE = ["Recall@10", "MRR@10", "NDCG@10"]
 
-// "" = every run except smoke tests (the default), "*" = every run, otherwise one subset.
+// "" = every run except 20-question quick checks (the default), "*" = every run, otherwise one subset.
 type Search = { q?: string; sel?: string; subset?: string }
 
 export const Route = createFileRoute("/results/")({
@@ -72,7 +72,7 @@ function Results() {
           : undefined
   const needle = q.toLowerCase()
   const inSubset = (s: string) =>
-    subset === "*" || (subset === "" ? !isSmoke(s) : s === subset)
+    subset === "*" || (subset === "" ? !isQuickCheck(s) : s === subset)
   const runs = results.data.runs.filter(
     (r) =>
       inSubset(r.subset) &&
@@ -110,7 +110,7 @@ function Results() {
             onChange={(e) => setSearch({ subset: e.target.value || undefined })}
             className="h-8 rounded-lg border bg-background px-2"
           >
-            <option value="">all but smoke tests</option>
+            <option value="">all but quick checks (practice-20)</option>
             <option value="*">all</option>
             {subsets.map((s) => (
               <option key={s} value={s}>

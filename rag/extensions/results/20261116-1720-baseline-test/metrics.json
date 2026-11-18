@@ -1,0 +1,45 @@
+{
+  "retrieval": {
+    "Recall@5": 0.38235457875457873,
+    "Recall@10": 0.478785347985348,
+    "Recall@20": 0.5832351648351648,
+    "Recall@100": 0.7274739926739927,
+    "MRR@10": 0.46063174603174606,
+    "NDCG@10": 0.4016262102970457
+  },
+  "answers": null,
+  "cost": {
+    "elm_calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.02389389369636774,
+    "encode": 157.25216993689537,
+    "retrieve": 5.9881307408213615,
+    "rerank": null,
+    "context": 0.051512690261006355,
+    "generate": null,
+    "end_to_end": {
+      "mean": 163.42368818446994,
+      "p50": 124.53478900715709,
+      "p95": 407.8403376275673
+    }
+  },
+  "resources": {
+    "cpu_s": 193.75140805200004,
+    "peak_rss_mb": 583.7734375
+  },
+  "run": {
+    "run_id": "20261116-1720-baseline-test",
+    "config_name": "baseline",
+    "subset": "test",
+    "started": "2026-11-16T17:20:30",
+    "finished": "2026-11-16T17:20:50",
+    "git_commit": "d334018babd8485fd10709a47cdb9c11b5b3bce3",
+    "fresh": true,
+    "n_queries": 125
+  }
+}

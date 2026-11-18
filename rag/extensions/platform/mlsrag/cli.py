@@ -19,16 +19,16 @@ def main(argv=None):
 
     run = sub.add_parser("run", help="run a config over a subset")
     run.add_argument("--config", required=True, help="preset name (baseline) or .yaml/.json file")
-    run.add_argument("--subset", default="practice-smoke20")
+    run.add_argument("--subset", default="practice-20")
     run.add_argument("--no-generate", action="store_true", help="skip the generator (retrieval only; free with asr: cached)")
-    run.add_argument("--allow-full", action="store_true", help="allow practice-all / dev-all")
+    run.add_argument("--allow-full", action="store_true", help="allow practice / test")
     run.add_argument("--fresh", action="store_true", help=FRESH_HELP)
 
     tr = sub.add_parser("transcribe", help="fill a transcript cache (resumable)")
     tr.add_argument("--asr", choices=["whisper1", "course"], default="whisper1")
-    tr.add_argument("--subset", default="practice-smoke20")
+    tr.add_argument("--subset", default="practice-20")
     tr.add_argument("--out", required=True, help="JSONL path, relative to the checkout root")
-    tr.add_argument("--allow-full", action="store_true", help="allow practice-all / dev-all")
+    tr.add_argument("--allow-full", action="store_true", help="allow practice / test")
     tr.add_argument("--fresh", action="store_true", help="whisper1: skip the gateway cache read, so latency is real (paid)")
 
     sub.add_parser("make-subsets", help="regenerate the subset files (seed 0)")
@@ -41,7 +41,7 @@ def main(argv=None):
 
     es = sub.add_parser("estimate", help="print the expected ELM calls and cost of a run")
     es.add_argument("--config", required=True)
-    es.add_argument("--subset", default="practice-smoke20")
+    es.add_argument("--subset", default="practice-20")
     es.add_argument("--judge", action="store_true", help="include the judge calls")
     es.add_argument("--fresh", action="store_true", help="the run will use --fresh")
 
@@ -50,7 +50,7 @@ def main(argv=None):
     mx.add_argument("--no-judge", action="store_true")
     mx.add_argument("--no-generate", action="store_true", help="retrieval only (implies --no-judge)")
     mx.add_argument("--force", action="store_true", help="rerun configs that already have a run")
-    mx.add_argument("--allow-full", action="store_true", help="allow practice-all / dev-all")
+    mx.add_argument("--allow-full", action="store_true", help="allow practice / test")
     mx.add_argument("--yes", action="store_true", help="do not ask for confirmation")
     mx.add_argument("--fresh", action="store_true", help=FRESH_HELP + "; reruns non-fresh runs instead of reusing them")
 
@@ -66,7 +66,7 @@ def main(argv=None):
     ac = sub.add_parser("asr-compare", help="WER between two transcript caches and the retrieval of each")
     ac.add_argument("--a", required=True, help="reference transcript cache (JSONL)")
     ac.add_argument("--b", required=True, help="transcript cache to compare (JSONL)")
-    ac.add_argument("--subset", default="practice-smoke20")
+    ac.add_argument("--subset", default="practice-20")
     ac.add_argument("--config", default="baseline")
     ac.add_argument("--name", help="output folder name (default: <a>-vs-<b>-<subset>)")
 

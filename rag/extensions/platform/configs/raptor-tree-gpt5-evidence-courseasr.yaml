@@ -1,4 +1,4 @@
-# Same as 20261111-0719-raptor-tree-gpt5-evidence-dev-all/config.json; only name and asr_cache changed (course ASR on our kernels).
+# Same as 20261111-0719-raptor-tree-gpt5-evidence-test/config.json; only name and asr_cache changed (course ASR on our kernels).
 name: raptor-tree-gpt5-evidence-courseasr
 asr: cached
 asr_cache: rag/.cache/transcripts/course-dev.jsonl

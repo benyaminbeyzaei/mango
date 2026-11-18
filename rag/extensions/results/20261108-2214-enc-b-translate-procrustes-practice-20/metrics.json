@@ -1,0 +1,44 @@
+{
+  "retrieval": {
+    "Recall@5": 0.3083333333333333,
+    "Recall@10": 0.425,
+    "Recall@20": 0.4583333333333333,
+    "Recall@100": 0.7,
+    "MRR@10": 0.46624999999999994,
+    "NDCG@10": 0.35088030256560215
+  },
+  "answers": null,
+  "cost": {
+    "elm_calls": 0,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "audio_seconds": 0.0,
+    "est_usd": 0.0
+  },
+  "latency_ms": {
+    "asr": 0.021647062385454774,
+    "encode": 98.56664300314151,
+    "retrieve": 5.649866498424672,
+    "context": 0.03864089667331427,
+    "generate": null,
+    "end_to_end": {
+      "mean": 104.36990360321943,
+      "p50": 105.50924751441926,
+      "p95": 117.53773135424127
+    }
+  },
+  "resources": {
+    "cpu_s": 27.87141216100001,
+    "peak_rss_mb": 788.88671875
+  },
+  "run": {
+    "run_id": "20261108-2214-enc-b-translate-procrustes-practice-20",
+    "config_name": "enc-b-translate-procrustes",
+    "subset": "practice-20",
+    "started": "2026-11-08T22:14:06",
+    "finished": "2026-11-08T22:14:08",
+    "git_commit": "6a0084d04b766d7dce3218b27f17fcd19bd47418",
+    "fresh": true,
+    "n_queries": 20
+  }
+}

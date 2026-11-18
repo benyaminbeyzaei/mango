@@ -199,5 +199,5 @@ export function fmt(v: number | string | null | undefined): string {
   return v.toPrecision(2)
 }
 
-// Subsets used for quick tests; the Results page hides their runs unless asked.
-export const isSmoke = (subset: string) => subset.includes("smoke")
+// The 20-question quick-check subset; the Results page hides its runs unless asked.
+export const isQuickCheck = (subset: string) => subset === "practice-20"

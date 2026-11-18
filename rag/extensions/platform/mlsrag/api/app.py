@@ -27,7 +27,7 @@ from ..maps import map_path
 from ..matrix import CONFIGS_DIR, config_hash
 from ..results import list_runs, load_run
 from ..stages import CONTEXT_BUILDERS, RETRIEVERS, Translate, WhisperASR, build_stages, load_transcripts
-from ..subsets import check_subset, load_subset
+from ..subsets import SUBSETS, check_subset, load_subset
 from ..trace import Trace
 from .models import (ConfigEntry, HealthResponse, Hit, JobStatus, ModelsResponse, NamedItem, QueriesPage, QueryRequest,
                      QueryResponse, Question, QuestionsPage, RecordResponse, ResultsResponse, RunDetail, RunSummary,
@@ -294,15 +294,16 @@ def create_app(web_dir=None, results_dir=None, data_dir=None, cache_dir=None) ->
         return RecordResponse(record_id=record_id, text=records[record_id])
 
     @api.get("/questions", response_model=QuestionsPage)
-    def questions(split: Literal["dev", "practice"] = "dev", match: Literal["all", "differ", "same"] = "all",
+    def questions(split: Literal["test", "practice"] = "test", match: Literal["all", "differ", "same"] = "all",
                   offset: int = 0, limit: int = 20):
         if offset < 0 or not 1 <= limit <= 100:
             raise HTTPException(400, "offset >= 0 and 1 <= limit <= 100")
-        whisper1 = load_transcripts(transcripts_dir / f"whisper1-{split}.jsonl")
-        course = load_transcripts(transcripts_dir / f"course-{split}.jsonl")
+        course_split = SUBSETS[split][0]  # the course calls the test split "dev"
+        whisper1 = load_transcripts(transcripts_dir / f"whisper1-{course_split}.jsonl")
+        course = load_transcripts(transcripts_dir / f"course-{course_split}.jsonl")
         rows = [Question(query_id=e["query_id"], split=split, duration_seconds=e["duration_seconds"],
                          whisper1=whisper1.get(e["query_id"]), course=course.get(e["query_id"]))
-                for e in manifest().values() if e["split"] == split]
+                for e in manifest().values() if e["split"] == course_split]
         same = {q.query_id: words(q.whisper1) == words(q.course)
                 for q in rows if q.whisper1 is not None and q.course is not None}
         if match != "all":

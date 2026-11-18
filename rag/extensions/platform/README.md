@@ -91,13 +91,13 @@ stages rerun; LLM stages keep a per-item ledger and resume after a stop. See [do
 | `mlsrag make-subsets` | regenerate `subsets/*.txt` (identical every time) |
 
 ```bash
-mlsrag run --config baseline --subset practice-smoke20 --no-generate   # retrieval only: no ELM call
-mlsrag run --config baseline --subset practice-smoke20 --fresh         # + 20 Qwen calls, real latency
-mlsrag matrix --matrix rag/extensions/platform/configs/matrices/matrix-a-smoke.yaml --no-generate --fresh
+mlsrag run --config baseline --subset practice-20 --no-generate   # retrieval only: no ELM call
+mlsrag run --config baseline --subset practice-20 --fresh         # + 20 Qwen calls, real latency
+mlsrag matrix --matrix rag/extensions/platform/configs/matrices/matrix-retrievers-practice-20.yaml --no-generate --fresh
 ```
 
-**Subsets** (`subsets/`, seed 0): `practice-smoke20` (20), `practice-20pct` (70), `dev-20pct` (25),
-`practice-all` (350), `dev-all` (125).
+**Subsets** (`subsets/`, seed 0): `practice-20` (20), `practice-70` (70), `test-25` (25),
+`practice` (350), `test` (125).
 
 ## Cost rules
 
@@ -107,7 +107,7 @@ mlsrag matrix --matrix rag/extensions/platform/configs/matrices/matrix-a-smoke.y
   stay as configured; preprocessing always keeps the cache. `metrics.json` records `run.fresh`.
   **Latency and cost are valid only for fresh runs:** `matrix` and `compare` show them as `-`
   (the web client as `–`) for any other run; retrieval and answer scores are shown either way.
-- **Full splits** (`practice-all`, `dev-all`) need `--allow-full` on `run`, `transcribe` and `matrix`
+- **Full splits** (`practice`, `test`) need `--allow-full` on `run`, `transcribe` and `matrix`
   (`allow_full: true` on `POST /api/runs`); `mlsrag preprocess run` asks `y/N` before LLM calls unless `--yes`.
 - `matrix` prints its estimate and asks for `y` (`--yes` skips). Agents run only smoke matrices; the
   20 % and full-split runs need Benyamin's go-ahead.
@@ -166,32 +166,32 @@ toc-llm-flat ~2.4 s, all other retrievers < 0.2 s (the plan 030 `toc-llm*-gpt5la
 while another job loaded the CPU, so their latency is not comparable). Judge time is
 not measured.
 
-The fresh Qwen grep runs (`results/20261108-1949-grep-static-practice-smoke20`,
-`results/20261108-2021-grep-agentic-practice-smoke20`) are kept for the helper-model comparison
+The fresh Qwen grep runs (`results/20261108-1949-grep-static-practice-20`,
+`results/20261108-2021-grep-agentic-practice-20`) are kept for the helper-model comparison
 with the Llama runs (`results/20261109-1134-grep-*`): grep static Recall@10 0.108 → 0.133,
 MRR@10 0.172 → 0.111, ~94 s → ~1.4 s per query; grep agentic Recall@10 0.208 → 0.067,
-MRR@10 0.350 → 0.175, ~304 s → ~5.6 s per query (Qwen → Llama, practice-smoke20).
+MRR@10 0.350 → 0.175, ~304 s → ~5.6 s per query (Qwen → Llama, practice-20).
 
 | Matrix file (`configs/matrices/`) | Subset | Mode | ELM calls (fresh) | Wall time |
 |---|---|---|---|---|
-| A `matrix-a-smoke.yaml` (21 retrieval configs) | practice-smoke20 | `--no-generate` | 380 (180 grep, 200 toc-llm: 2 x (40 + 40 + 20)) | ~12 min |
-| A `matrix-a-retrieval.yaml` | practice-20pct (70) | `--no-generate` | 980, after filling the transcript cache | ~24 min |
-| A `matrix-a-retrieval-dev.yaml` | dev-20pct (25) | `--no-generate` | 350 | ~9 min |
-| B `matrix-b-answers.yaml` (7 configs, simple context) | dev-20pct | generate + judge | 375 + 175 judge | ~2.6 h + judge |
-| B `matrix-b-answers-budgeted.yaml` (same rows, budgeted) | dev-20pct | generate + judge | 375 + 175 judge | ~2.6 h + judge |
-| C `matrix-c-secondary.yaml` (encoder policies) | dev-20pct | `--no-generate` | 0 | ~1 min |
-| A `matrix-a-free-practice-all.yaml` (14 no-LLM retrievers) | practice-all (350) | `--no-generate --allow-full` | 0 | ~5 min |
-| A `matrix-a-free-dev-all.yaml` (same rows) | dev-all (125) | `--no-generate --allow-full` | 0 | ~2 min |
-| C `matrix-c-practice-all.yaml` (baseline + 5 encoder policies) | practice-all | `--no-generate --allow-full` | 0 | ~3 min |
-| C `matrix-c-dev-all.yaml` (same rows) | dev-all | `--no-generate --allow-full` | 0 | ~1 min |
+| A `matrix-retrievers-practice-20.yaml` (21 retrieval configs) | practice-20 | `--no-generate` | 380 (180 grep, 200 toc-llm: 2 x (40 + 40 + 20)) | ~12 min |
+| A `matrix-a-retrieval.yaml` | practice-70 (70) | `--no-generate` | 980, after filling the transcript cache | ~24 min |
+| A `matrix-a-retrieval-dev.yaml` | test-25 (25) | `--no-generate` | 350 | ~9 min |
+| B `matrix-b-answers.yaml` (7 configs, simple context) | test-25 | generate + judge | 375 + 175 judge | ~2.6 h + judge |
+| B `matrix-b-answers-budgeted.yaml` (same rows, budgeted) | test-25 | generate + judge | 375 + 175 judge | ~2.6 h + judge |
+| C `matrix-c-secondary.yaml` (encoder policies) | test-25 | `--no-generate` | 0 | ~1 min |
+| A `matrix-retrievers-practice.yaml` (14 no-LLM retrievers) | practice (350) | `--no-generate --allow-full` | 0 | ~5 min |
+| A `matrix-retrievers-test.yaml` (same rows) | test (125) | `--no-generate --allow-full` | 0 | ~2 min |
+| C `matrix-encoders-practice.yaml` (baseline + 5 encoder policies) | practice | `--no-generate --allow-full` | 0 | ~3 min |
+| C `matrix-encoders-test.yaml` (same rows) | test | `--no-generate --allow-full` | 0 | ~1 min |
 
 Matrix C varies the encoder and index. Since plan 029 the local transcript caches cover all of
 practice (350) and dev (125), so no matrix makes whisper-1 calls here. They are not in git: a fresh
 clone fills them once (430 whisper-1 calls, 2,263 audio s, about $0.23; resumable) with
-`mlsrag transcribe --asr whisper1 --subset practice-all --allow-full --out rag/.cache/transcripts/whisper1-practice.jsonl`
-and the same with `dev-all` and `whisper1-dev.jsonl`.
+`mlsrag transcribe --asr whisper1 --subset practice --allow-full --out rag/.cache/transcripts/whisper1-practice.jsonl`
+and the same with `test` and `whisper1-dev.jsonl`.
 Matrix B's rows are one per family; after matrix A, replace each with its family's best setting.
-A `dev-all` run (125 queries) costs five times the dev-20pct numbers.
+A `test` run (125 queries) costs five times the test-25 numbers.
 
 **Full-split results for the no-LLM methods (plans 029, 030).** The four `*-all` matrices above ran fresh
 on 2026-11-09, after 430 whisper-1 calls filled both transcript caches (2,263 audio s, ~$0.23); the two A
@@ -201,7 +201,7 @@ Recall@10 and NDCG@10. Only `results/matrices/<name>/summary.{md,json}` is commi
 folders they name stay local (~70 MB), so the web Compare page answers "no run" for them.
 Recall@10 [95 % CI]:
 
-| Config | practice-all | dev-all |
+| Config | practice | test |
 |---|---|---|
 | baseline (gte-small, enc_a, exact) | 0.485 [0.443, 0.526] | 0.479 [0.409, 0.558] |
 | bm25 | 0.297 [0.256, 0.337] | 0.281 [0.215, 0.351] |
@@ -214,7 +214,7 @@ Recall@10 [95 % CI]:
 | enc-b-reencode / reencode-prefix | 0.505 / 0.516 [0.476, 0.560] | 0.491 / 0.526 [0.455, 0.599] |
 | enc-b-translate-lstsq / procrustes | 0.467 / 0.422 [0.376, 0.463] | 0.473 / 0.425 [0.355, 0.497] |
 
-On practice-all, bm25, topics m=2 and m=4 and toc-centroid-m4 lie below the baseline's interval
+On practice, bm25, topics m=2 and m=4 and toc-centroid-m4 lie below the baseline's interval
 (non-overlapping), and m=8 is above m=2; topics m=8, every RAPTOR variant and every encoder policy
 overlap the baseline on Recall@10. On NDCG@10, enc-b-asis and enc-b-translate-procrustes lie below the
 baseline. Overlapping intervals do not show two methods are equal, only that 350 queries cannot
@@ -232,13 +232,13 @@ NDCG@10 and latency are in the summaries.
 **Final three-way comparison (plan 032).** Three rows, everything else fixed (whisper-1 transcripts,
 gte-small on enc_a, k=5, Qwen3.5-397B at 0.1 with the course prompt, Mistral-Small-4 judge): `baseline`;
 `rerank-best` (dense top 20 re-scored by `cross-encoder/ms-marco-MiniLM-L-6-v2` on CPU, chosen on
-practice-all from five settings: highest NDCG@10, then the fastest within 0.005); and
+practice from five settings: highest NDCG@10, then the fastest within 0.005); and
 `raptor-tree-gpt5-evidence` (records and gpt-5-mini summaries searched together, a summary hit goes into the
-prompt). Matrices `matrix-final-{smoke,practice-all,dev-all}.yaml`; every number, the paired differences and
+prompt). Matrices `matrix-final-{smoke,practice,test}.yaml`; every number, the paired differences and
 evidence-backed explanations are in `results/matrices/final/comparison.json` (`python -m mlsrag.final`).
 Intervals are 95 % bootstraps over questions.
 
-| Row | practice-all NDCG@10 | dev-all NDCG@10 | dev-all answer_norm | paired vs baseline (dev) | rerank ms/q |
+| Row | practice NDCG@10 | test NDCG@10 | test answer_norm | paired vs baseline (dev) | rerank ms/q |
 |---|---|---|---|---|---|
 | baseline | 0.425 [0.385, 0.462] | 0.402 [0.338, 0.470] | 0.687 [0.622, 0.751] | - | - |
 | rerank-best | 0.418 [0.380, 0.454] | 0.393 [0.333, 0.460] | 0.646 [0.577, 0.714] | -0.041 [-0.095, 0.011] | 1,250 |
@@ -264,8 +264,8 @@ cp rag/.env.example rag/.env    # then put your ELM key in rag/.env
 mkdir -p rag/.cache             # so the mount is owned by you, not root
 docker compose up               # API + client at http://localhost:8000 (first run builds the image, ~2 min)
 # transcript caches are not in git: fill one before a cached-ASR run (20 whisper-1 calls, ~$0.01)
-docker compose run --rm cli mlsrag transcribe --asr whisper1 --subset practice-smoke20 --out rag/.cache/transcripts/whisper1-practice.jsonl
-docker compose run --rm cli mlsrag run --config baseline --subset practice-smoke20 --no-generate
+docker compose run --rm cli mlsrag transcribe --asr whisper1 --subset practice-20 --out rag/.cache/transcripts/whisper1-practice.jsonl
+docker compose run --rm cli mlsrag run --config baseline --subset practice-20 --no-generate
 ```
 
 The port is bound to `127.0.0.1` only: the API has no login and spends ELM calls. `rag/.env` is

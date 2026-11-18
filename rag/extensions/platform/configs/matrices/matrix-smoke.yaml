@@ -1,5 +1,0 @@
-name: smoke
-subset: practice-smoke20
-configs:
-  - baseline
-  - bm25  # configs/bm25.yaml, added by plan 003
