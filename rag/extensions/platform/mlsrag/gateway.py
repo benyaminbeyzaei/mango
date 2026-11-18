@@ -177,12 +177,14 @@ class ModelGateway:
         return np.asarray(result["vectors"], dtype=np.float32)
 
     def reranker(self, model, revision=None):
-        """Load a local sentence-transformers CrossEncoder once per process (CPU)."""
+        """Load a local sentence-transformers CrossEncoder once per process (CPU). `model` is a Hugging Face id
+        or a folder relative to the checkout root (a fine-tuned model, plan 035)."""
         if (model, revision) not in _rerankers:
             from sentence_transformers import CrossEncoder
 
+            local = paths.rag_dir.parent / model
             _rerankers[model, revision] = CrossEncoder(
-                model, revision=revision, max_length=RERANK_MAX_LENGTH, device="cpu",
+                str(local) if local.is_dir() else model, revision=revision, max_length=RERANK_MAX_LENGTH, device="cpu",
                 cache_folder=str(paths.cache_dir / "hf"),
             )
         return _rerankers[model, revision]
