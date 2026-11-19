@@ -480,7 +480,27 @@ Status: PASS
 \section{Side experiments}
 \label{appendix:side}
 
-\paragraph{Changing the encoder.} The course also ships a second set of corpus vectors, \texttt{enc\_b}, which we identified as bge-small~\citep{xiao2023cpack}. Our questions are embedded with gte-small, and vectors from two different models do not live in the same space: searching the bge-small vectors with gte-small questions drops dev NDCG@10 from 0.402 to 0.349. We tried two ways around this. The simple one is to embed the questions with bge-small as well. This gives 0.413, or 0.434 with bge-small's recommended query prefix; practice agrees (0.437 against 0.425), although on dev the interval overlaps the baseline's. The other keeps gte-small for the questions and converts its vectors into bge-small's space. Every record has a vector from both models, so on these 24,000 pairs we fitted a matrix that turns a record's gte-small vector into its bge-small vector, and applied it to each question. A freely fitted matrix (least squares) wins back about three quarters of the drop, at 0.389; a pure rotation (Procrustes) wins back only a quarter, at 0.363. Embedding the questions with the matching model therefore works best.
+\paragraph{Changing the encoder.} The course also ships a second set of corpus vectors, \texttt{enc\_b}, which we identified as bge-small~\citep{xiao2023cpack}. Our questions are embedded with gte-small, and vectors from two different models do not live in the same space: searching the bge-small vectors with gte-small questions drops dev NDCG@10 from 0.402 to 0.349. We tried two ways around this. The simple one is to embed the questions with bge-small as well. This gives 0.413, or 0.434 with bge-small's recommended query prefix; practice agrees (0.437 against 0.425), although on dev the interval overlaps the baseline's. The other keeps gte-small for the questions and converts its vectors into bge-small's space. Every record has a vector from both models, so on these 24,000 pairs we fitted a matrix that turns a record's gte-small vector into its bge-small vector, and applied it to each question. A freely fitted matrix (least squares) wins back about three quarters of the drop, at 0.389; a pure rotation (Procrustes) wins back only a quarter, at 0.363. Embedding the questions with the matching model therefore works best (Table~\ref{tab:encoder}).
+
+\begin{table}[h]
+\centering
+\footnotesize
+\begin{tabular}{lllr}
+\toprule
+Question vectors & Corpus vectors & Handling of the mismatch & NDCG@10 \\
+\midrule
+gte-small & \texttt{enc\_a} (gte-small) & none needed (baseline) & .402 \\
+\midrule
+gte-small & \texttt{enc\_b} (bge-small) & none: search as is & .349 \\
+bge-small & \texttt{enc\_b} (bge-small) & embed the questions with bge-small & .413 \\
+bge-small, query prefix & \texttt{enc\_b} (bge-small) & the same, with bge-small's query prefix & \textbf{.434} \\
+gte-small, mapped & \texttt{enc\_b} (bge-small) & least-squares map into bge-small's space & .389 \\
+gte-small, rotated & \texttt{enc\_b} (bge-small) & Procrustes rotation into bge-small's space & .363 \\
+\bottomrule
+\end{tabular}
+\caption{Changing the corpus vectors to \texttt{enc\_b} on the 125 dev questions. Both maps are fitted on the 24,000 records, each of which has a vector from both models.}
+\label{tab:encoder}
+\end{table}
 
 \paragraph{Context builders.} On 20 questions, an 800-token budget raised the answer score from 0.579 to 0.650, and removing near-duplicate records raised it to 0.671. Both used 20\% fewer prompt tokens. Given the judge noise in Section~\ref{sec:results}, 20 questions cannot support these gains, so we did not carry them forward.
 
