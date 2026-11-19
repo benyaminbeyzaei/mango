@@ -1,0 +1,11 @@
+% A clean copy of report.tex without the line-number ruler. report.tex stays in the review mode
+% the course requires: compile report.tex itself for the submission.
+\AddToHook{begindocument/before}{\iclrfinalcopy}
+% XeTeX (e.g. tectonic) has no Type 1 Times: use TeX Gyre, the same metrics. pdflatex skips this.
+\ifdefined\XeTeXrevision
+  \AddToHook{package/times/after}{\RequirePackage{fontspec}%
+    \setmainfont{texgyretermes}[Extension=.otf,UprightFont=*-regular,BoldFont=*-bold,ItalicFont=*-italic,BoldItalicFont=*-bolditalic]%
+    \setsansfont{texgyreheros}[Extension=.otf,UprightFont=*-regular,BoldFont=*-bold,ItalicFont=*-italic,BoldItalicFont=*-bolditalic]%
+    \setmonofont{texgyrecursor}[Extension=.otf,UprightFont=*-regular,BoldFont=*-bold,ItalicFont=*-italic,BoldItalicFont=*-bolditalic]}
+\fi
+\input{report.tex}

@@ -39,6 +39,10 @@
 \usepackage{url}
 \usepackage{booktabs}
 \usepackage{graphicx}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\definecolor{nolm}{HTML}{296DC0}
+\definecolor{llm}{HTML}{D66235}
 \usepackage{amsmath}
 \usepackage{amssymb}
 
@@ -88,19 +92,18 @@
 \section{Introduction}
 \label{sec:introduction}
 
-% Our system answers spoken questions about personal finance. A speech recognition (ASR) model transcribes a question of about 5\,s of audio. The supplied encoder embeds the transcript, exact search returns the 5 closest of 24,000 forum records, and a language model writes the answer from them: retrieval-augmented generation (RAG)~\citep{lewis2020rag}.
-% \\
-% The literature suggests that structured retrieval, such as summary trees~\citep{sarthi2024raptor} and graphs~\citep{edge2024graphrag}, pays off on multi-hop or whole-corpus questions. For single-hop lookups like ours, flat dense retrieval should already offer the best quality for its cost. Rather than assume this, we set out to \emph{validate} it with controlled measurements and to find where gains actually come from. Our question is: \emph{which retrieval changes improve answers to spoken single-hop finance questions over flat dense retrieval, and at what cost per question?}
-% \par We make four contributions. \emph{(i)} We run the course's ASR model, GLM-ASR-Nano, on four CUDA kernels completed for this coursework (Section~\ref{sec:hw1}); it transcribes the test recording exactly in 1.66\,s on an NVIDIA H200 MIG slice. \emph{(ii)} We validate this ASR end to end against an independent production model, whisper-1, on transcripts, retrieval and judged answers, and find no measurable difference. \emph{(iii)} On a traced, configurable platform with an interactive front-end, we screen 21 retrieval settings from five families and confirm the hypothesis: flat dense search lies on the quality--cost edge (Figure~\ref{fig:speed-quality}); summary trees match but never beat it, even with a paid summariser or a faithful RAPTOR; in a fully judged dev comparison neither RAPTOR nor a small reranker changes answer quality; and methods that call an LLM at query time are 10 to over 1000 times slower and less accurate. \emph{(iv)} Retrieval gains come from the ranking model, not from structure: two larger cross-encoders raise dev NDCG@10 by $+0.058$ and $+0.063$, with intervals clear of zero, while fine-tuning a small reranker on the practice labels overfits. Yet the judged answer score does not move: the LLM judge barely separates answers built on relevant and irrelevant evidence and changes its verdict on half of identical prompts, so the answering and judging harness, not retrieval, limits measurable quality here.
-Our system answers spoken questions about personal finance. A speech recognition (ASR) model transcribes the question, and the transcript is embedded and matched against 24,000 forum records. A language model then writes an answer from the five closest records~\citep{lewis2020rag}. We run the ASR model, GLM-ASR-Nano, on CUDA kernels completed for this coursework (Section~\ref{sec:hw1}).
+Many companies want to answer their customers' spoken questions automatically, from their own documents. We treat this coursework as a small, measurable instance of that problem: spoken personal-finance questions, answered from a collection of 24,000 forum records~\citep{lewis2020rag}. We model the system as three stages and study each in turn:
+\vspace{-0.5em}
+\begin{enumerate}[leftmargin=*]
+\setlength{\itemsep}{0pt}
+\item \emph{Speech to text:} an ASR model turns the spoken question into a transcript.
+\item \emph{Retrieval:} the transcript is embedded and matched against the records by semantic similarity.
+\item \emph{Answering:} a language model answers from the retrieved records, and the course's evaluator scores the answer.
+\end{enumerate}
+\vspace{-0.5em}
+For the first stage, besides completing the four CUDA kernels of the course's ASR model, GLM-ASR-Nano (Section~\ref{sec:hw1}), we compared its transcripts with those of whisper-1, a widely used ASR model, and measured how the differences carry through the whole system (Section~\ref{sec:asr-swap}). For the second, we implemented retrieval methods from earlier work, from lexical search and topic routing to summary trees and rerankers, and dropped each from further evaluation once it was clearly worse, too costly, or no different from a cheaper method. For the third, the strongest candidates went through the full pipeline and were scored with the course's own evaluator.
 \\
-We study which changes to retrieval improve the answers, and at what cost. Work on structured retrieval, such as summary trees~\citep{sarthi2024raptor} and knowledge graphs~\citep{edge2024graphrag}, reports its gains on multi-hop or whole-corpus questions. Our questions are single-hop: each asks for one specific answer that one or two forum posts contain. We therefore expected flat dense retrieval to be hard to beat. Rather than assume this, we set out to test it with controlled measurements, and to find what does help.
-\\
-The expectation held. Across 21 retrieval settings, no form of structure beat flat dense search, and methods that call an LLM at query time were both slower and less accurate. What did improve retrieval was a stronger ranking model: two larger cross-encoder rerankers raised NDCG@10 from 0.402 to 0.460 and 0.465. These gains did not, however, show up in the judged answer score. The LLM judge scores answers by how well they use the evidence they were given, not by whether that evidence was right, and its verdict changes on about half of repeated identical prompts. In this setting, measurable answer quality is limited by the answering and judging harness rather than by retrieval.
-\\
-We also checked our own ASR against whisper-1 inside the full system. The transcripts differ, but only in ways that do not change the system's output: mostly formatting such as ``two thousand'' for ``2000'', case and punctuation, and a handful of mishearings. Our kernels can therefore replace a paid transcription service.
-
-
+To run these comparisons we built \emph{Mango}, an end-to-end system in which the ASR model, the retriever, the context builder and the LLM are each a single configuration choice, with an interactive interface to run any configuration and compare runs. Beyond the coursework tasks themselves, the study compares retrieval families under the same controls and finds a change that beats the supplied baseline on retrieval: a larger cross-encoder reranker raises NDCG@10 from 0.402 to 0.465. That gain does not reach the judged answer score, and Section~\ref{sec:results} discusses why.
 
 
 \section{ASR on our own CUDA kernels (Homework 1)}
@@ -159,125 +162,99 @@ When the maximum does not rise, $\text{corr} = \exp(m - m_{\text{new}}) = \exp(0
 \section{RAG System and Technical Approach}
 \label{sec:approach}
 
-The supplied baseline embeds each transcript with the encoder \texttt{enc\_a}, which is gte-small~\citep{li2023gte}. It ranks all 24,000 records by exact similarity and passes the top five, with a simple prompt, to Qwen~3.5 on the University's ELM service. We left the course data, relevance labels (qrels) and evaluators untouched, so every number stays comparable with this baseline.
+The supplied baseline embeds each transcript with the encoder \texttt{enc\_a}, which is gte-small~\citep{li2023gte}. It ranks all 24,000 records by exact similarity and passes the top five, with a simple prompt, to Qwen~3.5 on the University's ELM service. At this size, exact search is a single matrix product in memory and takes about 0.1\,s per question, so we used no vector database or approximate index. We left the course data, relevance labels (qrels) and evaluators untouched, so every number stays comparable with this baseline.
 \\
-To compare many variants fairly, we built a thin platform beside the course code. Each stage of the pipeline is a single configuration field: ASR, encoder, index, retriever, context builder and generator. Two runs can therefore differ in exactly one choice, and any ASR can be plugged in, whether whisper-1 through ELM, our CUDA kernels, or typed text. Every model call is timed, cached and logged, and every run stores its configuration, so each number in this report can be traced back and repeated. An interactive front end 
-%(Appendix~\ref{appendix:frontend}) I removed this part in appendices
-runs any configuration on a spoken or typed question. It shows what ran, how long each stage took, which records were retrieved and the exact prompt, and we used it to inspect failures by hand.
+Mango sits beside the course code. Each stage of the pipeline is one configuration field: ASR, encoder, index, retriever, context builder and generator. Two runs can therefore differ in exactly one choice, and any ASR can be plugged in, whether whisper-1, our CUDA kernels or typed text. The generator and helper models are reached through an OpenAI-compatible API, so any provider that offers one can be used. Every model call is timed, cached and logged, and every run stores its configuration, so each number in this report can be traced back and repeated. Mango's web interface runs any configuration on a spoken or typed question, shows how long each stage took, which records were retrieved and the exact prompt, and compares stored runs side by side; we used it to inspect failures by hand.
 \\
-The candidate changes fall into five families, each adding something that flat search lacks. \emph{Lexical} methods match words instead of vectors: BM25~\citep{robertson2009bm25}, and grep following \citet{sen2026grep}, in which an LLM writes regular expressions. In grep's agentic and feedback variants, the LLM also sees the hits and rewrites its query while keeping earlier hits~\citep{yao2023react,trivedi2023ircot}. \emph{Topic routing} searches only the few k-means topics, out of 256, closest to the query, chosen either directly or by an LLM reading a table of contents.
+The candidate changes fall into five families, each adding something that flat search lacks. \emph{Lexical} methods match words instead of vectors: BM25~\citep{robertson2009bm25}, and grep following \citet{sen2026grep}, in which an LLM writes regular expressions. In grep's agentic and feedback variants, the LLM also sees the hits and rewrites its query while keeping earlier hits~\citep{yao2023react,trivedi2023ircot}. \emph{Topic routing} searches only the few k-means topics, out of 256, closest to the query, chosen either directly or by an LLM reading a table of contents (TOC).
 \\
 \emph{Summary trees} in the style of RAPTOR~\citep{sarthi2024raptor} add LLM-written summaries of record clusters to the index. A retrieved summary is either expanded into its records or handed to the generator as evidence. We built three versions, each closer to the paper: RAPTOR-lite (one level of clusters), RAPTOR-tree (a tree of summaries), and a faithful version (UMAP and Gaussian-mixture clustering, five layers, and 5,243 summaries of at most 100 tokens). \emph{Graphs} link records through shared noun phrases or LLM-extracted entities~\citep{edge2024graphrag}.
 \\
 Finally, \emph{rerankers} rescore the top 20 dense candidates with a cross-encoder~\citep{nogueira2019passage}. We used the small MiniLM trained on MS MARCO~\citep{wang2020minilm,nguyen2016msmarco}, the same model fine-tuned on our practice labels, and two larger models, bge-reranker-v2-m3~\citep{chen2024bgem3} and mxbai-rerank-base-v2~\citep{li2026prorank}.
 
-
-% \paragraph{Retrieval methods.} We chose five families, each with a known cost and a known kind of question it should help with:
-% \begin{itemize}[leftmargin=*]
-% \setlength{\itemsep}{0pt}
-% \item Lexical $\rightarrow$ BM25~\citep{robertson2009bm25}, and grep following \citet{sen2026grep}: an LLM writes regular expressions that are matched against the records. The \emph{static} variant writes patterns once. The \emph{agentic} and \emph{feedback} variants let the LLM see the hits and rewrite the query while keeping earlier hits~\citep{yao2023react,trivedi2023ircot}.
-
-% \item Topic routing $\rightarrow$ k-means splits the corpus into 256 topics, and only the $m$ topics closest to the query are searched. A table-of-contents (TOC) variant groups the topics into sections and routes by centroid or by an LLM.
-
-% \item Summary trees $\rightarrow$ An LLM summarises clusters of records, and the summaries are searched together with the records~\citep{sarthi2024raptor}. A retrieved summary is either \emph{expanded} into its records or given to the generator as \emph{evidence}. We built three versions, each closer to the paper: RAPTOR-lite (one level of k-means clusters), RAPTOR-tree (a tree of summaries), and a faithful RAPTOR (UMAP and Gaussian-mixture clustering, 5 layers, 5,243 summaries of at most 100 tokens).
-
-% \item Graphs $\rightarrow$ A lazy noun-phrase graph, and an LLM-extracted knowledge graph~\citep{edge2024graphrag}.
-
-% \item Reranking $\rightarrow$ A cross-encoder~\citep{nogueira2019passage} rescores the top 20 dense candidates. We tried MiniLM (22M parameters, trained on MS MARCO~\citep{wang2020minilm,nguyen2016msmarco}), the same model fine-tuned on the practice qrels, and two larger rerankers: bge-reranker-v2-m3, which starts from BGE-M3's weights~\citep{chen2024bgem3}, and mxbai-rerank-base-v2 ~\citep{li2026prorank}.
-
-% \end{itemize}
-
-
 \section{Experimental Methodology}
 \label{sec:methodology}
 
-% \paragraph{Data.} The course provides 350 \emph{practice} and 125 \emph{dev} audio questions, each with qrels that mark the relevant records. We chose every setting on practice and report on dev. The main experiments used whisper-1 transcripts from ELM, because our kernels were not finished yet. Section~\ref{sec:asr-swap} repeats the final comparison on our own transcripts. Answers come from Qwen~3.5 and helper calls from Llama~3.3, both free on ELM; paid models served only as index summarisers. Retrieval, encoders and rerankers ran on a laptop CPU (timings vary by about $\pm0.1$\,s).
-% \vspace{-0.7em}
-% \paragraph{Metrics.} Retrieval quality is NDCG@10, plus Recall@10 and MRR@10. Answer quality comes from the course's \texttt{evaluate\_answers.py}, with Mistral Small~4 as the judge. It scores correctness, grounding and completeness from 0 to 4, and the \emph{score} is their sum divided by 12. Cost covers retrieval time per question, median end-to-end time per question, LLM calls per question, and the one-off index build cost.
-% \vspace{-0.7em}
-% \paragraph{Controls.} Two configurations in a comparison differ in exactly one field, and timing runs skip the cache. Means carry 95\% bootstrap intervals from 1,000 resamples of the questions~\citep{efron1993bootstrap}. Comparisons resample the per-question differences, so question difficulty cancels out.
-% \vspace{-0.7em}
-% \paragraph{Funnel.} Every method was first screened for retrieval on 20 fixed practice questions. That is too few to rank close methods, but enough to spot one that is far worse or far slower. The 14 settings with no LLM call at query time then ran on the full splits. Three methods went into a fully judged comparison, with 375 fresh answers and judgements, and two larger rerankers were judged later in the same way. Its reranker was fixed on practice by a rule set in advance: the highest NDCG@10, or the fastest setting within 0.005 of it.
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.92\linewidth, height=5.6cm,
+  xmode=log, xmin=0.12, xmax=2e6, ymin=0, ymax=0.52,
+  xtick={1,10,100,1000,10000,100000,1000000},
+  xticklabels={1\,ms,10\,ms,100\,ms,1\,s,10\,s,100\,s,1000\,s},
+  ytick={0,0.1,0.2,0.3,0.4,0.5},
+  yticklabel style={/pgf/number format/fixed,/pgf/number format/precision=1},
+  xlabel={mean retrieval time per question (log scale)}, ylabel={Recall@10},
+  tick label style={font=\scriptsize}, label style={font=\footnotesize},
+  grid=major, grid style={gray!20}, axis line style={gray!60},
+  legend style={font=\scriptsize, at={(0.02,0.03)}, anchor=south west, draw=gray!40, row sep=-2pt},
+  legend cell align=left,
+]
+\addplot[only marks, mark=*, mark size=2.4pt, color=nolm] coordinates {
+  (1.79,0.183) (26.9,0.325) (20.1,0.433) (20.4,0.450) (18.9,0.383)
+  (108.2,0.475) (102.0,0.475) (109.0,0.450) (112.4,0.458)};
+\addlegendentry{no LLM call at query time}
+\addplot[only marks, mark=triangle*, mark size=2.8pt, color=llm] coordinates {
+  (1124.9,0.275) (1524.6,0.275) (2373.0,0.271)
+  (1404.8,0.133) (5571.8,0.067) (7727.9,0.158)};
+\addlegendentry{LLM call per question (Llama~3.3)}
+\addplot[only marks, mark=triangle, mark size=2.8pt, thick, color=llm] coordinates {
+  (94025,0.108) (303776,0.208) (561045,0.217)};
+\addlegendentry{LLM call per question (Qwen~3.5, reasoning)}
+\begin{scope}[font=\scriptsize, text=black!80]
+\node[anchor=east] at (axis cs:16,0.441) {topic routing, $m{=}8$, $4$};
+\node[anchor=east] at (axis cs:15,0.383) {TOC, centroid};
+\node[anchor=east] at (axis cs:22,0.325) {topic routing, $m{=}2$};
+\node[anchor=west] at (axis cs:2.4,0.183) {BM25};
+\node[anchor=south west] at (axis cs:125,0.474) {flat dense = RAPTOR-tree};
+\node[anchor=north west] at (axis cs:135,0.457) {RAPTOR-lite, faithful};
+\node[anchor=south] at (axis cs:1700,0.283) {TOC, LLM-routed};
+\node[anchor=north] at (axis cs:1404.8,0.122) {grep static};
+\node[anchor=north] at (axis cs:5571.8,0.056) {grep agentic};
+\node[anchor=south] at (axis cs:7727.9,0.168) {grep feedback};
+\node[anchor=north] at (axis cs:94025,0.097) {grep static};
+\node[anchor=south east] at (axis cs:7e5,0.226) {grep agentic, feedback};
+\node[anchor=north east, text=black!60] at (axis cs:1.6e6,0.505) {$\nwarrow$ better: higher and faster};
+\end{scope}
+\end{axis}
+\end{tikzpicture}
+\vspace{-0.6em}
+\caption{Every retrieval method we screened, on the 20 fixed practice questions: Recall@10 against mean retrieval time per question on a laptop CPU (log scale). Up and to the left is better. Circles need no LLM at query time; triangles call an LLM for every question, which costs seconds to minutes. $m$ is the number of topics searched, out of 256.}
+\label{fig:speed-quality}
+\end{figure}
 
 The course provides 350 practice and 125 dev questions, each recorded as audio and labelled with the records that answer it. We made every choice on practice and report results on dev. Our kernels were not ready when the experiments began, so the main runs used whisper-1 transcripts. Section~\ref{sec:asr-swap} repeats the final comparison with transcripts from our own ASR.
 \\
-Retrieval is measured mainly by NDCG@10. Answers are scored by the course's \texttt{evaluate\_answers.py}, with Mistral Small~4 as the judge, which rates correctness, grounding and completeness from 0 to 4; their sum divided by 12 is the answer score. For cost, we record retrieval time, end-to-end time and LLM calls per question, and the one-off cost of building an index.
+Retrieval is measured mainly by NDCG@10. Answers are scored by the course's \texttt{evaluate\_answers.py}, with Mistral Small~4 as the judge, which rates correctness, grounding and completeness from 0 to 4; their sum divided by 12 is the answer score. For cost, we record retrieval time, end-to-end time and LLM calls per question, and the one-off work needed to build an index.
 \\
-Answers, judgements and helper calls all used free models on ELM. The RAPTOR summaries were also written by a free model, Llama~3.3, at first. When that tree did not beat the baseline, we switched to paid models to rule out summary quality as the cause: gpt-5-mini for RAPTOR-tree and gpt-4o-mini for the faithful version. Retrieval, encoders and rerankers ran on a laptop CPU.
+Answers, judgements and helper calls all used free models on ELM, and retrieval, encoders and rerankers ran on a laptop CPU. Apart from the whisper-1 transcripts, we used paid models only to check whether a method's weak result came from the model behind it rather than from the method: when RAPTOR-tree with free Llama~3.3 summaries did not beat the baseline, we rebuilt it, and the TOC's topic names, with gpt-5-mini, and the faithful version used gpt-4o-mini. Each of these builds stayed small, and the whole study cost under US\$3 in paid API calls.
 \\
-A judged run takes about 74\,s per question, almost all of it in generation, so we could not judge every method. Instead we narrowed the field in three steps. Every method was first tried on 20 fixed practice questions, retrieval only, which was enough to discard those that were far slower or far worse. The 14 settings that need no LLM call at query time then ran on both full splits. The most promising settings went through the full judged pipeline on dev. These were the baseline, RAPTOR-tree and the reranker chosen on practice by a rule fixed in advance, followed later by the two larger rerankers. Within each comparison, runs differ in exactly one configuration field and timing runs bypass the cache. Differences are paired means over questions, with 95\% bootstrap intervals from 1,000 resamples~\citep{efron1993bootstrap}.
-
-
-% \paragraph{Data and transcripts.} The course provides 350 \emph{practice} and 125 \emph{dev} audio questions, each with qrels that mark the relevant records. We chose every setting on practice and report only on dev. For the main experiments, the audio was transcribed with OpenAI's whisper-1, because our kernels were not finished yet. Section~\ref{sec:asr-swap} then repeats the final comparison on transcripts from our own kernels.
-% \vspace{-0.7em}
-% \paragraph{Metrics.} Retrieval quality is NDCG@10 (and Recall@10 where relevant). Answer quality comes from the course's \texttt{evaluate\_answers.py} with Mistral Small~4 as the judge, which scores correctness, grounding and completeness from 0 to 4; the \emph{answer score} is their sum divided by 12. Cost is retrieval time per question, median end-to-end time per question, LLM calls per question, and the one-off build cost of an index (LLM calls and US\$). Answers use Qwen~3.5, judging uses Mistral Small~4, and helper calls use Llama~3.3, all free on ELM. Paid models (gpt-5-mini, gpt-4o-mini) were used only for some index builds. Retrieval, encoders and rerankers ran on a laptop CPU, where timings vary by about $\pm 0.1$\,s.
-% \vspace{-0.7em} 
-% \paragraph{Controls and statistics.} Two configurations in a comparison differ in exactly one field. Runs used for timing skip the cache (\texttt{-{}-fresh}), so no cache hits enter latency or cost. Every mean carries a 95\% bootstrap interval from 1,000 resamples of the questions~\citep{efron1993bootstrap}. To compare methods, we resample the per-question \emph{differences}, so question difficulty cancels out.
-% \vspace{-0.7em}
-% \paragraph{Funnel.} Each method was first screened on 20 fixed practice questions, retrieval only. This set is too small to rank close methods, but large enough to spot a method that is far worse or far slower. Methods that make no LLM call at query time (14 settings) then ran on the full practice and dev splits. Three methods went into the fully judged comparison: $125 \times 3 = 375$ answers and 375 judgements, all fresh. The reranker setting was fixed on practice before the dev run, by a rule set in advance: take the highest NDCG@10, and among settings within 0.005 of it, the fastest.
-
-
+A judged run takes about 74\,s per question, almost all of it in generation, so we could not judge every method. Instead we narrowed the field in three steps. Every method was first tried on 20 fixed practice questions, retrieval only, which was enough to discard those that were far slower or far worse. The 14 settings that need no LLM call at query time then ran on both full splits. The most promising settings went through the full judged pipeline on dev: the baseline, RAPTOR-tree and the reranker chosen on practice by a rule fixed in advance, followed later by the two larger rerankers. Within each comparison, runs differ in exactly one configuration field and timing runs bypass the cache. Differences are paired means over questions, with 95\% bootstrap intervals from 1,000 resamples~\citep{efron1993bootstrap}.
 
 \section{Results and Analysis}
 \label{sec:results}
 
-
 \subsection{Flat dense search is hard to beat}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.6\linewidth]{images/retrieval-time-per-query.jpg}
-\caption{Recall@10 against mean retrieval time per query (log scale) for the methods we tried. Blue methods make no LLM call at query time. Purple methods call an LLM: filled markers use Llama~3.3, and hollow markers use Qwen with its reasoning. Up and to the left is better. \textcolor{red}{TODO: it should not be a screenshot}}
-\label{fig:speed-quality}
-\end{figure}
 
-Figure~\ref{fig:speed-quality} places every method we tried by quality and retrieval time; up and to the left is better. Flat dense search and the summary trees sit together at the top, at about 100\,ms per question, and nothing lies beyond them. Table~\ref{tab:retrieval} gives NDCG@10 on dev for the methods that ran on the full splits.
+Figure~\ref{fig:speed-quality} places every method we tried by quality and retrieval time. Flat dense search and the summary trees sit together at the top, at about 100\,ms per question, and no method lies above and to the left of them. The methods differ in when they do their extra work. Some prepare once, offline: topic routing needs a few CPU minutes of k-means, the TOC adds 272 LLM calls to name topics and sections, RAPTOR-tree 439 summary calls, and the faithful RAPTOR 5,243 summary calls over 4.1 hours. This cost is paid before any question arrives and adds nothing to the wait. Others work online, for every question: grep and LLM-routed TOC make one to four LLM calls per question, which is what pushes them to the right of the figure.
 \\
-The cheapest methods match strings rather than meaning. BM25 answers in about 2\,ms but reaches only 0.227 NDCG@10, because the forum answers rarely reuse the question's words. String methods could still compete in a system that learns from its users over time, as web search learns from clicks~\citep{joachims2002clickthrough}, but our task offers no such feedback.
+The cheapest methods match strings rather than meaning. BM25 answers in about 2\,ms but reaches only 0.227 NDCG@10 on dev, because the forum answers rarely reuse the question's words. String methods could still compete in a system that learns from its users over time, as web search learns from clicks~\citep{joachims2002clickthrough}, but our task offers no such feedback.
 \\
-Grep was our test of whether a modern LLM could make up for this. \citet{sen2026grep} found that grep beats vector search for agents working over conversation history, but here it did not. The best variant reached a Recall@10 of about 0.22, against 0.48 for dense search, and took seconds to minutes per question. A regular expression finds words, while our questions need records that share meaning. Letting Qwen reason before writing patterns~\citep{wei2022cot} helped one variant and hurt another while adding 70--100\,s per call, so we dropped it. Grep suits searches where exact tokens matter, such as identifiers in code, and lexical methods remain an option where a vector index is impossible. Here, though, they are no substitute for one.
+Grep was our test of whether a modern LLM could make up for this. \citet{sen2026grep} found that grep beats vector search for agents working over conversation history, but here it did not. The best variant reached a Recall@10 of about 0.22, against 0.48 for dense search, and took seconds to minutes per question. A regular expression finds words, while our questions need records that share meaning. Letting Qwen reason before writing patterns~\citep{wei2022cot} helped two variants and hurt the third while adding 70--100\,s per call, so we dropped it. Grep suits searches where exact tokens matter, such as identifiers in code, but here it is no substitute for a vector index.
 \\
-Routing and graphs lose quality for little gain. Searching only the 8 nearest of 256 topics, 3\% of the corpus, costs 0.021 NDCG@10. An LLM reading a table of contents routes worse than plain centroids. Both graphs scored well below dense search even on a 600-record subset: 0.387 and 0.472, against 0.790.
-
-
-% Figure~\ref{fig:speed-quality} maps every method we tried, and Table~\ref{tab:retrieval} gives NDCG@10 on dev. Flat dense search and the summary trees share the top of the chart at about 100\,ms, and no method lies above and to the left of them.
-
-% \paragraph{String matching is fast but blind to meaning.} BM25 answers in about 2\,ms but reaches only 0.227 NDCG@10. The records are paraphrase-heavy forum answers, and matching strings misses that two phrasings mean the same thing. Such methods could still compete if the system learned what users find relevant over time, as search engines learn from clicks~\citep{joachims2002clickthrough}. In a feedback-driven system they might even beat dense RAG. Our task has no feedback signal, so we did not pursue them.
-% \vspace{-0.7em}
-% \paragraph{Grep: an agent does not make up for missing semantics.} \citet{sen2026grep} report that grep beats vector retrieval for agents searching conversation history, so we tested whether a modern LLM could make grep work here too. It could not: the best variant reached only about 0.22 Recall@10, against 0.479 for dense search. Grep matches strings, but our answers share meaning with the question, not words. It suits search where exact tokens matter, such as identifiers in a codebase or names in a chat log.
-% \\
-% We also let Qwen reason before writing patterns, a form of chain of thought~\citep{wei2022cot}. That helped agentic grep (Recall@10 0.067 to 0.208) but hurt static grep (0.133 to 0.108), and each call spent 70--100\,s on hidden reasoning, so we dropped it. These methods remain candidates where a vector index is not possible, but not as a replacement for one.
-% \vspace{-0.7em}
-% \paragraph{Routing and graphs.} Topic routing trades quality for search size: searching 8 of 256 topics, or 3\% of the records, costs 0.021 NDCG@10. Routing by an LLM over the TOC was slower and worse than routing by centroid. Graphs were the weakest family. On a 600-record subset, NDCG@10 was 0.387 for the LLM graph and 0.472 for the lazy graph, against 0.790 for dense search.
-
-\begin{table}[t]
-\centering
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{llrr}
-\toprule
-Method & Build cost & Searched & NDCG@10 \\
-\midrule
-Dense baseline (\texttt{enc\_a}) & none & 100\% & 0.402 \\
-RAPTOR-tree, gpt-5-mini (exp./evid.) & 272 summ., \$1.46 & 100\% & 0.401 / 0.400 \\
-RAPTOR-tree, Llama~3.3 (exp.\,/\,evid.) & 439 calls, free & 100\% & 0.396 / 0.398 \\
-RAPTOR-lite (exp.\,/\,evid.) & LLM summaries & 100\% & 0.399 / 0.398 \\
-Faithful RAPTOR, gpt-4o-mini (exp./evid.) & 5,243 calls, \$1.11 & 100\% & 0.383 / 0.348 \\
-Topic routing, $m = 8/4/2$ of 256 & CPU minutes & 3.1 / 1.6 / 0.8\% & 0.381 / 0.342 / 0.289 \\
-TOC routed by centroid, $m=4$ & CPU minutes & -- & 0.302 \\
-BM25 & seconds & 100\% & 0.227 \\
-\bottomrule
-\end{tabular}
-\caption{Retrieval structures on the 125 dev questions, for methods with no LLM call at query time. The build cost is one-off, in US\$. Rerankers are in Table~\ref{tab:final}.}
-\label{tab:retrieval}
-\end{table}
-\vspace{-0.7em}
-Summary trees came closest but never beat the baseline. With free Llama summaries, RAPTOR-tree scored 0.398. Rebuilt with paid gpt-5-mini summaries, to check whether summary quality was the problem, it scored 0.400. The faithful version of the paper did worse, at 0.348--0.383: 95\% of its summaries stop mid-sentence at the 100-token cap, and its 5,243 summary nodes crowd records out of the top 10. All versions fail for the same reason. The summaries are broad topic overviews, such as lists of apps, books or rules, while each question asks for one specific answer that a single record already contains.
+Routing and graphs lose quality for little gain. Searching only the 8 nearest of 256 topics, 3\% of the corpus, costs 0.021 NDCG@10 on dev. An LLM reading a table of contents routes worse than plain centroids. Both graphs scored well below dense search even on a 600-record subset: 0.387 and 0.472, against 0.790.
+\\
+Summary trees came closest but never beat the baseline's 0.402 on dev. With free Llama summaries, RAPTOR-tree scored 0.398; rebuilt with gpt-5-mini summaries, to check whether summary quality was the problem, it scored 0.400. The faithful version did worse, at 0.348--0.383: 95\% of its summaries stop mid-sentence at the 100-token cap, and its 5,243 summary nodes crowd records out of the top 10. All versions fail for the same reason. The summaries are broad topic overviews, such as lists of apps, books or rules, while each question asks for one specific answer that a single record already contains.
+\\
+For a question-answering service, the time until the user receives an answer matters as much as its quality. Several of these methods could be combined, for example routing, grep and dense search feeding one reranker, and might retrieve better together. But every online step adds to the user's wait, and a single LLM call already costs seconds, so we carried forward only changes that add little time per question.
 
 \subsection{A stronger ranking model is where retrieval improves}
 
-Rerankers were the one change that moved retrieval, even though they only reorder the dense top 20 and so cannot recover the 42\% of labelled records that lie outside it. The small MiniLM made things slightly worse, at 0.393, because, trained on web search, it prefers records that repeat the question's words. Fine-tuning it on our practice labels did not help: it scored 0.466 on the questions it trained on, but 0.371 on dev. Practice and dev share no relevant records. With only 793 positive examples, the 22M-parameter model memorised which records were relevant instead of learning what makes a record relevant, and lost what it knew from MS MARCO. The two larger rerankers, by contrast, gave the clearest gains of the project. They raised NDCG@10 to 0.460 and 0.465, with intervals well clear of zero (Table~\ref{tab:final}).
-
+Rerankers were the one change that moved retrieval, even though they only reorder the dense top 20 and so cannot recover the 42\% of labelled records that lie outside it. We got there in three steps. First, the small rerankers did not help: on practice neither MiniLM nor bge-reranker-base beat the baseline at any pool size, and on dev MiniLM scored 0.393. Trained on web search, it prefers records that repeat the question's words. Second, we fine-tuned MiniLM on the practice labels, to teach it what relevance means in this corpus. It overfitted: 0.466 on the questions it trained on, 0.407 on held-out practice folds and 0.371 on dev. Practice and dev share no relevant records, and with only 793 positive examples the 22M-parameter model memorised which records were relevant instead of learning what makes a record relevant. Third, we tried two larger, more recent rerankers. They gave the clearest gains of the project, raising NDCG@10 to 0.460 and 0.465 with intervals well clear of zero (Table~\ref{tab:final}). On our laptop CPU they add 42--62\,s per question, about as long as the answer itself; cross-encoders of this size are normally served on a GPU, where 20 pairs take a small fraction of a second, so we expect this cost to be manageable in deployment, although we did not time them on a GPU.
+\\
+We therefore propose dense search followed by a large reranker as the retrieval step. A deployed system could improve further over time: the questions and answers it serves become new labelled data, and since corpus vectors are computed once and cached, the whole collection can be re-encoded with a stronger encoder when one is worth it. Appendix~\ref{appendix:side} shows that the course's second encoder already helps when queries are encoded to match it. To stay within the setting of this coursework, we did not compute a new vector set with another model.
 
 \subsection{The judged answers do not follow}
 
@@ -302,46 +279,27 @@ RAPTOR-tree (evidence) & -- & .400 & -- & -- & .690 & $+.003$ $[-.045, .051]$ \\
 
 We expected better retrieval to give better answers, but Table~\ref{tab:final} shows that it did not. The two larger rerankers put about twice as many relevant records into the prompt as MiniLM, yet their answer scores moved by only $-0.026$ and $-0.009$, inside the noise. Neither RAPTOR-tree nor MiniLM changed the score measurably either.
 \\
-RAPTOR-tree shows most clearly what is going on. A summary reached the top five in only 10 of the 125 dev questions, each time pushing out the fifth-ranked record, never a relevant one. On the other 115 questions, the prompt was exactly the baseline's, yet regenerating and re-judging those identical prompts changed the score on 58 of them. Of the 10 questions where a summary did enter the prompt, 7 scored the same as the baseline. Whatever RAPTOR changes is far smaller than the noise in a single judged run~\citep{zheng2023judging}.
+RAPTOR-tree shows most clearly what is going on. A summary reached the top five in only 10 of the 125 dev questions, each time pushing out the fifth-ranked record, never a relevant one. On the other 115 questions, the prompt was exactly the baseline's, yet regenerating and re-judging those identical prompts changed the score on 58 of them. Whatever RAPTOR changes is far smaller than the noise in a single judged run~\citep{zheng2023judging}.
 \\
-The judge also barely rewards retrieval itself. The baseline scores 0.681 on dev questions with no relevant record in its top five, and 0.691 on questions with one. The judge rates how well an answer uses the evidence it was given, not whether that evidence was right. A judge that cannot tell these cases apart, and that changes its verdict on half of identical prompts, is most likely the wrong model or the wrong set-up for this score, and we would like to investigate this further.
+The score also barely depends on retrieval itself. The judge compares each answer with the records the labels mark as relevant, yet the baseline scores 0.681 on dev questions with no relevant record in its top five, and 0.691 on questions with one. A likely reason, which we did not measure, is that Qwen answers these general personal-finance questions well from its own knowledge, so the evidence in the prompt changes little. A score that barely separates these cases, and that changes on half of identical prompts, cannot resolve the effects we compare. LLM outputs are not deterministic, so the harness around answering and judging matters as much as the retriever: sampling settings, repeated generations and judgements, and calibration against human ratings. One generation and one judgement per question does not meet that standard.
 \\
-More generally, LLM outputs are not deterministic. The harness around answering and judging therefore matters as much as the retriever: sampling settings, repeated generations and judgements, reference answers, and calibration against human ratings. The set-up we used, one generation and one judgement per question, does not meet that standard, and we did not find a robust form of it within this exercise.
-\\
-Cost shows the same thing. Retrieval takes 0.11\,s per question for the baseline and 1.40\,s with MiniLM on a laptop CPU. The Qwen answer takes about 74\,s, mostly about 2.9k tokens of hidden reasoning, so the choice of retriever barely changes end-to-end time: the medians range from 73.9 to 80.0\,s.
+Cost shows the same thing. Retrieval takes 0.11\,s per question for the baseline and 1.40\,s with MiniLM on a laptop CPU. The Qwen answer takes about 74\,s, mostly about 2.9k tokens of hidden reasoning, so the choice of a fast retriever barely changes end-to-end time: the medians range from 73.9 to 80.0\,s.
 
 \subsection{Closing the loop with our own ASR}
 \label{sec:asr-swap}
 
 Passing the kernel tests shows that each operation is correct, not that the whole model is good enough for this task. We therefore compared our ASR with whisper-1 inside the full system. We transcribed the 125 dev questions with GLM-ASR-Nano on our kernels, in a 17-minute job on an NVIDIA L40S: 13 minutes went to loading the model, then each question took a median of 1.45\,s. We then reran the baseline and RAPTOR-tree with only the transcripts changed.
 \\
-The transcripts are not identical, but the differences are of a kind that does not change what the system does. Of the 125 transcripts, 76 are byte-identical, and 24 differ only in case or punctuation. Of the 25 that differ in words, 18 are formatting, such as ``two thousand'' for ``2000'' or ``H one B'' for ``H-1B''. Only 5 are mishearings by our model, against 2 by whisper-1.
+The transcripts are not identical, but the differences are of a kind that does not change what the system does. Of the 125 transcripts, 76 are byte-identical, and 24 differ only in case or punctuation. Of the 25 that differ in words, 18 are formatting, such as ``two thousand'' for ``2000'' or ``H one B'' for ``H-1B''. Only 5 are mishearings by our model, against 2 by whisper-1. We checked several of the formatting cases by hand in Mango, asking each question both ways, and the generator understood them: it reads ``H one B visa'' as an H-1B visa, and even cites a record on H1B tax reporting. We therefore added no text normalisation after the ASR.
 \\
-We checked several of the formatting cases by hand in the front end, and the generator understood them. In Figure~\ref{fig:h1b}, it reads ``H one B visa'' as an H-1B visa, and even cites a record on H1B tax reporting. We therefore added no text normalisation after the ASR. Retrieval moved by less than 0.005 NDCG@10. The answer score changed by $+0.002$ $[-0.034, 0.040]$ for the baseline and $-0.027$ $[-0.062, 0.009]$ for RAPTOR-tree. Our ASR can therefore replace whisper-1, a paid service, at no measurable cost to the system. Appendix~\ref{appendix:side} reports two smaller side experiments, on the encoder and the context builder.
-
-
-% \vspace{-0.7em}
-% \paragraph{The judging harness is the bottleneck.} We therefore do not read Table~\ref{tab:final} as ``better retrieval does not help''. A judge that barely separates answers built on relevant and irrelevant evidence, and that changes its verdict on half of identical prompts, is most likely the wrong model, or the wrong set-up, for this score; we would like to investigate this in detail. More broadly, because LLM outputs are not deterministic, the harness around both answering and judging (sampling settings, repeated generations and judgements, reference answers, calibration of the judge against human labels) matters as much as the retriever. The set-up we used, one generation and one judgement per question, does not meet that standard, and we did not find a robust form of it within this exercise; building one is the main step for future work.
-
-% \subsection{Validating our own ASR end to end}
-% \label{sec:asr-swap}
-
-% \paragraph{Setup.} Kernel tests show that each operation is correct, but not that the whole model is good enough for the task, so we checked our ASR against whisper-1. GLM-ASR-Nano on our kernels transcribed the 125 dev questions in one 17-minute job on an NVIDIA L40S. Loading the model took 13 minutes, and transcription took a median of 1.45\,s per question. There the kernels also passed all tests (893\,ms for the test sentence). We then reran the baseline and RAPTOR-tree with only the transcript file changed (500 ELM calls, no failures).
-% \vspace{-0.7em}
-% \paragraph{Transcripts.} Compared with whisper-1, 76 transcripts are byte-identical, and 24 differ only in case or punctuation. Of the 25 that differ in words, 18 are formatting differences, such as ``two thousand'' for ``2000'' or ``H one B'' for ``H-1B''. Our model misheard 5 questions and whisper-1 misheard 2. We checked several of these by hand in the front end, typing each question both ways. In Figure~\ref{fig:h1b}, for example, the generator reads ``H one B visa'' as H-1B and even cites a record on H1B tax reporting. We therefore added no text normalisation after the ASR.
-% \vspace{-0.7em}
-% \paragraph{Retrieval and answers.} Retrieval moved by less than 0.005 NDCG@10. The score changed by $+0.002$ $[-0.034, 0.040]$ for the baseline and by $-0.027$ $[-0.062, 0.009]$ for RAPTOR-tree, so neither change is measurable. Our ASR therefore does the job as well as whisper-1, a paid model with a median of 1.13\,s per question, while ours is free and runs on our own kernels.
-% \\
-% Appendix~\ref{appendix:side} reports two side experiments (encoder migration and context builders).
- 
-
+The effect on the system is negligible. Retrieval moved by less than 0.005 NDCG@10, and the answer score by at most 0.03 on its 0--1 scale, with both 95\% intervals including zero. Our ASR can therefore replace whisper-1, a paid service. Appendix~\ref{appendix:side} reports two smaller side experiments, on the encoder and the context builder.
 
 \section{Discussion and Conclusion}
 \label{sec:conclusion}
 
-For spoken single-hop finance questions, flat dense retrieval is already close to the best quality available for its cost, as we expected. None of the structures we added beat it, and LLM calls at query time made retrieval slower and worse. Retrieval did improve with a stronger ranking model, and the bge-small encoder in Appendix~\ref{appendix:side} points the same way. These gains, however, did not reach the judged answers. We read this as a limit of the measurement rather than of retrieval: the judge rewards grounding in whatever evidence it is shown, and its noise is as large as the effects we compare. Our own ASR, meanwhile, matches whisper-1 wherever we measured. The study cost about US\$3 in paid API calls, under one GPU-hour on an L40S and 0.55 on an H200.
+For spoken single-hop finance questions, flat dense retrieval is already close to the best quality available for its cost. None of the structures we added beat it, and LLM calls at query time made retrieval slower and worse while adding to the user's wait. Retrieval did improve with a stronger ranking model, and the bge-small encoder in Appendix~\ref{appendix:side} points the same way. These gains did not reach the judged answers, which we read as a limit of the measurement rather than of retrieval: the answer score barely depends on whether relevant evidence was retrieved, and its noise is as large as the effects we compare. Our own ASR matches whisper-1 wherever we measured. Besides the paid API calls above, the study used under one GPU-hour on an L40S and 0.55 on an H200.
 \\
-The main limitation is therefore the answering and judging harness, and that is where we would go next. We would try other judge models and prompts, repeat generations and judgements, add reference answers, and check the judge against a small set of human ratings. We would then rerun the final comparison, including the larger rerankers combined with the bge-small encoder. Two further limitations apply. The labels mark only answers from each question's original forum thread, which penalises methods that find different but valid evidence. Our timings also come from a laptop CPU and a shared model, and the larger rerankers have not yet been timed.
+The main limitation is therefore the answering and judging harness, and that is where we would go next: other judge models and prompts, repeated generations and judgements, and a check against a small set of human ratings, followed by a rerun of the final comparison with the larger rerankers and the bge-small encoder combined. Two further limitations apply. The labels mark only answers from each question's original forum thread, which penalises methods that find different but valid evidence. Our timings come from a laptop CPU and a shared model service, and the larger rerankers were timed only on the CPU.
 
 
 % References are excluded from the main-body page limit.
@@ -477,54 +435,14 @@ Status: PASS
 
 \paragraph{Context builders.} On 20 questions, an 800-token budget raised the answer score from 0.579 to 0.650, and removing near-duplicate records raised it to 0.671. Both used 20\% fewer prompt tokens. Given the judge noise in Section~\ref{sec:results}, 20 questions cannot support these gains, so we did not carry them forward.
 
-% \section{Interactive front end}
+% \section{The Mango interface}
 % \label{appendix:frontend}
-
-% Our front end runs any configuration preset on a spoken or typed question. Under each answer it shows what ran, stage by stage with timings, followed by the retrieved evidence with scores and the full prompt (Figure~\ref{fig:frontend}). Chats are stored only in the browser. We used it to inspect individual failures, such as the ASR formatting differences in Section~\ref{sec:asr-swap} (Figure~\ref{fig:h1b}).
-
 % \begin{figure}[h]
 % \centering
 % \includegraphics[width=0.8\linewidth]{images/site-trace.jpg}
-% \caption{The front end answering a question with the \texttt{raptor-full-evidence} preset. The trace line lists each stage (ASR, encoder, index, retriever, context builder, generator) with its time, and the panel below shows the five retrieved records with their scores.}
+% \caption{Mango answering a question with the \texttt{raptor-full-evidence} preset. The trace line lists each stage (ASR, encoder, index, retriever, context builder, generator) with its time, and the panel below shows the five retrieved records with their scores.}
 % \label{fig:frontend}
 % \end{figure}
-
-% \begin{figure}[h]
-% \centering
-% \includegraphics[width=0.49\linewidth]{images/site-h1b-typed.jpg}\hfill
-% \includegraphics[width=0.49\linewidth]{images/site-h1b-spoken.jpg}
-% \caption{The same question spelled as in the reference text (``H-1B'', left) and as our ASR spells it (``H one B'', right), both with the baseline preset. The generator reads ``H one B'' as H-1B, and on the right it even cites a record about H1B tax reporting. Both answers say that the evidence does not settle the exact tax liability.}
-% \label{fig:h1b}
-% \end{figure}
-
-% \section{Side experiments}
-% \label{appendix:side}
-
-% \paragraph{Changing the encoder.} The course also ships corpus vectors from a second encoder, \texttt{enc\_b}, which we identified as bge-small~\citep{xiao2023cpack}. Searching those vectors with gte-small queries drops dev NDCG@10 from 0.402 to 0.349. Re-encoding the queries with bge-small recovers it, at 0.413, and adding bge-small's query prefix gives 0.434. Practice agrees, at 0.437 against 0.425, though the dev interval overlaps the baseline's. A linear map from gte space to bge space, learned on the 24,000 paired records, recovers most of the loss without changing the query encoder: 0.389 with least squares and 0.363 with Procrustes.
-
-% \paragraph{Context builders.} On 20 questions, an 800-token budget raised the answer score from 0.579 to 0.650, and removing near-duplicate records raised it to 0.671. Both used 20\% fewer prompt tokens. Given the judge noise in Section~\ref{sec:results}, 20 questions cannot support these gains, so we did not carry them forward.
-
-% \section{Interactive front end}
-% \label{appendix:frontend}
-
-% Our front end runs any configuration preset on a spoken or typed question. Under each answer it shows what ran, stage by stage with timings, followed by the retrieved evidence with scores and the full prompt (Figure~\ref{fig:frontend}). Chats are stored only in the browser. We used it to inspect individual failures, such as the ASR formatting differences in Section~\ref{sec:asr-swap} (Figure~\ref{fig:h1b}).
-
-% \begin{figure}[h]
-% \centering
-% \includegraphics[width=0.6\linewidth]{images/site-trace.jpg}
-% \caption{The front end answering a question with the \texttt{raptor-full-evidence} preset. The trace line lists each stage (ASR, encoder, index, retriever, context builder, generator) with its time, and the panel below shows the five retrieved records with their scores.}
-% \label{fig:frontend}
-% \end{figure}
-
-% \begin{figure}[h]
-% \centering
-% \includegraphics[width=0.5\linewidth]{images/site-h1b-typed.jpg}\hfill
-% \includegraphics[width=0.5\linewidth]{images/site-h1b-spoken.jpg}
-% \caption{The same question spelled as in the reference text (``H-1B'', left) and as our ASR spells it (``H one B'', right), both with the baseline preset. The generator reads ``H one B'' as H-1B, and on the right it even cites a record about H1B tax reporting. Both answers say that the evidence does not settle the exact tax liability.}
-% \label{fig:h1b}
-% \end{figure}
-
-
 
 % Keep this line unchanged.
 % \newpage
