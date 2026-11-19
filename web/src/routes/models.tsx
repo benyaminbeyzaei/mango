@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 
+import { STATIC } from "@/api/client"
 import { useModels } from "@/api/queries"
 import type { components } from "@/api/schema"
 import { Line, Loading, TableSkeleton } from "@/components/page-skeletons"
@@ -26,10 +27,13 @@ function stages(
   return [
     {
       stage: "ASR",
-      rows: m.asr.map((a) => ({
-        name: a.name,
-        available: a.available ?? true,
-      })),
+      // the static build serves stored runs only, so the "cached" ASR option is every row's status there
+      rows: m.asr
+        .filter((a) => !STATIC || a.name !== "cached")
+        .map((a) => ({
+          name: a.name,
+          available: a.available ?? true,
+        })),
     },
     {
       stage: "Query encoders",
@@ -89,7 +93,9 @@ function Models() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {row.available ? (
+                      {STATIC ? (
+                        <Badge variant="secondary">cached</Badge>
+                      ) : row.available ? (
                         <Badge>available</Badge>
                       ) : (
                         <Badge variant="outline">unavailable</Badge>
