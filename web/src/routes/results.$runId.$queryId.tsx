@@ -5,7 +5,13 @@ import { QueryDetail } from "@/components/query-detail"
 import { Heading, Line, Loading } from "@/components/page-skeletons"
 import { Skeleton } from "@/components/ui/skeleton"
 import { configLabel, runDate } from "@/lib/labels"
-import { SLIM_NOTE, fmt, useRun, useRunQueries } from "@/lib/results"
+import {
+  SLIM_NOTE,
+  fmt,
+  traceToResponse,
+  useRun,
+  useRunQueries,
+} from "@/lib/results"
 
 export const Route = createFileRoute("/results/$runId/$queryId")({
   component: StoredQuery,
@@ -36,18 +42,8 @@ function StoredQuery() {
       </p>
     )
 
-  const k = Number(run.data.config.k)
   const a = q.artifacts
-  const response = {
-    answer: a.answer,
-    transcript: a.transcript,
-    prompt: a.prompt,
-    // the API keeps the record text out of the trace; QueryDetail loads it per record
-    retrieved: a.ranked_ids
-      .slice(0, k)
-      .map((id, i) => ({ record_id: id, score: a.scores[i], text: "" })),
-    trace: q as unknown as Record<string, unknown>,
-  }
+  const response = traceToResponse(q, Number(run.data.config.k))
   return (
     <div className="flex flex-col gap-4">
       <Link

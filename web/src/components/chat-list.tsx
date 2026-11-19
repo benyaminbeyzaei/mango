@@ -35,9 +35,9 @@ export function ChatList({
   return (
     <div className="flex flex-col gap-2">
       <Button variant="outline" onClick={() => onSelect(null)}>
-        <PlusIcon /> New chat
+        <PlusIcon /> New question
       </Button>
-      <ul className="flex flex-col gap-0.5" aria-label="Chats">
+      <ul className="flex flex-col gap-0.5" aria-label="History">
         {chats.map((chat) => (
           <li key={chat.id} className="group flex items-center gap-0.5">
             {renaming === chat.id ? (
@@ -105,7 +105,7 @@ export function ChatList({
         ))}
       </ul>
       {chats.length === 0 && (
-        <p className="px-2 text-xs text-muted-foreground">No chats yet.</p>
+        <p className="px-2 text-xs text-muted-foreground">No questions yet.</p>
       )}
       <div className="mt-2 flex flex-wrap gap-1">
         <Button
@@ -136,7 +136,8 @@ export function ChatList({
             variant="ghost"
             size="sm"
             onClick={async () => {
-              if (!confirm("Delete every chat stored in this browser?")) return
+              if (!confirm("Delete every question stored in this browser?"))
+                return
               await clearAll()
               onSelect(null)
             }}
@@ -146,7 +147,8 @@ export function ChatList({
         )}
       </div>
       <p className="px-2 text-xs text-muted-foreground">
-        Chats are stored in this browser only. The server keeps nothing.
+        Your questions are stored in this browser only. The server keeps
+        nothing.
       </p>
     </div>
   )

@@ -42,25 +42,26 @@ asks that text once, as if typed there (`/interactive?ask=…`; the parameter is
 
 ## Interactive mode
 
-`/interactive` is a chat page. Pick a config (a preset from `GET /api/configs`, or edit any `RunConfig`
+`/interactive` answers one question at a time. Pick a config (a preset from `GET /api/configs`, or edit any `RunConfig`
 field under **Config → Advanced**; options come from the `RunConfig` type and `GET /api/models`), then type a question or
-record one with the microphone button. Each question is answered on its own (no conversation context):
+record one with the microphone button. Each question is answered on its own (no conversation context);
+once it is sent, the input is replaced by **New question**, which brings it back:
 text goes to `POST /api/query`, a recording (WebM, or MP4 on Safari) to `POST /api/query/audio`, where
 whisper-1 transcribes it. Under each answer, **What ran** names the implementation and time of every
 stage; **Full detail** shows the transcript, the evidence, the prompt, the span timeline, counters and cost.
-An invalid config comes back as the API's 400 message in the chat.
+An invalid config comes back as the API's 400 message in place of the answer.
 
 The server answers one question at a time and a Qwen answer takes 35 to 90 seconds, so the page shows a
 waiting timer and never retries on its own. Recording needs `https` or `localhost` and microphone permission.
 
-Settings (gear icon, kept in `localStorage`): the default config for new chats, "confirm the transcript of a
+Settings (gear icon, kept in `localStorage`): the default config for new questions, "confirm the transcript of a
 voice question before showing its answer" (the API has no transcription-only call, so the answer is fetched
 and held back until you accept the transcript, or edit it and ask again as text), and the admin token.
 
-**History is on-device only.** Chats and messages, including each full API response and the recording, are
+**History is on-device only.** Each question is one entry in the History sidebar (a Dexie "chat"); its messages, including each full API response and the recording, are
 stored in this browser's IndexedDB (Dexie database `mlsrag`). The server stores nothing about users. Each
-chat can be renamed, deleted or exported as JSON (recordings are left out); **Import** reads such a file back,
-and **Clear all** deletes every chat after a confirmation.
+entry can be renamed, deleted or exported as JSON (recordings are left out); **Import** reads such a file back,
+and **Clear all** deletes every entry after a confirmation.
 
 ## Results mode
 
@@ -79,6 +80,25 @@ numbers. Remote calls served from the cache take about 1 ms and cost nothing, so
 samples: such spans are marked `(cached)`. Latency and cost are shown only for runs made with `--fresh`
 (`run.fresh` in `metrics.json`); for any other run the results list, the run page and the comparison show `–`. Per-query judge scores are not part of the trace, so the query page shows them only when
 a trace carries a `judge` field.
+
+## Static version
+
+A read-only copy of the site that runs with no API, served at https://mango.benyaminbeyzaei.fyi. It is built
+with `VITE_STATIC=1`: every API read becomes a JSON file under `dist/static-api/` (path rule:
+`staticPath` in `src/api/client.ts`), written by `mlsrag export-web`. It makes no model calls. The
+Interactive page shows a notice and answers only cached questions: pick a committed run whose
+`queries.jsonl` has answers, then one of its questions; the stored trace is shown like a live answer.
+
+```bash
+VITE_STATIC=1 pnpm --dir web build
+mlsrag export-web --out web/dist                 # needs the course data and rag/extensions/transcripts/
+pnpm --dir web exec wrangler dev                 # http://localhost:8787, as Cloudflare serves it
+```
+
+`.github/workflows/deploy-web.yml` builds and deploys it (`web/wrangler.jsonc`: a Worker with static assets
+only) on pushes to `main` that touch the site or the results, or by hand (`gh workflow run deploy-web.yml`).
+It needs two repository secrets: `CLOUDFLARE_API_TOKEN` (an account API token from the "Edit Cloudflare
+Workers" template, scoped to the `benyaminbeyzaei.fyi` zone) and `CLOUDFLARE_ACCOUNT_ID`.
 
 ## Layout
 

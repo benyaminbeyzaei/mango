@@ -26,7 +26,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "ruff", "httpx2"]  # httpx2: the HTTP library openai uses; the gateway tests build its errors
+dev = ["pytest", "ruff", "httpx2", "httpx"]  # httpx2: the HTTP library openai uses; the gateway tests build its errors. httpx: fastapi TestClient (tests, export-web)
 
 [project.scripts]
 mlsrag = "mlsrag.cli:main"

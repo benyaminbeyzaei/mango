@@ -1,0 +1,85 @@
+# Builds the static Mango website (no API, no model calls) and deploys it to https://mango.benyaminbeyzaei.fyi
+# as a Cloudflare Worker with static assets only. Secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
+name: Deploy website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - web/**
+      - rag/extensions/results/**
+      - rag/extensions/transcripts/**
+      - rag/extensions/platform/**
+      - .github/workflows/deploy-web.yml
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-web
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # The course data (corpus, question audio) is rag-assets.zip in Git LFS. Cache it by its LFS id:
+      # the private repo's free LFS bandwidth is small and the zip is 196 MB.
+      - name: Find the course data version
+        id: lfs
+        run: echo "oid=$(git lfs ls-files -l -I rag-assets.zip | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+      - name: Restore the course data
+        id: assets
+        uses: actions/cache@v4
+        with:
+          path: rag-assets.zip
+          key: rag-assets-${{ steps.lfs.outputs.oid }}
+      - name: Download the course data
+        if: steps.assets.outputs.cache-hit != 'true'
+        run: git lfs pull --include=rag-assets.zip
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+          activate-environment: true
+      - name: Install mlsrag
+        run: |
+          uv pip install torch --index-url https://download.pytorch.org/whl/cpu
+          uv pip install -e "rag/extensions/platform[dev]"
+      - name: Install the course data
+        run: |
+          unzip -q rag-assets.zip -d "$RUNNER_TEMP/assets"
+          python rag/scripts/install_assets.py --from-dir "$RUNNER_TEMP/assets"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - name: Build the static site
+        run: |
+          pnpm --dir web install --frozen-lockfile
+          VITE_STATIC=1 pnpm --dir web build
+          mlsrag export-web --out web/dist
+
+      # Cloudflare's free static assets: at most 20,000 files, 25 MiB each.
+      - name: Check Cloudflare limits
+        run: |
+          files=$(find web/dist -type f | wc -l)
+          big=$(find web/dist -type f -size +25M)
+          echo "$files files"
+          if [ "$files" -ge 20000 ] || [ -n "$big" ]; then echo "over the limits: $big"; exit 1; fi
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: web
+          command: deploy
