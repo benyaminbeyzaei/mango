@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Anonymous submission: report/submission/mango-anonymous.zip (git-ignored), holding
 #   report-anonymous.pdf  the review-mode report: no names, UUNs or repository link
-#   code/                 the repository at HEAD without its git history, names and accounts replaced
+#   code/                 the repository at HEAD without its git history or these build scripts, names replaced
 #   README.txt            what was hidden and why
 # It packs the last commit, so commit first. Needs tectonic or latexmk, pdftotext and zip.
 set -euo pipefail
@@ -25,7 +25,7 @@ cp -r "$PAPER"/. "$tmp/tex"
 cp "$tmp/tex/report.pdf" "$stage/report-anonymous.pdf"
 
 # 2. The code at HEAD, without history and without the named report.
-git -C "$ROOT" archive --prefix=code/ HEAD -- . ':(exclude)report/paper/report-named.*' | tar -x -C "$stage"
+git -C "$ROOT" archive --prefix=code/ HEAD -- . ':(exclude)report/paper/report-named.*' ':(exclude)report/build-*.sh' | tar -x -C "$stage"
 grep -rlIE "$IDS" "$stage/code" | while read -r f; do
   sed -i -E 's/Beyzaei, Benyamin and Halvachi, Paniz/Anonymous/g; s/Benyamin Beyzaei|Paniz Halvachi/Anonymous/g;
              s/benyaminbeyzaei/anonymous/g; s/s2865916|s2984817/sXXXXXXX/g; s/Benyamin|Paniz/the author/g' "$f"
