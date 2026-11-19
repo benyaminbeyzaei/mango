@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Anonymous submission: report/submission/mango-anonymous.zip (git-ignored), holding
 #   report-anonymous.pdf  the review-mode report: no names, UUNs or repository link
-#   code/                 the repository at HEAD without its git history or these build scripts, names replaced
+#   code/                 the repository at HEAD without its git history, these build scripts or the course's
+#                         rag-assets.zip; names replaced
 #   README.txt            what was hidden and why
 # It packs the last commit, so commit first. Needs tectonic or latexmk, pdftotext and zip.
 set -euo pipefail
@@ -25,7 +26,7 @@ cp -r "$PAPER"/. "$tmp/tex"
 cp "$tmp/tex/report.pdf" "$stage/report-anonymous.pdf"
 
 # 2. The code at HEAD, without history and without the named report.
-git -C "$ROOT" archive --prefix=code/ HEAD -- . ':(exclude)report/paper/report-named.*' ':(exclude)report/build-*.sh' | tar -x -C "$stage"
+git -C "$ROOT" archive --prefix=code/ HEAD -- . ':(exclude)report/paper/report-named.*' ':(exclude)report/build-*.sh' ':(exclude)rag-assets.zip' | tar -x -C "$stage"
 grep -rlIE "$IDS" "$stage/code" | while read -r f; do
   sed -i -E 's/Beyzaei, Benyamin and Halvachi, Paniz/Anonymous/g; s/Benyamin Beyzaei|Paniz Halvachi/Anonymous/g;
              s/benyaminbeyzaei/anonymous/g; s/s2865916|s2984817/sXXXXXXX/g; s/Benyamin|Paniz/the author/g' "$f"
@@ -36,7 +37,8 @@ Mango: anonymous submission for INFR11269 Machine Learning Systems.
 
 report-anonymous.pdf is the report in review mode. code/ is the repository without its git
 history. Author names, UUNs, the GitHub account and the repository link are hidden or replaced
-with "Anonymous" in both, for anonymous review.
+with "Anonymous" in both, for anonymous review. The course's data archive rag-assets.zip
+(196 MB, from the course repository ed-aisys/edin-mls-26-autumn) is left out for size.
 TXT
 
 # 3. Nothing identifying may remain, in the files or in the PDF's text.
