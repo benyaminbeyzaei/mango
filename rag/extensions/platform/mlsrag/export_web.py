@@ -7,10 +7,20 @@ import shutil
 import tempfile
 from pathlib import Path
 
+from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.testclient import TestClient
 
 from .api.app import create_app
 from .course import paths
+
+
+# The cached questions of the static site: the report's three methods, each a full judged run on the 125 test
+# questions whose complete traces (transcript, evidence, prompt, answer) are committed.
+SHOWCASE_RUNS = [
+    "20261114-1448-baseline-courseasr-test",
+    "20261116-2358-rerank-bge-m3-p20-test",
+    "20261114-1721-raptor-tree-gpt5-evidence-courseasr-test",
+]
 
 
 def static_path(path: str, query: dict | None = None) -> str:
@@ -44,7 +54,8 @@ def _export(client, out: Path):
     record_ids, cached = set(), []
     for run in get("/api/results")["runs"]:
         run_id = run["run_id"]
-        k = int(get(f"/api/results/{run_id}")["config"]["k"])
+        detail = get(f"/api/results/{run_id}")
+        k = int(detail["config"]["k"])
         items, offset, total = [], 0, 1
         while offset < total:
             page = get(f"/api/results/{run_id}/queries", offset=offset, limit=100)
@@ -52,8 +63,15 @@ def _export(client, out: Path):
             total, offset = page["total"], offset + 100
         for q in items:
             record_ids.update(q["artifacts"]["ranked_ids"][:k])
-        if items and all(q["artifacts"].get("answer") for q in items):
+        if run_id in SHOWCASE_RUNS:
+            if not all(q["artifacts"].get("answer") for q in items):
+                raise SystemExit(f"{run_id} is a showcase run but has queries without an answer")
+            m = detail["metrics"]
             cached.append({"run_id": run_id, "config_name": run["config_name"], "subset": run["subset"], "k": k,
+                           "transcripts": "our ASR" if "/course-" in (detail["config"].get("asr_cache") or "")
+                           else "whisper-1",
+                           "ndcg10": m["retrieval"]["NDCG@10"],
+                           "answer_score": (m.get("answers") or {}).get("normalized"),
                            "questions": [{"query_id": q["query_id"], "transcript": q["artifacts"]["transcript"]}
                                          for q in items]})
     # RAPTOR summary nodes (summary:...) are ranked like records but are not in the corpus: the live API 404s too
@@ -75,8 +93,17 @@ def _export(client, out: Path):
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(paths.data_dir / entry["audio_file"], dest)
 
-    cached.sort(key=lambda c: c["run_id"], reverse=True)  # run ids start with the date: newest first
+    if len(cached) != len(SHOWCASE_RUNS):
+        raise SystemExit(f"showcase runs missing from the results: {set(SHOWCASE_RUNS) - {c['run_id'] for c in cached}}")
+    cached.sort(key=lambda c: SHOWCASE_RUNS.index(c["run_id"]))
     (out / "static-api" / "cached-qa.json").write_text(json.dumps(cached), encoding="utf-8")
+
+    # The API reference, read-only: Swagger UI on the exported OpenAPI document, with "Try it out" switched off
+    (out / "static-api" / "openapi.json").write_bytes(client.get("/api-docs/openapi.json").content)
+    html = get_swagger_ui_html(openapi_url="/static-api/openapi.json", title="Mango API",
+                               swagger_favicon_url="/favicon.ico",
+                               swagger_ui_parameters={"supportedSubmitMethods": []})
+    (out / "api-docs.html").write_bytes(html.body)
 
     files = [p for p in (out / "static-api").rglob("*") if p.is_file()]
     size = sum(p.stat().st_size for p in files)

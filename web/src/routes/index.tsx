@@ -28,10 +28,6 @@ function Home() {
         transcript → retrieval → answer. Start with the{" "}
         <Link to="/docs" className="underline underline-offset-4">
           architecture
-        </Link>{" "}
-        or the{" "}
-        <Link to="/guide" className="underline underline-offset-4">
-          evaluator guide
         </Link>
         .
       </p>

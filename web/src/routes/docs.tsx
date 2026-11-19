@@ -11,15 +11,13 @@ function Docs() {
   return (
     <div className="flex flex-col gap-6">
       <PipelineDiagram />
-      {!STATIC && (
-        <p className="text-sm text-muted-foreground">
-          Every endpoint, with a form to try it:{" "}
-          <a href="/api-docs" className="underline underline-offset-4">
-            Mango API reference
-          </a>
-          .
-        </p>
-      )}
+      <p className="text-sm text-muted-foreground">
+        Every endpoint{STATIC ? "" : ", with a form to try it"}:{" "}
+        <a href="/api-docs" className="underline underline-offset-4">
+          Mango API reference (Swagger)
+        </a>
+        .
+      </p>
       <Markdown>{architecture}</Markdown>
     </div>
   )

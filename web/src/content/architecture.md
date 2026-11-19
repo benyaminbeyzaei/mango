@@ -16,7 +16,7 @@ The course code in `rag/src/` is used unchanged. `mlsrag` (in `rag/extensions/pl
 
 ## The modes
 
-- **Docs, Models, Guide**: reference pages; Models shows what the running API reports.
+- **Docs, Models**: reference pages (Docs links the API reference); Models shows what the API reports.
 - **Results**: browse saved runs (20-question quick checks hidden unless you pick `practice-20` in the filter) and compare their retrieval quality, answer scores and cost.
 - **Questions**: listen to each benchmark question and compare the whisper-1 transcript with our own ASR's, word by word.
 - **Interactive**: ask one question by text or audio and see every stage's output and timing.

@@ -110,16 +110,21 @@ def slim_trace(row: dict, judge: dict) -> dict:
         if duration is not None:
             spans.append({"name": name, "start_ms": start, "duration_ms": duration, "attrs": {}})
             start += duration
-    j = judge.get(row["query_id"])
-    return {
+    return with_judge({
         "query_id": row["query_id"], "slim": True, "spans": spans,
         "counters": {"rerank.pool": row["rerank_pool"], "rerank.truncated": row["rerank_truncated"]},
         "cost": {}, "resources": {"wall_ms": ms["end_to_end"]},
         "artifacts": {"transcript": "", "ranked_ids": row["context_ids"], "scores": [], "prompt": "", "answer": None},
         "metrics": {k: v for k, v in row.items() if "@" in k},
-        **({"judge": {k: j[k] for k in ["correctness", "grounding", "completeness", "normalised_answer_score"]}}
-           if j else {}),
-    }
+    }, judge)
+
+
+def with_judge(trace: dict, judge: dict) -> dict:
+    """The trace with its judge scores (from judge/answer_judge_per_query.jsonl), if the run was judged."""
+    j = judge.get(trace["query_id"])
+    if j:
+        trace["judge"] = {k: j[k] for k in ["correctness", "grounding", "completeness", "normalised_answer_score"]}
+    return trace
 
 
 def words(text: str) -> list[str]:
@@ -282,14 +287,14 @@ def create_app(web_dir=None, results_dir=None, data_dir=None, cache_dir=None) ->
         if offset < 0 or not 1 <= limit <= 100:
             raise HTTPException(400, "offset >= 0 and 1 <= limit <= 100")
         folder = run_dir(results_root, run_id)
+        judged = folder / "judge" / "answer_judge_per_query.jsonl"
+        judge = {j["query_id"]: j for j in map(json.loads, judged.read_text(encoding="utf-8").splitlines())
+                 } if judged.exists() else {}
         if (folder / "queries.jsonl").exists():
             lines = (folder / "queries.jsonl").read_text(encoding="utf-8").splitlines()
-            items = [json.loads(line) for line in lines[offset: offset + limit]]
+            items = [with_judge(json.loads(line), judge) for line in lines[offset: offset + limit]]
         elif (folder / "per_query.jsonl").exists():
             lines = (folder / "per_query.jsonl").read_text(encoding="utf-8").splitlines()
-            judged = folder / "judge" / "answer_judge_per_query.jsonl"
-            judge = {j["query_id"]: j for j in map(json.loads, judged.read_text(encoding="utf-8").splitlines())
-                     } if judged.exists() else {}
             items = [slim_trace(json.loads(line), judge) for line in lines[offset: offset + limit]]
         else:
             raise HTTPException(404, f"run {run_id!r} has no per-query file")

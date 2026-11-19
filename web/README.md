@@ -1,7 +1,7 @@
 # Mango: the website
 
 Mango is a Vite + React + TypeScript app (shadcn preset `b1Q5GC`, TanStack Router and Query) in front of
-the mlsrag API. Pages: Docs, Models, Results, Questions, Interactive, Guide.
+the mlsrag API. Pages: Docs, Models, Results, Questions, Interactive.
 
 ## Run
 
@@ -85,9 +85,14 @@ a trace carries a `judge` field.
 
 A read-only copy of the site that runs with no API, served at https://mango.benyaminbeyzaei.fyi. It is built
 with `VITE_STATIC=1`: every API read becomes a JSON file under `dist/static-api/` (path rule:
-`staticPath` in `src/api/client.ts`), written by `mlsrag export-web`. It makes no model calls. The
-Interactive page shows a notice and answers only cached questions: pick a committed run whose
-`queries.jsonl` has answers, then one of its questions; the stored trace is shown like a live answer.
+`staticPath` in `src/api/client.ts`), written by `mlsrag export-web`. It makes no model calls.
+Notices are dialogs (`components/notice-dialog.tsx`, once per browser session). Interactive answers only cached
+questions, picked in one dialog (`components/cached-question-dialog.tsx`): one of three full judged evaluations on the
+125 test questions (`SHOWCASE_RUNS` in `mlsrag/export_web.py`; their complete `queries.jsonl` traces are committed),
+then one of its questions; the stored trace is shown like a live answer. On Questions, "Ask with whisper-1
+transcript" is off and "Ask with our ASR transcript" opens the stored answer from a random one of those runs
+(`/interactive?run=…&q=…`). The API reference is Swagger UI on the exported OpenAPI document, read-only
+(`/api-docs`).
 
 ```bash
 VITE_STATIC=1 pnpm --dir web build
@@ -103,5 +108,5 @@ Workers" template, scoped to the `benyaminbeyzaei.fyi` zone) and `CLOUDFLARE_ACC
 ## Layout
 
 `src/routes/` pages (file-based routes), `src/components/` shared components (`ui/` from shadcn),
-`src/api/` the client, `src/content/` the Markdown shown on Docs and Guide.
+`src/api/` the client, `src/content/` the Markdown shown on Docs.
 The admin token from the settings dialog is kept in `localStorage` and sent as `X-Admin-Token`.
