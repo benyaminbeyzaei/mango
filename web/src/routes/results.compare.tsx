@@ -75,7 +75,11 @@ function Compare() {
       </p>
     )
   const setSearch = (next: Partial<Search>) =>
-    navigate({ search: (s) => ({ ...s, ...next }), replace: true })
+    navigate({
+      search: (s) => ({ ...s, ...next }),
+      replace: true,
+      resetScroll: false,
+    })
   const failed = runs.find((r) => r.error)
   if (failed) return <p>{failed.error!.message}</p>
   if (runs.some((r) => !r.data))

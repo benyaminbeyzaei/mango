@@ -61,8 +61,10 @@
 % report-named.tex defines \named before reading this file; without it the report stays anonymous.
 \ifdefined\named
   \newcommand{\repocite}{\citep{mango2026}}
+  \newcommand{\sitenote}{Our cached results are available to explore at \url{https://mango.benyaminbeyzaei.fyi}.}
 \else
   \newcommand{\repocite}{\citep{mango2026anon}}
+  \newcommand{\sitenote}{Our cached results are available to explore on a public website; its address is hidden for anonymous review.}
 \fi
 \newcommand{\mango}{\textsc{Mango}}
 \newcommand{\up}{\textcolor{asr3}{\blacktriangle}}
@@ -127,7 +129,7 @@ Several recent software products, such as LlamaIndex~\citep{liu2022llamaindex}, 
 \vspace{-0.5em}
 For the first stage, besides completing the four CUDA kernels of the course's ASR model, GLM-ASR-Nano~\citep{zai2025glmasr} (Section~\ref{sec:hw1}), we compared its transcripts with those of whisper-1~\citep{openai2022whisper}, a widely used ASR model, and measured how the differences carry through the whole system (Section~\ref{sec:asr-swap}). For the second, we implemented retrieval methods from earlier work, from lexical search and topic routing to summary trees and rerankers, and dropped each from further evaluation once it was clearly worse, too costly, or no different from a cheaper method. For the third, the strongest candidates went through the full pipeline and were scored with the course's own evaluator. Here we found that the LLM judge is too noisy to separate them: regenerating and re-judging identical prompts changed the score on about half of them, and the score barely depends on whether a relevant record was retrieved (Section~\ref{sec:results}).
 \\
-To run these comparisons we built \mango{}, an end-to-end system in which the ASR model, the retriever, the context builder and the LLM are each a single configuration choice, with an interactive interface to run any configuration and compare runs. Beyond the coursework tasks themselves, the study compares retrieval families under the same controls and finds a change that beats the supplied baseline on retrieval: a larger cross-encoder reranker raises NDCG@10 from 0.402 to 0.465.
+To run these comparisons we built \mango{},\footnote{\sitenote} an end-to-end system in which the ASR model, the retriever, the context builder and the LLM are each a single configuration choice, with an interactive interface to run any configuration and compare runs. Beyond the coursework tasks themselves, the study compares retrieval families under the same controls and finds a change that beats the supplied baseline on retrieval: a larger cross-encoder reranker raises NDCG@10 from 0.402 to 0.465.
 
 
 \section{ASR on our own CUDA kernels (Homework 1)}
@@ -149,13 +151,13 @@ The GEMM therefore sets the transcription time. On the encoder's \texttt{fc1} ou
 \label{sec:hw1-questions}
  
 \textit{Task 1, Q3: why rotate $q$ and $k$ in one launch instead of two?}
-\vspace{0.5em}
+\vspace{0.25em}
 \\
 One launch halves a fixed cost that dominates small calls. The model calls RoPE 396 times per transcription: once in each of the 32 encoder layers, plus 28 decoder layers $\times$ 13 decoder passes. A call averages $2.5\,\text{ms}/396 \approx 6.3\,\mu$s, and the decoder-sized test case takes only 3\,$\mu$s of kernel time. That is the same order as the overhead of launching a kernel at all, so a second launch per call would cost roughly as much again as RoPE's entire 2.5\,ms. One grid also fills the GPU better. In the decoder, about 64 tokens give 1024 $q$ rows and 256 $k$ rows, which is 81,920 pairs in 320 blocks of 256 threads. On our 60-SM slice, with up to 8 such blocks per SM, all 320 blocks run in a single wave. Two launches would run 256 $q$ blocks and then 64 $k$ blocks, and the second wave would leave most SMs idle.
-\vspace{1.3em}
+\vspace{0.6em}
 \\
 \textit{Task 2, Q4: what goes wrong in LayerNorm without the final \texttt{\_\_syncthreads()}?}
-\vspace{0.5em}
+\vspace{0.25em}
 \\
 LayerNorm calls \texttt{block\_reduce\_sum} twice, once for the mean and once for the variance, and both calls use the same shared array \texttt{partial[]}. Without the final barrier, a fast warp 0 and a slow warp 5 can interleave like this:
 \vspace{-0.7em}
@@ -169,16 +171,16 @@ LayerNorm calls \texttt{block\_reduce\_sum} twice, once for the mean and once fo
 \end{enumerate}
 \vspace{-0.7em}
 The barrier inside the second call does not help, because warp 0 writes \texttt{partial[0]} before reaching it. Tests usually still pass, because warps rarely drift that far apart. \texttt{compute-sanitizer -{}-tool racecheck} still reports the hazard, because it checks the order of accesses rather than the result.
-\vspace{1.3em}
+\vspace{0.6em}
 \\
 \textit{Task 3, Q4: why must every thread reach both \texttt{\_\_syncthreads()}, even outside $y$?}
-\vspace{0.5em}
+\vspace{0.25em}
 \\
 There are two reasons. First, out-of-range threads are still loaders: thread $(t_y, t_x)$ loads \texttt{xs[ty][tx]} and \texttt{ws[ty][tx]}, which the whole block uses. For \texttt{lm\_head} ($M=1$) only threads with $t_y=0$ have an output row, yet threads with $t_y = 1,\dots,15$ load weight-tile rows 1--15 that every output column needs; returning early would leave those entries stale. Second, CUDA defines \texttt{\_\_syncthreads()} only when every thread of the block reaches it, and a skipped barrier can hang the block or release early and race on the shared tiles. So our kernel loads zeros outside the matrices and checks bounds only at the final store.
-\vspace{1.3em}
+\vspace{0.6em}
 \\
 \textit{Task 4, Q3: what is \texttt{corr} when a tile does not raise the maximum, and when can $m_{\text{new}}$ be $-\infty$?}
-\vspace{0.5em}
+\vspace{0.25em}
 \\
 When the maximum does not rise, $\text{corr} = \exp(m - m_{\text{new}}) = \exp(0) = 1$ exactly, so the running sum $l$ and the output \texttt{acc} keep their values. $m_{\text{new}} = -\infty$ only while a warp has seen no visible key. In our kernel, that happens only for the spare warps of a block's last group, whose query index is at least \texttt{seq\_q}. They have \texttt{last\_key} $=-1$. An active query always sees key 0 in the first tile, because $\texttt{seq\_q} \le \texttt{seq\_k}$ even under the causal mask. Unguarded, $\exp(-\infty - (-\infty))$ would be NaN and would poison $l$ and \texttt{acc}, so the kernel skips the update while $m_{\text{new}} = -\infty$. On the first visible tile, $\text{corr} = \exp(-\infty - m_{\text{new}}) = 0$ correctly clears the still-empty state.
 

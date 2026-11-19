@@ -93,7 +93,7 @@ function Questions() {
         sends either transcript to the Interactive page as a typed question.
       </p>
       {STATIC && (
-        <NoticeDialog id="static-questions" title="Cached version">
+        <NoticeDialog title="Cached version">
           This version cannot ask new questions. &ldquo;Ask with whisper-1
           transcript&rdquo; is turned off; &ldquo;Ask with our ASR
           transcript&rdquo; opens the stored answer to that question from one of

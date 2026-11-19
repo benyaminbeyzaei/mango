@@ -240,7 +240,6 @@ function Interactive() {
         {STATIC && (
           <>
             <NoticeDialog
-              id="static-interactive"
               title="Cached version"
               action={{
                 label: "Choose a cached question",

@@ -1,5 +1,4 @@
-// A notice shown as a dialog: it opens by itself once per browser session (per id), and the small
-// button it renders opens it again. An optional action runs after the dialog closes.
+// A notice shown as a dialog, opened by the small button it renders. An optional action runs after it closes.
 import { useState, type ReactNode } from "react"
 import { InfoIcon } from "lucide-react"
 
@@ -15,45 +14,21 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
-function seen(key: string) {
-  try {
-    return sessionStorage.getItem(key) === "1"
-  } catch {
-    return false // storage blocked: show the notice
-  }
-}
-
-function markSeen(key: string) {
-  try {
-    sessionStorage.setItem(key, "1")
-  } catch {
-    // storage blocked: the notice shows again next time, which is fine
-  }
-}
-
 export function NoticeDialog({
-  id,
   title,
   children,
   triggerLabel = "About this version",
   action,
 }: {
-  id: string
   title: string
   children: ReactNode
   triggerLabel?: string
   action?: { label: string; onClick: () => void }
 }) {
-  const key = `notice:${id}`
-  const [open, setOpen] = useState(() => !seen(key))
-
-  function change(next: boolean) {
-    setOpen(next)
-    if (!next) markSeen(key)
-  }
+  const [open, setOpen] = useState(false)
 
   return (
-    <Dialog open={open} onOpenChange={change}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={<Button variant="ghost" size="sm" className="self-start" />}
       >
@@ -69,7 +44,7 @@ export function NoticeDialog({
           {action && (
             <Button
               onClick={() => {
-                change(false)
+                setOpen(false)
                 action.onClick()
               }}
             >
