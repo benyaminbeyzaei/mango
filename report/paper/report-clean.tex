@@ -1,6 +1,6 @@
-% A clean copy of report.tex without the line-number ruler. report.tex stays in the review mode
+% A clean copy of report.tex with the authors' names and without the line-number ruler. report.tex stays in the review mode
 % the course requires: compile report.tex itself for the submission.
-\AddToHook{begindocument/before}{\iclrfinalcopy}
+\AddToHook{begindocument/before}{\iclrfinalcopy\author{Benyamin Beyzaei \And Paniz Halvachi}}
 % XeTeX (e.g. tectonic) has no Type 1 Times: use TeX Gyre, the same metrics. pdflatex skips this.
 \ifdefined\XeTeXrevision
   \AddToHook{package/times/after}{\RequirePackage{fontspec}%
