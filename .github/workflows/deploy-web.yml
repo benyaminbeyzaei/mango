@@ -2,14 +2,18 @@
 # as a Cloudflare Worker with static assets only. Secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
 name: Deploy website
 
+# Deploys on every push to main that changes something the built site depends on.
 on:
   push:
     branches: [main]
     paths:
-      - web/**
-      - rag/extensions/results/**
-      - rag/extensions/transcripts/**
-      - rag/extensions/platform/**
+      - web/**                            # the site
+      - rag/extensions/platform/**        # mlsrag: the API the export calls, its configs and subsets
+      - rag/extensions/results/**         # the committed runs
+      - rag/extensions/transcripts/**     # the Questions page
+      - rag/src/**                        # the course code mlsrag imports (corpus loading)
+      - rag/scripts/install_assets.py
+      - rag-assets.zip                    # the course data: corpus records and question audio
       - .github/workflows/deploy-web.yml
   workflow_dispatch:
 
