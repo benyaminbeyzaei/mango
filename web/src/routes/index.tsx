@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link, createFileRoute } from "@tanstack/react-router"
 
-import { api } from "@/api/client"
+import { STATIC, api } from "@/api/client"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -46,6 +46,7 @@ function Home() {
         {health.data && (
           <>
             <Badge>{health.data.status}</Badge>
+            {STATIC && <Badge variant="secondary">Cached version</Badge>}
             <span className="font-mono text-xs text-muted-foreground">
               commit {health.data.git_commit ?? "unknown"}
             </span>

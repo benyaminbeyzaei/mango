@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { SendIcon } from "lucide-react"
 
-import { api } from "@/api/client"
+import { api, audioUrl } from "@/api/client"
 import { Line, Loading } from "@/components/page-skeletons"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
@@ -182,7 +182,7 @@ function Questions() {
             <audio
               controls
               preload="none"
-              src={`/api/questions/${q.query_id}/audio`}
+              src={audioUrl(q.query_id)}
               className="h-10 max-w-full"
               aria-label={`Audio of ${q.query_id}`}
             />

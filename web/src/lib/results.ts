@@ -2,6 +2,7 @@
 import { useQueries, useQuery } from "@tanstack/react-query"
 
 import { api } from "@/api/client"
+import type { QueryResponse } from "@/api/queries"
 
 type Metrics = {
   retrieval: Record<string, number>
@@ -43,6 +44,21 @@ export type QueryTrace = {
   judge?: Record<string, unknown>
 }
 
+// A stored trace in the shape of a live answer. The API keeps the record text out of the trace;
+// QueryDetail loads it per record.
+export function traceToResponse(q: QueryTrace, k: number): QueryResponse {
+  const a = q.artifacts
+  return {
+    answer: a.answer,
+    transcript: a.transcript,
+    prompt: a.prompt,
+    retrieved: a.ranked_ids
+      .slice(0, k)
+      .map((id, i) => ({ record_id: id, score: a.scores[i], text: "" })),
+    trace: q as unknown as Record<string, unknown>,
+  }
+}
+
 export function useResults() {
   return useQuery({
     queryKey: ["results"],
@@ -54,7 +70,7 @@ export function useResults() {
   })
 }
 
-async function fetchRun(runId: string) {
+export async function fetchRun(runId: string) {
   const { data, error } = await api.GET("/api/results/{run_id}", {
     params: { path: { run_id: runId } },
   })
@@ -63,7 +79,7 @@ async function fetchRun(runId: string) {
 }
 
 // Every query of a run; the API pages them 100 at a time.
-async function fetchQueries(runId: string) {
+export async function fetchQueries(runId: string) {
   const items: QueryTrace[] = []
   for (let offset = 0; ; offset += 100) {
     const { data, error } = await api.GET("/api/results/{run_id}/queries", {

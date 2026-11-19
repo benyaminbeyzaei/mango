@@ -1,0 +1,11 @@
+// The static Mango website (VITE_STATIC=1 build + `mlsrag export-web`): a Worker with assets only and no
+// script, so requests are free. Unknown paths serve index.html so client routes like /results/<run> load.
+// Deployed by .github/workflows/deploy-web.yml.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "mango-web",
+  "compatibility_date": "2026-09-01",
+  "workers_dev": false,
+  "routes": [{ "pattern": "mango.benyaminbeyzaei.fyi", "custom_domain": true }],
+  "assets": { "directory": "./dist", "not_found_handling": "single-page-application" },
+}

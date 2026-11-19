@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useLiveQuery } from "dexie-react-hooks"
 import {
   MessagesSquareIcon,
   MicIcon,
+  PlusIcon,
   SendIcon,
   SlidersHorizontalIcon,
   SquareIcon,
   XIcon,
 } from "lucide-react"
 
+import { STATIC } from "@/api/client"
 import { askAudio, askText, useConfigs, type RunConfig } from "@/api/queries"
 import { ChatList } from "@/components/chat-list"
 import { ConfigChips, ConfigPicker } from "@/components/config-picker"
@@ -33,10 +36,29 @@ import {
 } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
 import { db, type Message } from "@/lib/db"
+import { configLabel, runDate } from "@/lib/labels"
+import { fetchQueries, fetchRun, traceToResponse } from "@/lib/results"
 import { getConfirmTranscript, getDefaultPreset } from "@/lib/settings"
 import { useRecorder } from "@/lib/use-recorder"
 
+// One stored answer of a committed run (the static build has no API to ask).
+type Cached = { runId: string; queryId: string; transcript: string }
+type CachedRun = {
+  run_id: string
+  config_name: string
+  subset: string
+  k: number
+  questions: { query_id: string; transcript: string }[]
+}
+
+async function askCached(c: Cached, k: number) {
+  const q = (await fetchQueries(c.runId)).find((x) => x.query_id === c.queryId)
+  if (!q) throw new Error(`no query ${c.queryId} in ${c.runId}`)
+  return traceToResponse(q, k)
+}
+
 // ?ask=<text> (from the Questions page) asks that text once, as if typed here.
+// In the static build it selects the cached question with that transcript instead.
 export const Route = createFileRoute("/interactive")({
   validateSearch: (s: Record<string, unknown>): { ask?: string } => ({
     ask: typeof s.ask === "string" && s.ask.trim() ? s.ask : undefined,
@@ -65,41 +87,85 @@ function Interactive() {
   const end = useRef<HTMLDivElement>(null)
   const sending = useRef(false)
 
+  // static build: the cached run and question picked in place of the text box
+  const [runId, setRunId] = useState("")
+  const [queryId, setQueryId] = useState("")
+  const cachedRuns = useQuery({
+    queryKey: ["cached-qa"],
+    enabled: STATIC,
+    queryFn: async () => {
+      const res = await fetch("/static-api/cached-qa.json")
+      if (!res.ok) throw new Error("could not load the cached questions")
+      return (await res.json()) as CachedRun[]
+    },
+  })
+  // static ?ask=<text>: the first cached question with that transcript is selected until the user picks
+  const { ask } = Route.useSearch()
+  const navigate = useNavigate({ from: Route.fullPath })
+  const want = STATIC ? ask?.trim().toLowerCase() : undefined
+  const askRun = want
+    ? cachedRuns.data?.find((r) =>
+        r.questions.some((q) => q.transcript.trim().toLowerCase() === want)
+      )
+    : undefined
+  const cachedRun =
+    cachedRuns.data?.find((r) => r.run_id === runId) ??
+    askRun ??
+    cachedRuns.data?.[0]
+  const cachedQuestion =
+    cachedRun?.questions.find((q) => q.query_id === queryId) ??
+    cachedRun?.questions.find(
+      (q) => q.transcript.trim().toLowerCase() === want
+    ) ??
+    cachedRun?.questions[0]
+  const run = useQuery({
+    queryKey: ["run", cachedRun?.run_id],
+    enabled: STATIC && !!cachedRun,
+    queryFn: () => fetchRun(cachedRun!.run_id),
+  })
+
   const preset =
     configs.data?.find((c) => c.name === getDefaultPreset()) ??
     configs.data?.[0]
-  const config = picked ?? preset?.config ?? null
+  const config = STATIC
+    ? ((run.data?.config as RunConfig | undefined) ?? null)
+    : (picked ?? preset?.config ?? null)
 
   useEffect(() => {
     end.current?.scrollIntoView({ block: "end" })
   }, [messages?.length, waitingSince])
 
+  // null starts a new question and keeps the chosen config; a past question brings back its config
   function selectChat(id: number | null) {
     setChatId(id)
     setSheetOpen(false)
     const chat = chats?.find((c) => c.id === id)
-    setPicked(chat ? chat.config : null)
+    if (chat) setPicked(chat.config)
   }
 
   // One request at a time and never retried: the server answers one query at a time and a retry costs ELM calls.
-  async function send(question: { text: string } | { audio: Blob }) {
+  // Each question is its own entry in the history (no chat context).
+  async function send(
+    question: { text: string } | { audio: Blob } | { cached: Cached }
+  ) {
     if (!config || sending.current) return
     sending.current = true // set before the first await, so a second submit cannot slip through
     setWaitingSince(Date.now())
     const voice = "audio" in question
+    const text =
+      "text" in question
+        ? question.text
+        : "cached" in question
+          ? question.cached.transcript
+          : ""
     try {
-      let id = chatId
-      if (id === null) {
-        const title = voice ? "Voice question" : question.text
-        id = await db.chats.add({ title, created: Date.now(), config })
-        setChatId(id)
-      } else {
-        await db.chats.update(id, { config })
-      }
+      const title = voice ? "Voice question" : text
+      const id = await db.chats.add({ title, created: Date.now(), config })
+      setChatId(id)
       await db.messages.add({
         chatId: id,
         role: "user",
-        text: voice ? "" : question.text,
+        text,
         audio: voice ? question.audio : undefined,
         config,
         created: Date.now(),
@@ -115,7 +181,7 @@ function Interactive() {
             role: "assistant",
             text: "",
             config,
-            input: voice ? "voice" : "text",
+            input: voice || "cached" in question ? "voice" : "text",
             created: Date.now(),
             ...fields,
           } as Message)
@@ -125,9 +191,12 @@ function Interactive() {
             })
         })
       try {
-        const response = voice
-          ? await askAudio(config, question.audio)
-          : await askText(config, question.text)
+        const response =
+          "audio" in question
+            ? await askAudio(config, question.audio)
+            : "cached" in question
+              ? await askCached(question.cached, Number(config.k))
+              : await askText(config, question.text)
         await addReply({
           text: response.answer ?? "",
           response,
@@ -136,7 +205,7 @@ function Interactive() {
       } catch (err) {
         await addReply({
           error:
-            err instanceof TypeError
+            err instanceof TypeError && !STATIC
               ? "Could not reach the API. Is `mlsrag serve` running?"
               : (err as Error).message,
         })
@@ -147,10 +216,8 @@ function Interactive() {
     }
   }
 
-  const { ask } = Route.useSearch()
-  const navigate = useNavigate({ from: Route.fullPath })
   useEffect(() => {
-    if (!ask || !config) return
+    if (STATIC || !ask || !config) return
     navigate({ search: {}, replace: true }) // so a reload does not ask again
     send({ text: ask.trim() })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once per ?ask, when a config is ready
@@ -175,10 +242,10 @@ function Interactive() {
                 <Button variant="outline" size="sm" className="md:hidden" />
               }
             >
-              <MessagesSquareIcon /> Chats
+              <MessagesSquareIcon /> History
             </SheetTrigger>
             <SheetContent side="left" className="overflow-y-auto p-4">
-              <SheetTitle>Chats</SheetTitle>
+              <SheetTitle>History</SheetTitle>
               {chatList}
             </SheetContent>
           </Sheet>
@@ -186,20 +253,39 @@ function Interactive() {
             className="truncate font-heading text-2xl font-medium"
             title={chats?.find((c) => c.id === chatId)?.title}
           >
-            {chats?.find((c) => c.id === chatId)?.title ?? "New chat"}
+            {chats?.find((c) => c.id === chatId)?.title ?? "New question"}
           </h1>
         </div>
+
+        {STATIC && (
+          <p
+            role="note"
+            className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm"
+          >
+            This version does not support the interactive mode, try some cached
+            Q&amp;A
+          </p>
+        )}
 
         <div className="flex flex-1 flex-col gap-4">
           {chatId === null && (
             <p className="text-sm text-muted-foreground">
-              Ask a question by typing or recording. Each question is answered
-              on its own with the chosen config; open "Full detail" under an
-              answer to see the transcript, evidence, prompt and trace.
+              {STATIC
+                ? "Pick a run and one of its questions to see the stored answer."
+                : "Ask a question by typing or recording. It is answered with the chosen config."}{" "}
+              Open "Full detail" under an answer to see the transcript,
+              evidence, prompt and trace.
             </p>
           )}
           {messages?.map((m) => (
-            <MessageView key={m.id} message={m} onEdit={setText} />
+            <MessageView
+              key={m.id}
+              message={m}
+              onEdit={(transcript) => {
+                selectChat(null)
+                setText(transcript)
+              }}
+            />
           ))}
           {waitingSince !== null && <Waiting since={waitingSince} />}
           <div ref={end} />
@@ -217,7 +303,7 @@ function Interactive() {
                 <Skeleton className="h-6 w-28" />
               </span>
             )}
-            {config && (
+            {config && !STATIC && (
               <Dialog>
                 <DialogTrigger
                   render={
@@ -238,14 +324,74 @@ function Interactive() {
               </Dialog>
             )}
           </div>
-          {configs.isError && (
+          {configs.isError && !STATIC && (
             <p className="text-sm text-destructive">{configs.error.message}</p>
+          )}
+          {cachedRuns.isError && (
+            <p className="text-sm text-destructive">
+              {cachedRuns.error.message}
+            </p>
           )}
           {recorder.error && (
             <p className="text-sm text-destructive">{recorder.error}</p>
           )}
 
-          {recorder.recording ? (
+          {chatId !== null ? (
+            <Button className="self-start" onClick={() => selectChat(null)}>
+              <PlusIcon /> New question
+            </Button>
+          ) : STATIC ? (
+            <form
+              className="flex flex-wrap items-end gap-2"
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (!cachedRun || !cachedQuestion || busy) return
+                send({
+                  cached: {
+                    runId: cachedRun.run_id,
+                    queryId: cachedQuestion.query_id,
+                    transcript: cachedQuestion.transcript,
+                  },
+                })
+              }}
+            >
+              <label className="flex min-w-0 flex-col gap-1 text-xs text-muted-foreground">
+                Cached run
+                <select
+                  value={cachedRun?.run_id ?? ""}
+                  onChange={(e) => {
+                    setRunId(e.target.value)
+                    setQueryId("")
+                  }}
+                  className="h-9 rounded-lg border border-input bg-background px-2 text-sm text-foreground"
+                >
+                  {cachedRuns.data?.map((r) => (
+                    <option key={r.run_id} value={r.run_id}>
+                      {configLabel(r.config_name)}, {r.subset},{" "}
+                      {runDate(r.run_id)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs text-muted-foreground">
+                Question
+                <select
+                  value={cachedQuestion?.query_id ?? ""}
+                  onChange={(e) => setQueryId(e.target.value)}
+                  className="h-9 w-full rounded-lg border border-input bg-background px-2 text-sm text-foreground"
+                >
+                  {cachedRun?.questions.map((q) => (
+                    <option key={q.query_id} value={q.query_id}>
+                      {q.transcript}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <Button type="submit" disabled={busy || !cachedQuestion}>
+                <SendIcon /> Ask
+              </Button>
+            </form>
+          ) : recorder.recording ? (
             <div className="flex items-center gap-2">
               <span
                 className="size-2 animate-pulse rounded-full bg-destructive"

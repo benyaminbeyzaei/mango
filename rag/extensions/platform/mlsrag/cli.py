@@ -1,4 +1,4 @@
-"""mlsrag run | transcribe | make-subsets | judge | estimate | matrix | compare | fit-map | asr-compare | preprocess | serve | openapi"""
+"""mlsrag run | transcribe | make-subsets | judge | estimate | matrix | compare | fit-map | asr-compare | preprocess | serve | openapi | export-web"""
 import argparse
 import json
 from pathlib import Path
@@ -90,7 +90,16 @@ def main(argv=None):
     oa = sub.add_parser("openapi", help="write the API's OpenAPI document")
     oa.add_argument("--out", default=str(OPENAPI_PATH))
 
+    ew = sub.add_parser("export-web", help="write the API responses the website reads, for the static build")
+    ew.add_argument("--out", required=True, help="the built site (web/dist); files go under <out>/static-api")
+    ew.add_argument("--transcripts", help="folder with the whisper1-*.jsonl and course-*.jsonl transcript files "
+                                          "(default: rag/extensions/transcripts)")
+
     args = ap.parse_args(argv)
+    if args.command == "export-web":
+        from .export_web import export
+
+        return export(Path(args.out), args.transcripts and Path(args.transcripts))
     if args.command == "preprocess":
         return preprocess(args)
     if args.command in ("serve", "openapi"):
