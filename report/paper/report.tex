@@ -34,6 +34,12 @@
 % ============================================================
 
 \usepackage{iclr2027_conference,times}
+% XeTeX (e.g. tectonic) has no Type 1 Times: use TeX Gyre, the same metrics. pdflatex skips this.
+\ifdefined\XeTeXrevision
+  \usepackage{fontspec}
+  \setmainfont{texgyretermes}[Extension=.otf,UprightFont=*-regular,BoldFont=*-bold,ItalicFont=*-italic,BoldItalicFont=*-bolditalic]
+  \setsansfont{texgyreheros}[Extension=.otf,UprightFont=*-regular,BoldFont=*-bold,ItalicFont=*-italic,BoldItalicFont=*-bolditalic]
+\fi
 
 \usepackage{hyperref}
 \usepackage{url}
@@ -49,6 +55,17 @@
 \definecolor{asr4}{HTML}{D66235}
 \definecolor{asr5}{HTML}{DA971F}
 \usepackage[varqu,scaled=0.95]{zi4} % Inconsolata for code
+\ifdefined\XeTeXrevision
+  \setmonofont{Inconsolatazi4}[Extension=.otf,UprightFont=*-Regular,BoldFont=*-Bold,Scale=0.95]
+\fi
+% report-named.tex defines \named before reading this file; without it the report stays anonymous.
+\ifdefined\named
+  \newcommand{\repocite}{\citep{mango2026}}
+  \newcommand{\ownpart}{Benyamin Beyzaei's part of the work}
+\else
+  \newcommand{\repocite}{\citep{mango2026anon}}
+  \newcommand{\ownpart}{one author's part of the work}
+\fi
 \newcommand{\mango}{\textsc{Mango}}
 \newcommand{\up}{\textcolor{asr3}{\blacktriangle}}
 \newcommand{\eq}{\textcolor{gray}{=}}
@@ -112,7 +129,7 @@ Many companies want to answer their customers' spoken questions automatically, f
 \vspace{-0.5em}
 For the first stage, besides completing the four CUDA kernels of the course's ASR model, GLM-ASR-Nano~\citep{zai2025glmasr} (Section~\ref{sec:hw1}), we compared its transcripts with those of whisper-1~\citep{openai2022whisper}, a widely used ASR model, and measured how the differences carry through the whole system (Section~\ref{sec:asr-swap}). For the second, we implemented retrieval methods from earlier work, from lexical search and topic routing to summary trees and rerankers, and dropped each from further evaluation once it was clearly worse, too costly, or no different from a cheaper method. For the third, the strongest candidates went through the full pipeline and were scored with the course's own evaluator. Here we found that the LLM judge is too noisy to separate them: regenerating and re-judging identical prompts changed the score on about half of them, and the score barely depends on whether a relevant record was retrieved (Section~\ref{sec:results}).
 \\
-To run these comparisons we built \mango{}~\citep{mango2026}, an end-to-end system in which the ASR model, the retriever, the context builder and the LLM are each a single configuration choice, with an interactive interface to run any configuration and compare runs. Beyond the coursework tasks themselves, the study compares retrieval families under the same controls and finds a change that beats the supplied baseline on retrieval: a larger cross-encoder reranker raises NDCG@10 from 0.402 to 0.465.
+To run these comparisons we built \mango{}~\repocite{}, an end-to-end system in which the ASR model, the retriever, the context builder and the LLM are each a single configuration choice, with an interactive interface to run any configuration and compare runs. Beyond the coursework tasks themselves, the study compares retrieval families under the same controls and finds a change that beats the supplied baseline on retrieval: a larger cross-encoder reranker raises NDCG@10 from 0.402 to 0.465.
 
 
 \section{ASR on our own CUDA kernels (Homework 1)}
@@ -346,7 +363,7 @@ The retrieval gains did not reach the judged answers. We read this as a limit of
 \section{Complete Homework 1 outputs}
 \label{appendix:hw1-outputs}
  
-All outputs below come from the same session on the GPU node. They are also in our repository~\citep{mango2026}, in \texttt{hw1-asr/outputs/}.
+All outputs below come from the same session on the GPU node. They are also in our repository~\repocite{}, in \texttt{hw1-asr/outputs/}.
 \vspace{0.5em}
 \\
 Output of \texttt{nvidia-smi -L}:
@@ -432,7 +449,7 @@ Output of \texttt{./run.sh -{}-profile}:
 \begin{lstlisting}[breaklines=true, basicstyle=\ttfamily\fontsize{6.5}{7.5}\selectfont]
 GPU: NVIDIA H200 MIG 3g.71gb (sm_90)
 Kernels: rope=cuda  reduce=cuda  gemm=cuda  attention=cuda  provided=cuda
-Library: /home/s2984817/edin-mls-26-autumn/hw1-asr/build/sm_90/libasr_kernels.so
+Library: /home/<user>/edin-mls-26-autumn/hw1-asr/build/sm_90/libasr_kernels.so
 Loading the model (about 9 GB of float32 weights)...
 Loaded in 86.6 s
 Audio: 3.50 s, mel features (1, 128, 3000), prompt 59 tokens
@@ -493,12 +510,13 @@ Status: PASS
 
 \section*{AI declaration}
 %Please acknowledge your use of AI here.
-We used AI tools in two ways. For the RAG study and the \mango{} system (Benyamin Beyzaei's part of the work), most of the implementation was written by AI coding assistants. We verified the implementation, checked its outputs and results, and tested them. We studied the related approaches ourselves and chose which to include in this report, and we designed the path of the study ourselves, including which approaches to implement and which to evaluate. For the rest of the work, AI tools helped us edit the manuscript text for clarity, debug a section of our CUDA implementation, and search the literature for related work.
+We used AI tools in two ways. For the RAG study and the \mango{} system (\ownpart), most of the implementation was written by AI coding assistants. We verified the implementation, checked its outputs and results, and tested them. We studied the related approaches ourselves and chose which to include in this report, and we designed the path of the study ourselves, including which approaches to implement and which to evaluate. For the rest of the work, AI tools helped us edit the manuscript text for clarity, debug a section of our CUDA implementation, and search the literature for related work.
 % Please put the information of your group here without changing the format.
 % This page will be deleted when the report is distributed for reviewing.
 \section*{Group information}
 Group ID: MLS-0089
 
+\ifdefined\named
 Information of group member A:
 \begin{itemize}
     \item Name: Benyamin Beyzaei
@@ -509,6 +527,9 @@ Information of group member B:
     \item Name: Paniz Halvachi
     \item UUN: s2984817
 \end{itemize}
+\else
+Names and UUNs are hidden in this version for anonymous review.
+\fi
 
 % Keep this COMMENTED OUT, unless there is more than one member.
 % Information of group member B:
