@@ -52,6 +52,14 @@ export const Route = createFileRoute("/results/$runId/")({
   component: RunDetail,
 })
 
+// Headings for the per-query columns; retrieval metrics (Recall@5, NDCG@10, ...) keep their own names.
+const COLUMNS: Record<string, string> = {
+  query_id: "Question",
+  wall_ms: "Wall time (ms)",
+  remote_calls: "ELM calls",
+  cache_hits: "Cache hits",
+}
+
 // Per-query columns: the stored retrieval metrics, then wall time and real (uncached) remote calls.
 // A slim trace has no gateway spans, so its call columns would read 0: they are left out.
 function row(q: QueryTrace): Record<string, number | string> {
@@ -175,8 +183,8 @@ function RunDetail() {
       <h2 className="font-heading text-lg font-medium">Queries</h2>
       <Input
         type="search"
-        aria-label="Filter by query id"
-        placeholder="Filter by query id"
+        aria-label="Filter by question id"
+        placeholder="Filter by question id"
         value={filter}
         onChange={(e) =>
           navigate({
@@ -202,9 +210,10 @@ function RunDetail() {
               >
                 <button
                   onClick={() => sortBy(c)}
+                  title={c}
                   className="inline-flex items-center gap-1 rounded outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
-                  {c}
+                  {COLUMNS[c] ?? c}
                   {c === sort &&
                     (desc ? (
                       <ArrowDownIcon className="size-3" />
