@@ -1,11 +1,11 @@
 % A clean copy of report.tex with the authors' names and without the line-number ruler. report.tex stays in the review mode
 % the course requires: compile report.tex itself for the submission.
 \AddToHook{begindocument/before}{\iclrfinalcopy\author{Benyamin Beyzaei \And Paniz Halvachi}}
-% XeTeX (e.g. tectonic) has no Type 1 Times: use TeX Gyre, the same metrics. pdflatex skips this.
+% XeTeX (e.g. tectonic) has no Type 1 Times or Inconsolata: use the OpenType versions. pdflatex skips this.
 \ifdefined\XeTeXrevision
   \AddToHook{package/times/after}{\RequirePackage{fontspec}%
     \setmainfont{texgyretermes}[Extension=.otf,UprightFont=*-regular,BoldFont=*-bold,ItalicFont=*-italic,BoldItalicFont=*-bolditalic]%
-    \setsansfont{texgyreheros}[Extension=.otf,UprightFont=*-regular,BoldFont=*-bold,ItalicFont=*-italic,BoldItalicFont=*-bolditalic]%
-    \setmonofont{texgyrecursor}[Extension=.otf,UprightFont=*-regular,BoldFont=*-bold,ItalicFont=*-italic,BoldItalicFont=*-bolditalic]}
+    \setsansfont{texgyreheros}[Extension=.otf,UprightFont=*-regular,BoldFont=*-bold,ItalicFont=*-italic,BoldItalicFont=*-bolditalic]}
+  \AddToHook{begindocument/before}{\setmonofont{Inconsolatazi4}[Extension=.otf,UprightFont=*-Regular,BoldFont=*-Bold,Scale=0.95]}
 \fi
 \input{report.tex}
