@@ -60,7 +60,11 @@ function Results() {
   const selected = sel ? sel.split(",") : []
 
   const setSearch = (next: Search) =>
-    navigate({ search: (s) => ({ ...s, ...next }), replace: true })
+    navigate({
+      search: (s) => ({ ...s, ...next }),
+      replace: true,
+      resetScroll: false,
+    })
   const toggle = (id: string) => {
     const next = selected.includes(id)
       ? selected.filter((s) => s !== id)

@@ -115,6 +115,7 @@ function RunDetail() {
         desc: col === sort && !desc ? true : undefined,
       }),
       replace: true,
+      resetScroll: false,
     })
 
   const groups = Object.keys(GROUPS)
@@ -190,6 +191,7 @@ function RunDetail() {
           navigate({
             search: (s) => ({ ...s, filter: e.target.value || undefined }),
             replace: true,
+            resetScroll: false,
           })
         }
         className="max-w-xs"
