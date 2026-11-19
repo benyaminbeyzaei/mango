@@ -18,7 +18,6 @@ const SECTIONS = [
   { to: "/results", label: "Results" },
   { to: "/questions", label: "Questions" },
   { to: "/interactive", label: "Interactive" },
-  { to: "/guide", label: "Guide" },
 ] as const
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {

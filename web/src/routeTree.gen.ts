@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DocsRouteImport } from './routes/docs'
-import { Route as GuideRouteImport } from './routes/guide'
 import { Route as InteractiveRouteImport } from './routes/interactive'
 import { Route as ModelsRouteImport } from './routes/models'
 import { Route as QuestionsRouteImport } from './routes/questions'
@@ -28,11 +27,6 @@ const IndexRoute = IndexRouteImport.update({
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GuideRoute = GuideRouteImport.update({
-  id: '/guide',
-  path: '/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InteractiveRoute = InteractiveRouteImport.update({
@@ -74,7 +68,6 @@ const ResultsRunIdQueryIdRoute = ResultsRunIdQueryIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/docs': typeof DocsRoute
-  '/guide': typeof GuideRoute
   '/interactive': typeof InteractiveRoute
   '/models': typeof ModelsRoute
   '/questions': typeof QuestionsRoute
@@ -86,7 +79,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/docs': typeof DocsRoute
-  '/guide': typeof GuideRoute
   '/interactive': typeof InteractiveRoute
   '/models': typeof ModelsRoute
   '/questions': typeof QuestionsRoute
@@ -99,7 +91,6 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/docs': typeof DocsRoute
-  '/guide': typeof GuideRoute
   '/interactive': typeof InteractiveRoute
   '/models': typeof ModelsRoute
   '/questions': typeof QuestionsRoute
@@ -113,7 +104,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/docs'
-    | '/guide'
     | '/interactive'
     | '/models'
     | '/questions'
@@ -125,7 +115,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/docs'
-    | '/guide'
     | '/interactive'
     | '/models'
     | '/questions'
@@ -137,7 +126,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/docs'
-    | '/guide'
     | '/interactive'
     | '/models'
     | '/questions'
@@ -150,7 +138,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DocsRoute: typeof DocsRoute
-  GuideRoute: typeof GuideRoute
   InteractiveRoute: typeof InteractiveRoute
   ModelsRoute: typeof ModelsRoute
   QuestionsRoute: typeof QuestionsRoute
@@ -174,13 +161,6 @@ declare module '@tanstack/react-router' {
       path: '/docs'
       fullPath: '/docs'
       preLoaderRoute: typeof DocsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/guide': {
-      id: '/guide'
-      path: '/guide'
-      fullPath: '/guide'
-      preLoaderRoute: typeof GuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/interactive': {
@@ -238,7 +218,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DocsRoute: DocsRoute,
-  GuideRoute: GuideRoute,
   InteractiveRoute: InteractiveRoute,
   ModelsRoute: ModelsRoute,
   QuestionsRoute: QuestionsRoute,

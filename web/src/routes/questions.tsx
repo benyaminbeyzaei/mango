@@ -2,11 +2,13 @@ import { useQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { SendIcon } from "lucide-react"
 
-import { api, audioUrl } from "@/api/client"
+import { STATIC, api, audioUrl } from "@/api/client"
+import { NoticeDialog } from "@/components/notice-dialog"
 import { Line, Loading } from "@/components/page-skeletons"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { randomRunFor, useCachedRuns, type CachedRun } from "@/lib/cached"
 import { fmt } from "@/lib/results"
 
 const PAGE = 20
@@ -76,6 +78,7 @@ function Questions() {
       return data
     },
   })
+  const cachedRuns = useCachedRuns()
   const items = questions.data?.items ?? []
   const pages = Math.max(1, Math.ceil((questions.data?.total ?? 0) / PAGE))
   const go = (s: Search) => navigate({ search: (old) => ({ ...old, ...s }) })
@@ -89,6 +92,15 @@ function Questions() {
         two are compared word by word, ignoring case and punctuation; a button
         sends either transcript to the Interactive page as a typed question.
       </p>
+      {STATIC && (
+        <NoticeDialog id="static-questions" title="Cached version">
+          This version cannot ask new questions. &ldquo;Ask with whisper-1
+          transcript&rdquo; is turned off; &ldquo;Ask with our ASR
+          transcript&rdquo; opens the stored answer to that question from one of
+          the three full evaluations, chosen at random. Practice questions have
+          no stored answers.
+        </NoticeDialog>
+      )}
       <div className="flex flex-wrap items-center gap-4 text-sm">
         <span className="flex items-center gap-1.5">
           <mark className={ONLY.whisper}>word</mark> only in whisper-1
@@ -188,6 +200,8 @@ function Questions() {
             />
             <div className="grid gap-3 md:grid-cols-2">
               <Transcript
+                queryId={q.query_id}
+                cachedRuns={null}
                 label="whisper-1"
                 text={q.whisper1}
                 words={w}
@@ -195,6 +209,8 @@ function Questions() {
                 mark={ONLY.whisper}
               />
               <Transcript
+                queryId={q.query_id}
+                cachedRuns={cachedRuns.data ?? []}
                 label="our ASR"
                 text={q.course}
                 words={c}
@@ -233,13 +249,19 @@ function Questions() {
   )
 }
 
+// In the static build: no button sends a new question. cachedRuns null turns the button off; otherwise it opens
+// the stored answer of a random run that answered this question (off when none did).
 function Transcript({
+  queryId,
+  cachedRuns,
   label,
   text,
   words,
   common,
   mark,
 }: {
+  queryId: string
+  cachedRuns: CachedRun[] | null
   label: string
   text: string | null
   words: string[]
@@ -268,17 +290,59 @@ function Transcript({
               </span>
             ))}
           </p>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() =>
-              navigate({ to: "/interactive", search: { ask: text } })
-            }
-          >
-            <SendIcon /> Ask with {label} transcript
-          </Button>
+          {STATIC ? (
+            <CachedAsk queryId={queryId} runs={cachedRuns} label={label} />
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() =>
+                navigate({ to: "/interactive", search: { ask: text } })
+              }
+            >
+              <SendIcon /> Ask with {label} transcript
+            </Button>
+          )}
         </>
       )}
     </div>
+  )
+}
+
+function CachedAsk({
+  queryId,
+  runs,
+  label,
+}: {
+  queryId: string
+  runs: CachedRun[] | null
+  label: string
+}) {
+  const navigate = useNavigate()
+  const has = runs?.some((r) => r.questions.some((q) => q.query_id === queryId))
+  return (
+    <span className="flex flex-col items-start gap-1">
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={!has}
+        onClick={() => {
+          const run = randomRunFor(runs!, queryId)
+          navigate({
+            to: "/interactive",
+            search: { run: run.run_id, q: queryId },
+          })
+        }}
+      >
+        <SendIcon /> Ask with {label} transcript
+      </Button>
+      {!has && (
+        <span className="text-xs text-muted-foreground">
+          {runs === null
+            ? "Not available in the cached version"
+            : "No stored answer for this question"}
+        </span>
+      )}
+    </span>
   )
 }
